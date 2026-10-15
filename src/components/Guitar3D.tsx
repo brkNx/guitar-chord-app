@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Text, Float } from '@react-three/drei';
+import { OrbitControls, Text, Float, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ChordPosition } from '../types/guitar';
 import { guitarAudio } from '../audio/guitarAudio';
@@ -260,25 +260,49 @@ const GuitarHeadstock = () => {
 
 // Complete 3D Guitar Scene
 const GuitarScene = ({
+  chordName,
   position,
   isLeftHanded,
   vibratingStrings,
-  onPluckString
+  onPluckString,
+  onOpenChordDetail
 }: {
+  chordName: string;
   position: ChordPosition;
   isLeftHanded: boolean;
   vibratingStrings: boolean[];
   onPluckString: (strIdx: number) => void;
+  onOpenChordDetail?: (chordName: string) => void;
 }) => {
   const neckWidth = 2.4;
 
   const singleDots = [3, 5, 7, 9];
   const doubleDot = 12;
 
+  const handleOpenChord = () => {
+    if (onOpenChordDetail) {
+      onOpenChordDetail(chordName);
+    }
+  };
+
   return (
     <group scale={isLeftHanded ? [-1, 1, 1] : [1, 1, 1]}>
-      {/* Rosewood Fretboard Neck */}
-      <mesh position={[0, 0, NECK_LENGTH / 2]} receiveShadow castShadow>
+      {/* Rosewood Fretboard Neck - Interactive: Click opens Chord Details */}
+      <mesh
+        position={[0, 0, NECK_LENGTH / 2]}
+        receiveShadow
+        castShadow
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenChord();
+        }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
         <boxGeometry args={[neckWidth, 0.14, NECK_LENGTH]} />
         <meshStandardMaterial color="#231710" roughness={0.5} metalness={0.08} />
       </mesh>
@@ -357,7 +381,7 @@ const GuitarScene = ({
         />
       ))}
 
-      {/* 3D Barre Bar Representation */}
+      {/* 3D Barre Bar Representation - Interactive */}
       {position.barres?.map((barre, bIdx) => {
         const fret = barre.fret;
         const zMid = (FRET_POSITIONS[fret - 1] + FRET_POSITIONS[fret]) / 2;
@@ -367,13 +391,26 @@ const GuitarScene = ({
         const barWidth = Math.abs(xTo - xFrom) + 0.35;
 
         return (
-          <group key={`barre-${bIdx}`} position={[xCenter, 0.28, zMid]}>
+          <group
+            key={`barre-${bIdx}`}
+            position={[xCenter, 0.28, zMid]}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenChord();
+            }}
+            onPointerOver={() => {
+              document.body.style.cursor = 'pointer';
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor = 'auto';
+            }}
+          >
             <mesh rotation={[0, 0, Math.PI / 2]}>
               <capsuleGeometry args={[0.13, barWidth, 12, 12]} />
               <meshStandardMaterial
                 color="#f59e0b"
                 emissive="#d97706"
-                emissiveIntensity={0.5}
+                emissiveIntensity={0.6}
                 roughness={0.3}
               />
             </mesh>
@@ -384,7 +421,7 @@ const GuitarScene = ({
         );
       })}
 
-      {/* 3D Animated Finger Placement Spheres */}
+      {/* 3D Animated Finger Placement Spheres - Interactive: Click opens Chord Details & plucks */}
       {STRING_X.map((x, strIdx) => {
         const fret = position.frets[strIdx];
         if (fret > 0) {
@@ -394,14 +431,27 @@ const GuitarScene = ({
 
           return (
             <Float key={`finger-${strIdx}`} speed={2} rotationIntensity={0} floatIntensity={0.15}>
-              <group position={[x, 0.3, zMid]}>
+              <group
+                position={[x, 0.3, zMid]}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPluckString(strIdx);
+                  handleOpenChord();
+                }}
+                onPointerOver={() => {
+                  document.body.style.cursor = 'pointer';
+                }}
+                onPointerOut={() => {
+                  document.body.style.cursor = 'auto';
+                }}
+              >
                 <mesh castShadow>
-                  <sphereGeometry args={[0.15, 24, 24]} />
+                  <sphereGeometry args={[0.16, 24, 24]} />
                   <meshStandardMaterial
                     color={color}
                     emissive={color}
-                    emissiveIntensity={0.5}
-                    roughness={0.25}
+                    emissiveIntensity={0.6}
+                    roughness={0.2}
                     metalness={0.3}
                   />
                 </mesh>
@@ -421,8 +471,69 @@ const GuitarScene = ({
         return null;
       })}
 
-      {/* Acoustic Body */}
-      <GuitarBody neckJoint={NECK_LENGTH} />
+      {/* 3D Floating Interactive HUD Billboard - Always faces camera, click opens chord panel */}
+      <Billboard
+        position={[0, 0.95, 1.8]}
+        follow={true}
+        lockX={false}
+        lockY={false}
+        lockZ={false}
+      >
+        <mesh
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenChord();
+          }}
+          onPointerOver={() => {
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          <planeGeometry args={[2.5, 0.46]} />
+          <meshBasicMaterial color="#0b0e17" transparent opacity={0.92} />
+        </mesh>
+        <mesh position={[0, 0, -0.005]}>
+          <planeGeometry args={[2.54, 0.5]} />
+          <meshBasicMaterial color="#f59e0b" transparent opacity={0.4} />
+        </mesh>
+        <Text
+          position={[0, 0, 0.02]}
+          fontSize={0.16}
+          color="#f59e0b"
+          anchorX="center"
+          anchorY="middle"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleOpenChord();
+          }}
+          onPointerOver={() => {
+            document.body.style.cursor = 'pointer';
+          }}
+          onPointerOut={() => {
+            document.body.style.cursor = 'auto';
+          }}
+        >
+          {`[AKOR DETAYI: ${chordName} - TIKLA]`}
+        </Text>
+      </Billboard>
+
+      {/* Acoustic Body - Interactive: Click opens Chord Details */}
+      <group
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenChord();
+        }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <GuitarBody neckJoint={NECK_LENGTH} />
+      </group>
 
       {/* Headstock with Tuning Pegs */}
       <GuitarHeadstock />
@@ -614,10 +725,12 @@ export const Guitar3D = ({
           <pointLight position={[0, -3, 5]} intensity={0.4} color="#ffffff" />
 
           <GuitarScene
+            chordName={chordName}
             position={position}
             isLeftHanded={isLeftHanded}
             vibratingStrings={vibratingStrings}
             onPluckString={handlePluckString}
+            onOpenChordDetail={onOpenChordDetail}
           />
 
           <CameraController preset={cameraPreset} />
@@ -626,7 +739,7 @@ export const Guitar3D = ({
 
       {/* Interactive Footer Tip */}
       <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mt-2.5 px-2">
-        <span>[RIG TIP] Tellere tıklayarak notaları çalabilir, fare ile 360° döndürebilirsiniz.</span>
+        <span>[RIG TIP] Gitara, perdelere veya parmak noktalarına tıklayarak doğrudan akor panelini açabilirsiniz.</span>
         <span>POV / KARŞIDAN / TAM AÇI</span>
       </div>
     </div>
