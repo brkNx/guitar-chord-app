@@ -43,8 +43,16 @@ export function App() {
   const [currentSong, setCurrentSong] = useState<Song>(SAMPLE_SONGS[0]);
   const [activeChord, setActiveChord] = useState<string>('Am');
   const [positionIdx, setPositionIdx] = useState<number>(0);
-  const [viewDimension, setViewDimension] = useState<'3d' | '2d'>('3d'); // 3D default
   const [displayMode, setDisplayMode] = useState<FretboardDisplayMode>('fingers');
+  const [viewDimension, setViewDimension] = useState<'3d' | '2d'>(() => {
+    try {
+      const v = new URLSearchParams(window.location.search).get('view');
+      if (v === '3d') return '3d';
+    } catch {
+      // fallback
+    }
+    return '2d'; // 2D default for immediate playable interactive fretboard
+  });
   const [isLeftHanded, setIsLeftHanded] = useState<boolean>(false);
   const [transposeOffset, setTransposeOffset] = useState<number>(0);
 
@@ -228,26 +236,26 @@ export function App() {
             <div className="flex items-center gap-2">
               <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-xs">
                 <button
+                  onClick={() => setViewDimension('2d')}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                    viewDimension === '2d'
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Sliders className="w-3.5 h-3.5" />
+                  <span>2D Klavye</span>
+                </button>
+                <button
                   onClick={() => setViewDimension('3d')}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-lg font-bold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold transition-all cursor-pointer ${
                     viewDimension === '3d'
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 shadow-md shadow-amber-500/20'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   <Box className="w-3.5 h-3.5" />
-                  <span>3D Gitar</span>
-                </button>
-                <button
-                  onClick={() => setViewDimension('2d')}
-                  className={`flex items-center gap-1 px-3 py-1 rounded-lg font-semibold transition-all ${
-                    viewDimension === '2d'
-                      ? 'bg-slate-800 text-amber-400'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Sliders className="w-3.5 h-3.5" />
-                  <span>2D Klavye</span>
+                  <span>3D Canlı Gitar</span>
                 </button>
               </div>
 
@@ -334,6 +342,7 @@ export function App() {
               position={currentPosition}
               isLeftHanded={isLeftHanded}
               onOpenChordDetail={() => setIsChordDetailOpen(true)}
+              onSwitchTo2D={() => setViewDimension('2d')}
             />
           ) : (
             <Fretboard

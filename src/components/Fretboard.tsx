@@ -24,7 +24,7 @@ export const Fretboard = ({
   const [vibratingStrings, setVibratingStrings] = useState<Set<number>>(new Set());
   const [isStrumming, setIsStrumming] = useState(false);
   const [isArpeggiating, setIsArpeggiating] = useState(false);
-  const [is3DMode, setIs3DMode] = useState(true);
+  const [is3DMode, setIs3DMode] = useState(false);
 
   const numFrets = 14;
   const fretWidth = 56;
