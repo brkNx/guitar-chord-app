@@ -1,10 +1,10 @@
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Text, Float, Billboard } from '@react-three/drei';
+import { OrbitControls, Text, Billboard } from '@react-three/drei';
 import * as THREE from 'three';
 import type { ChordPosition } from '../types/guitar';
 import { guitarAudio } from '../audio/guitarAudio';
-import { Volume2, Eye, Camera, Sliders, Maximize2 } from 'lucide-react';
+import { Volume2, Eye, Camera, Maximize2 } from 'lucide-react';
 
 interface Guitar3DProps {
   chordName: string;
@@ -33,16 +33,19 @@ const STRING_LENGTH = BRIDGE_Z;
 // 6 Strings spacing across X axis (X: -1.0 to +1.0)
 const STRING_X = [-1.0, -0.6, -0.2, 0.2, 0.6, 1.0];
 const STRING_GAUGES = [0.038, 0.032, 0.026, 0.020, 0.015, 0.011];
-const FINGER_COLORS = ['#94a3b8', '#f59e0b', '#06b6d4', '#10b981', '#f43f5e'];
+// Oolimo & Polygonium Finger Colors: 1 (Index): Amber, 2 (Middle): Blue, 3 (Ring): Emerald, 4 (Pinky): Rose
+const FINGER_COLORS = ['#94a3b8', '#f59e0b', '#3b82f6', '#10b981', '#f43f5e'];
 
-// Individual Pluckable 3D String with physical sine-wave vibration animation
+// Individual Vibrating String with Phosphor Bronze (Bass) vs Plain Steel (Treble)
 const VibratingString = ({
+  strIdx,
   x,
   gauge,
   fret,
   isVibrating,
   onPluck
 }: {
+  strIdx: number;
   x: number;
   gauge: number;
   fret: number;
@@ -52,12 +55,17 @@ const VibratingString = ({
   const meshRef = useRef<THREE.Mesh>(null);
   const timeRef = useRef(0);
 
+  // Strings 0-2 (E, A, D) are Phosphor Bronze wound; 3-5 (G, B, E) are Plain Steel
+  const isWound = strIdx <= 2;
+  const stringColor = isWound ? '#d97706' : '#cbd5e1';
+
   useFrame((_, delta) => {
     if (!meshRef.current) return;
     if (isVibrating) {
       timeRef.current += delta * 60;
-      const decay = Math.max(0, 1 - timeRef.current * 0.028);
-      const amp = Math.sin(timeRef.current * 1.8) * 0.06 * decay;
+      const decay = Math.max(0, 1 - timeRef.current * 0.035);
+      const freqMultiplier = 1.2 + (5 - strIdx) * 0.3;
+      const amp = Math.sin(timeRef.current * freqMultiplier) * 0.07 * decay;
       meshRef.current.position.y = 0.13 + amp;
     } else {
       meshRef.current.position.y = 0.13;
@@ -67,7 +75,7 @@ const VibratingString = ({
 
   return (
     <group position={[x, 0, 0]}>
-      {/* Pluckable hit zone: invisible wider cylinder oriented along Z */}
+      {/* Invisible wide hit zone for easy raycast plucking */}
       <mesh
         position={[0, 0.13, STRING_LENGTH / 2]}
         rotation={[Math.PI / 2, 0, 0]}
@@ -75,12 +83,18 @@ const VibratingString = ({
           e.stopPropagation();
           onPluck();
         }}
+        onPointerOver={() => {
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={() => {
+          document.body.style.cursor = 'auto';
+        }}
       >
-        <cylinderGeometry args={[0.13, 0.13, STRING_LENGTH, 8]} />
+        <cylinderGeometry args={[0.12, 0.12, STRING_LENGTH, 8]} />
         <meshBasicMaterial transparent opacity={0} />
       </mesh>
 
-      {/* Visible metallic bronze/steel string oriented along Z */}
+      {/* Visible metallic string */}
       <mesh
         ref={meshRef}
         position={[0, 0.13, STRING_LENGTH / 2]}
@@ -88,24 +102,24 @@ const VibratingString = ({
       >
         <cylinderGeometry args={[gauge, gauge, STRING_LENGTH, 12]} />
         <meshStandardMaterial
-          color={isVibrating ? '#fef08a' : '#cbd5e1'}
-          metalness={0.95}
-          roughness={0.15}
+          color={isVibrating ? '#fef08a' : stringColor}
+          metalness={isWound ? 0.85 : 0.95}
+          roughness={isWound ? 0.28 : 0.12}
           emissive={isVibrating ? '#f59e0b' : '#000000'}
-          emissiveIntensity={isVibrating ? 0.8 : 0}
+          emissiveIntensity={isVibrating ? 0.9 : 0}
         />
       </mesh>
 
-      {/* Nut marker: Open (Green circle) or Muted (Red cross) */}
+      {/* Nut marker: Open (Green ring) or Muted (Red X) */}
       {fret === 0 && (
-        <mesh position={[0, 0.22, 0.05]} rotation={[-Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[0.07, 0.11, 16]} />
+        <mesh position={[0, 0.22, 0.04]} rotation={[-Math.PI / 2, 0, 0]}>
+          <ringGeometry args={[0.065, 0.11, 16]} />
           <meshBasicMaterial color="#10b981" side={THREE.DoubleSide} />
         </mesh>
       )}
       {fret === -1 && (
         <Text
-          position={[0, 0.22, 0.05]}
+          position={[0, 0.22, 0.04]}
           rotation={[-Math.PI / 2, 0, 0]}
           fontSize={0.2}
           color="#ef4444"
@@ -119,59 +133,120 @@ const VibratingString = ({
   );
 };
 
-// Contoured Acoustic Guitar Body
+// Smooth Lerping Animated Finger Sphere
+const LerpingFingerSphere = ({
+  targetX,
+  targetZ,
+  finger,
+  color,
+  onClick
+}: {
+  targetX: number;
+  targetZ: number;
+  finger: number;
+  color: string;
+  onClick: () => void;
+}) => {
+  const groupRef = useRef<THREE.Group>(null);
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    // Polygonium Smooth Interpolation: glide to new fret/string smoothly
+    groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, targetX, 0.18);
+    groupRef.current.position.z = THREE.MathUtils.lerp(groupRef.current.position.z, targetZ, 0.18);
+  });
+
+  return (
+    <group
+      ref={groupRef}
+      position={[targetX, 0.3, targetZ]}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      onPointerOver={() => {
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={() => {
+        document.body.style.cursor = 'auto';
+      }}
+    >
+      <mesh castShadow>
+        <sphereGeometry args={[0.155, 24, 24]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.65}
+          roughness={0.2}
+          metalness={0.2}
+        />
+      </mesh>
+      <Text
+        position={[0, 0, 0]}
+        fontSize={0.17}
+        color="#ffffff"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {finger > 0 ? `${finger}` : ''}
+      </Text>
+    </group>
+  );
+};
+
+// Realistic Acoustic Guitar Body
 const GuitarBody = ({ neckJoint }: { neckJoint: number }) => {
-  const bodyGeom = useMemo(() => {
-    const shape = new THREE.Shape();
-    const halfUpper = 2.3;
-    const halfWaist = 1.65;
-    const halfLower = 2.95;
-    const length = 8.8;
+  const bodyShape = useMemo(() => {
+    const s = new THREE.Shape();
+    s.moveTo(1.2, 0);
+    s.bezierCurveTo(2.4, 0.8, 3.2, 2.2, 2.8, 3.8); // Upper bout
+    s.bezierCurveTo(2.5, 4.8, 2.0, 5.0, 2.2, 5.8); // Waist
+    s.bezierCurveTo(2.5, 7.0, 3.6, 8.2, 3.2, 10.2); // Lower bout
+    s.bezierCurveTo(2.8, 11.8, 1.2, 12.2, 0, 12.2); // Bottom tail
+    s.bezierCurveTo(-1.2, 12.2, -2.8, 11.8, -3.2, 10.2);
+    s.bezierCurveTo(-3.6, 8.2, -2.5, 7.0, -2.2, 5.8);
+    s.bezierCurveTo(-2.0, 5.0, -2.5, 4.8, -2.8, 3.8);
+    s.bezierCurveTo(-3.2, 2.2, -2.4, 0.8, -1.2, 0);
+    s.closePath();
+    return s;
+  }, []);
 
-    shape.moveTo(0, 0);
-    shape.bezierCurveTo(0.8, 0, halfUpper, 0.6, halfUpper, 2.3);
-    shape.bezierCurveTo(halfUpper, 3.4, halfWaist, 3.9, halfWaist, 4.6);
-    shape.bezierCurveTo(halfWaist, 5.3, halfLower, 6.0, halfLower, 7.3);
-    shape.bezierCurveTo(halfLower, 8.4, 1.2, length, 0, length);
-    shape.bezierCurveTo(-1.2, length, -halfLower, 8.4, -halfLower, 7.3);
-    shape.bezierCurveTo(-halfLower, 6.0, -halfWaist, 5.3, -halfWaist, 4.6);
-    shape.bezierCurveTo(-halfWaist, 3.9, -halfUpper, 3.4, -halfUpper, 2.3);
-    shape.bezierCurveTo(-halfUpper, 0.6, -0.8, 0, 0, 0);
-
-    return new THREE.ExtrudeGeometry(shape, {
-      depth: 1.15,
+  const extrudeSettings = useMemo(
+    () => ({
+      depth: 1.4,
       bevelEnabled: true,
       bevelSegments: 4,
       steps: 1,
-      bevelSize: 0.12,
-      bevelThickness: 0.12
-    });
-  }, []);
+      bevelSize: 0.18,
+      bevelThickness: 0.18
+    }),
+    []
+  );
 
   return (
-    <group position={[0, -0.05, neckJoint]}>
-      {/* Wooden Body - Spruce top & Mahogany sides */}
+    <group position={[0, -0.1, neckJoint - 1.2]}>
+      {/* Solid Sitka Spruce / Mahogany Contoured Body */}
       <mesh
-        geometry={bodyGeom}
         rotation={[Math.PI / 2, 0, 0]}
-        position={[0, -1.15, 0]}
-        castShadow
+        position={[0, 0, 0]}
         receiveShadow
+        castShadow
       >
+        <extrudeGeometry args={[bodyShape, extrudeSettings]} />
         <meshStandardMaterial
-          color="#451a03"
-          roughness={0.35}
+          color="#381907"
+          roughness={0.32}
           metalness={0.08}
         />
       </mesh>
 
-      {/* Soundhole (Circular cutout cavity) */}
+      {/* Soundhole */}
       <mesh position={[0, 0.015, 2.4]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.78, 32]} />
-        <meshBasicMaterial color="#0b0806" />
+        <meshBasicMaterial color="#090705" />
       </mesh>
 
-      {/* Rosette Inlay Rings around Soundhole */}
+      {/* Rosette Rings */}
       <mesh position={[0, 0.02, 2.4]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[0.82, 0.92, 32]} />
         <meshStandardMaterial color="#fef08a" metalness={0.5} roughness={0.3} />
@@ -181,7 +256,7 @@ const GuitarBody = ({ neckJoint }: { neckJoint: number }) => {
         <meshStandardMaterial color="#d97706" metalness={0.4} roughness={0.4} />
       </mesh>
 
-      {/* Tortoiseshell / Dark Pickguard */}
+      {/* Pickguard */}
       <mesh position={[0.65, 0.022, 2.7]} rotation={[-Math.PI / 2, 0, 0]}>
         <circleGeometry args={[0.62, 24, 0, Math.PI * 1.25]} />
         <meshStandardMaterial color="#1c1917" roughness={0.2} metalness={0.15} />
@@ -199,7 +274,7 @@ const GuitarBody = ({ neckJoint }: { neckJoint: number }) => {
         <meshStandardMaterial color="#f8fafc" roughness={0.2} />
       </mesh>
 
-      {/* 6 White Bridge String Pins */}
+      {/* 6 White Bridge Pins */}
       {STRING_X.map((x, i) => (
         <mesh key={`pin-${i}`} position={[x, 0.17, 5.4]}>
           <sphereGeometry args={[0.045, 12, 12]} />
@@ -210,23 +285,23 @@ const GuitarBody = ({ neckJoint }: { neckJoint: number }) => {
   );
 };
 
-// Acoustic Guitar Headstock & Tuning Pegs
+// Acoustic Headstock with 6 Tuning Pegs
 const GuitarHeadstock = () => {
   return (
     <group position={[0, -0.05, 0]}>
-      {/* Angled Headstock Paddle */}
+      {/* Headstock Paddle */}
       <mesh position={[0, -0.15, -1.35]} rotation={[-0.14, 0, 0]} castShadow>
         <boxGeometry args={[2.2, 0.2, 2.6]} />
         <meshStandardMaterial color="#2a1810" roughness={0.4} metalness={0.1} />
       </mesh>
 
-      {/* Brand Inlay Emblem */}
+      {/* Gold Inlay Emblem */}
       <mesh position={[0, -0.04, -2.0]} rotation={[-0.14, 0, 0]}>
         <ringGeometry args={[0.1, 0.2, 16]} />
         <meshStandardMaterial color="#fef08a" metalness={0.8} roughness={0.2} />
       </mesh>
 
-      {/* 6 Chrome Tuning Pegs (3 Left, 3 Right) */}
+      {/* 6 Chrome Tuning Pegs */}
       {[-0.55, -1.35, -2.15].map((z, i) => (
         <group key={`pegs-${i}`}>
           {/* Left Peg */}
@@ -243,7 +318,7 @@ const GuitarHeadstock = () => {
 
           {/* Right Peg */}
           <group position={[1.25, -0.15, z]}>
-            <mesh rotation={[0, 0, Math.PI / 2]}>
+            <mesh rotation={[0, 0, -Math.PI / 2]}>
               <cylinderGeometry args={[0.04, 0.04, 0.35, 8]} />
               <meshStandardMaterial color="#e2e8f0" metalness={0.9} roughness={0.1} />
             </mesh>
@@ -275,7 +350,6 @@ const GuitarScene = ({
   onOpenChordDetail?: (chordName: string) => void;
 }) => {
   const neckWidth = 2.4;
-
   const singleDots = [3, 5, 7, 9];
   const doubleDot = 12;
 
@@ -287,7 +361,7 @@ const GuitarScene = ({
 
   return (
     <group scale={isLeftHanded ? [-1, 1, 1] : [1, 1, 1]}>
-      {/* Rosewood Fretboard Neck - Interactive: Click opens Chord Details */}
+      {/* Rosewood Fretboard Neck - Interactive Click */}
       <mesh
         position={[0, 0, NECK_LENGTH / 2]}
         receiveShadow
@@ -369,10 +443,11 @@ const GuitarScene = ({
         );
       })()}
 
-      {/* 6 Guitar Strings */}
+      {/* 6 Pluckable Strings */}
       {STRING_X.map((x, strIdx) => (
         <VibratingString
           key={`str-${strIdx}`}
+          strIdx={strIdx}
           x={x}
           gauge={STRING_GAUGES[strIdx]}
           fret={position.frets[strIdx]}
@@ -381,7 +456,7 @@ const GuitarScene = ({
         />
       ))}
 
-      {/* 3D Barre Bar Representation - Interactive */}
+      {/* 3D Barre Bar Representation */}
       {position.barres?.map((barre, bIdx) => {
         const fret = barre.fret;
         const zMid = (FRET_POSITIONS[fret - 1] + FRET_POSITIONS[fret]) / 2;
@@ -421,7 +496,7 @@ const GuitarScene = ({
         );
       })}
 
-      {/* 3D Animated Finger Placement Spheres - Interactive: Click opens Chord Details & plucks */}
+      {/* Animated Lerping Finger Spheres (Polygonium Glide Motion) */}
       {STRING_X.map((x, strIdx) => {
         const fret = position.frets[strIdx];
         if (fret > 0) {
@@ -430,48 +505,23 @@ const GuitarScene = ({
           const color = FINGER_COLORS[finger] || '#f59e0b';
 
           return (
-            <Float key={`finger-${strIdx}`} speed={2} rotationIntensity={0} floatIntensity={0.15}>
-              <group
-                position={[x, 0.3, zMid]}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPluckString(strIdx);
-                  handleOpenChord();
-                }}
-                onPointerOver={() => {
-                  document.body.style.cursor = 'pointer';
-                }}
-                onPointerOut={() => {
-                  document.body.style.cursor = 'auto';
-                }}
-              >
-                <mesh castShadow>
-                  <sphereGeometry args={[0.16, 24, 24]} />
-                  <meshStandardMaterial
-                    color={color}
-                    emissive={color}
-                    emissiveIntensity={0.6}
-                    roughness={0.2}
-                    metalness={0.3}
-                  />
-                </mesh>
-                <Text
-                  position={[0, 0, 0]}
-                  fontSize={0.18}
-                  color="#ffffff"
-                  anchorX="center"
-                  anchorY="middle"
-                >
-                  {finger > 0 ? `${finger}` : ''}
-                </Text>
-              </group>
-            </Float>
+            <LerpingFingerSphere
+              key={`finger-${strIdx}`}
+              targetX={x}
+              targetZ={zMid}
+              finger={finger}
+              color={color}
+              onClick={() => {
+                onPluckString(strIdx);
+                handleOpenChord();
+              }}
+            />
           );
         }
         return null;
       })}
 
-      {/* 3D Floating Interactive HUD Billboard - Always faces camera, click opens chord panel */}
+      {/* 3D Floating Interactive HUD Billboard */}
       <Billboard
         position={[0, 0.95, 1.8]}
         follow={true}
@@ -519,7 +569,7 @@ const GuitarScene = ({
         </Text>
       </Billboard>
 
-      {/* Acoustic Body - Interactive: Click opens Chord Details */}
+      {/* Acoustic Body - Interactive Click */}
       <group
         onClick={(e) => {
           e.stopPropagation();
@@ -535,44 +585,50 @@ const GuitarScene = ({
         <GuitarBody neckJoint={NECK_LENGTH} />
       </group>
 
-      {/* Headstock with Tuning Pegs */}
+      {/* Headstock */}
       <GuitarHeadstock />
     </group>
   );
 };
 
-// Camera Controller Component for Smooth Presets + OrbitControls
+// Camera Controller Component with Smooth THREE.MathUtils.lerp Interpolation
 const CameraController = ({ preset }: { preset: CameraPreset }) => {
   const { camera } = useThree();
   const controlsRef = useRef<any>(null);
 
+  const targets = useRef({
+    pos: new THREE.Vector3(-0.6, 3.2, -0.6),
+    look: new THREE.Vector3(0.1, 0, 2.8)
+  });
+
   useEffect(() => {
-    if (!controlsRef.current) return;
     if (preset === 'pov') {
-      // Guitarist POV looking down the neck right at active chord frets
-      camera.position.set(-0.6, 3.2, -0.6);
-      controlsRef.current.target.set(0.1, 0, 2.8);
+      targets.current.pos.set(-0.6, 3.2, -0.6);
+      targets.current.look.set(0.1, 0, 2.8);
     } else if (preset === 'front') {
-      // Clean top-front fretboard view focusing on frets 1 to 5
-      camera.position.set(0, 5.6, 2.8);
-      controlsRef.current.target.set(0, 0, 2.8);
+      targets.current.pos.set(0, 5.6, 2.8);
+      targets.current.look.set(0, 0, 2.8);
     } else if (preset === 'full') {
-      // Full acoustic guitar perspective showing body, neck, and headstock
-      camera.position.set(4.8, 6.2, 7.8);
-      controlsRef.current.target.set(0, 0, 5.2);
+      targets.current.pos.set(4.8, 6.2, 7.8);
+      targets.current.look.set(0, 0, 5.0);
     }
+  }, [preset]);
+
+  useFrame(() => {
+    if (!controlsRef.current) return;
+    camera.position.lerp(targets.current.pos, 0.08);
+    controlsRef.current.target.lerp(targets.current.look, 0.08);
     controlsRef.current.update();
-  }, [preset, camera]);
+  });
 
   return (
     <OrbitControls
       ref={controlsRef}
-      target={[0.1, 0, 2.8]}
       enablePan={true}
       enableZoom={true}
-      minDistance={2.5}
+      enableRotate={true}
+      minDistance={1.2}
       maxDistance={22}
-      maxPolarAngle={Math.PI / 2 + 0.05}
     />
   );
 };
@@ -582,22 +638,23 @@ export const Guitar3D = ({
   position,
   isLeftHanded,
   onOpenChordDetail,
-  onStrum,
-  onSwitchTo2D
+  onStrum
 }: Guitar3DProps) => {
   const [cameraPreset, setCameraPreset] = useState<CameraPreset>('pov');
   const [vibratingStrings, setVibratingStrings] = useState<boolean[]>(Array(6).fill(false));
   const [isStrumming, setIsStrumming] = useState(false);
 
   const handlePluckString = (strIdx: number) => {
-    const fret = position.frets[strIdx] >= 0 ? position.frets[strIdx] : 0;
-    guitarAudio.pluckNote(strIdx, fret, 0.9);
+    const fret = position.frets[strIdx];
+    if (fret < 0) return;
 
     setVibratingStrings((prev) => {
       const next = [...prev];
       next[strIdx] = true;
       return next;
     });
+
+    guitarAudio.pluckNote(strIdx, fret, 0.95);
 
     setTimeout(() => {
       setVibratingStrings((prev) => {
@@ -620,99 +677,81 @@ export const Guitar3D = ({
     setTimeout(() => {
       setVibratingStrings(Array(6).fill(false));
       setIsStrumming(false);
-    }, 600);
+    }, 550);
   };
 
   return (
-    <div className="w-full bg-slate-900/95 border border-slate-800 rounded-3xl p-4 sm:p-5 shadow-2xl backdrop-blur-md relative overflow-hidden flex flex-col">
-      {/* 3D Guitar Controls Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-3 z-10">
-        <div className="flex items-center gap-3">
+    <div className="w-full bg-[#11141c] border border-[#1e222d] rounded-lg p-3 shadow-md flex flex-col text-slate-200 select-none">
+      {/* 3D Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-[#1e222d]">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => onOpenChordDetail && onOpenChordDetail(chordName)}
-            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xl rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer"
-            title="Akor detaylarını ve teorisini incele"
+            className="px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono font-bold text-sm rounded shadow-sm shadow-amber-500/20 transition-colors cursor-pointer"
+            title="Akor detay panelini aç"
           >
-            <span>{chordName || 'Serbest Çalım'}</span>
-            <span className="text-xs font-normal opacity-80">ℹ</span>
+            {chordName || 'AKOR'}
           </button>
-          <span className="text-xs text-slate-400 font-medium hidden sm:inline">
-            {position.baseFret > 1 ? `${position.baseFret}. Perde` : 'Açık Pozisyon'} • Gerçekçi 3D Akustik Gitar
+          <span className="font-mono text-[11px] text-slate-400">
+            {position.baseFret > 1 ? `${position.baseFret}. Perde` : 'Açık'} • Polygonium 3D Rig
           </span>
         </div>
 
-        {/* Camera Preset Buttons, Switch to 2D & Strum */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Switch to 2D Button */}
-          {onSwitchTo2D && (
-            <button
-              onClick={onSwitchTo2D}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs font-bold transition-all shadow-sm cursor-pointer"
-              title="2D İnteraktif Klavyeye Geç"
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>2D Klavye</span>
-            </button>
-          )}
-
-          {/* Camera Presets */}
-          <div className="flex items-center bg-slate-800/80 rounded-xl p-1 border border-slate-700/60 text-xs">
+        {/* Camera Presets & Strum Action */}
+        <div className="flex items-center gap-1.5 font-mono text-[11px]">
+          {/* Camera Preset Buttons */}
+          <div className="flex items-center bg-[#0b0d12] border border-[#1e222d] rounded p-0.5">
             <button
               onClick={() => setCameraPreset('pov')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors cursor-pointer ${
                 cameraPreset === 'pov'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Gitarist Bakış Açısı (POV)"
             >
-              <Eye className="w-3.5 h-3.5" />
+              <Eye className="w-3 h-3" />
               <span>POV</span>
             </button>
             <button
               onClick={() => setCameraPreset('front')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors cursor-pointer ${
                 cameraPreset === 'front'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'text-slate-400 hover:text-white'
               }`}
               title="Karşıdan Görünüm"
             >
-              <Camera className="w-3.5 h-3.5" />
-              <span>Karşıdan</span>
+              <Camera className="w-3 h-3" />
+              <span>FRONT</span>
             </button>
             <button
               onClick={() => setCameraPreset('full')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-semibold transition-all ${
+              className={`flex items-center gap-1 px-2 py-0.5 rounded transition-colors cursor-pointer ${
                 cameraPreset === 'full'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-amber-500 text-slate-950 font-bold'
+                  : 'text-slate-400 hover:text-white'
               }`}
-              title="Tam Akustik Gitar"
+              title="Tam Akustik Gitar (İzometrik)"
             >
-              <Maximize2 className="w-3.5 h-3.5" />
-              <span>Tam Gitar</span>
+              <Maximize2 className="w-3 h-3" />
+              <span>FULL</span>
             </button>
           </div>
 
-          {/* Strum Button */}
           <button
             onClick={handleStrum}
             disabled={isStrumming}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer ${
-              isStrumming
-                ? 'bg-amber-500/30 text-amber-300 ring-2 ring-amber-500/50 scale-95'
-                : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/20 active:scale-95'
-            }`}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-bold rounded shadow-sm shadow-amber-500/20 transition-colors cursor-pointer"
           >
-            <Volume2 className="w-4 h-4" />
-            <span>{isStrumming ? 'Çalınıyor...' : 'Akoru Tınlat'}</span>
+            <Volume2 className="w-3 h-3 fill-current" />
+            <span>{isStrumming ? 'ÇALINIYOR...' : 'TINLAT'}</span>
           </button>
         </div>
       </div>
 
       {/* Three.js Canvas Container */}
-      <div className="w-full h-72 md:h-80 rounded-2xl overflow-hidden bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border border-slate-800 shadow-inner cursor-grab active:cursor-grabbing">
+      <div className="w-full h-64 sm:h-72 rounded bg-[#090a0f] border border-[#1e222d] overflow-hidden relative cursor-grab active:cursor-grabbing">
         <Canvas
           camera={{ position: [-0.6, 3.2, -0.6], fov: 48 }}
           shadows
@@ -737,10 +776,10 @@ export const Guitar3D = ({
         </Canvas>
       </div>
 
-      {/* Interactive Footer Tip */}
-      <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mt-2.5 px-2">
-        <span>[RIG TIP] Gitara, perdelere veya parmak noktalarına tıklayarak doğrudan akor panelini açabilirsiniz.</span>
-        <span>POV / KARŞIDAN / TAM AÇI</span>
+      {/* Footer Telemetry */}
+      <div className="flex items-center justify-between text-[10px] font-mono text-slate-400 mt-2 px-1">
+        <span>[RIG TIP] Gitara, tellere veya parmak noktalarına tıklayarak akor detayını açabilirsiniz.</span>
+        <span>INTERPOLATED 60FPS</span>
       </div>
     </div>
   );

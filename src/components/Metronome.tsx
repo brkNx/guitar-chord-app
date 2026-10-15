@@ -1,11 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { guitarAudio } from '../audio/guitarAudio';
-import { Play, Pause, Activity } from 'lucide-react';
+import { Play, Square, Minus, Plus } from 'lucide-react';
 
-export const Metronome = () => {
-  const [bpm, setBpm] = useState(100);
+interface MetronomeProps {
+  onBpmChange?: (bpm: number) => void;
+  initialBpm?: number;
+}
+
+export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => {
+  const [bpm, setBpm] = useState(initialBpm);
   const [isPlaying, setIsPlaying] = useState(false);
   const [beat, setBeat] = useState(0);
+  const tapTimesRef = useRef<number[]>([]);
+
+  useEffect(() => {
+    if (initialBpm && initialBpm !== bpm) {
+      setBpm(initialBpm);
+    }
+  }, [initialBpm]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -22,60 +34,99 @@ export const Metronome = () => {
     };
   }, [isPlaying]);
 
-  const handleBpmChange = (newBpm: number) => {
-    setBpm(newBpm);
+  const updateBpm = (newBpm: number) => {
+    const clamped = Math.max(40, Math.min(240, newBpm));
+    setBpm(clamped);
+    if (onBpmChange) onBpmChange(clamped);
     if (isPlaying) {
-      guitarAudio.setMetronomeBpm(newBpm);
+      guitarAudio.setMetronomeBpm(clamped);
+    }
+  };
+
+  const handleTapTempo = () => {
+    const now = performance.now();
+    const taps = [...tapTimesRef.current, now].slice(-4);
+    tapTimesRef.current = taps;
+
+    if (taps.length >= 2) {
+      const intervals = [];
+      for (let i = 1; i < taps.length; i++) {
+        intervals.push(taps[i] - taps[i - 1]);
+      }
+      const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+      if (avgInterval > 0) {
+        const calculatedBpm = Math.round(60000 / avgInterval);
+        updateBpm(calculatedBpm);
+      }
     }
   };
 
   return (
-    <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs shadow-md">
-      <div className="flex items-center gap-1.5">
-        <Activity className="w-3.5 h-3.5 text-amber-500" />
-        <span className="font-semibold text-slate-300">Metronom</span>
-      </div>
-
-      {/* Beat indicators (4/4 time) */}
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4].map((b) => (
-          <span
-            key={b}
-            className={`w-2 h-2 rounded-full transition-all duration-75 ${
-              beat === b
-                ? b === 1
-                  ? 'bg-amber-400 scale-125 shadow-sm shadow-amber-400'
-                  : 'bg-emerald-400 scale-110'
-                : 'bg-slate-700'
-            }`}
-          />
-        ))}
-      </div>
-
-      <div className="flex items-center gap-1">
-        <input
-          type="range"
-          min="40"
-          max="220"
-          value={bpm}
-          onChange={(e) => handleBpmChange(Number(e.target.value))}
-          className="w-16 h-1.5 accent-amber-500 bg-slate-700 rounded-lg cursor-pointer"
-        />
-        <span className="font-mono font-bold text-amber-400 min-w-[28px] text-right">
-          {bpm}
-        </span>
-      </div>
-
+    <div className="flex items-center gap-2 bg-[#11141c] border border-[#1e222d] rounded px-2.5 py-1 text-xs select-none">
+      {/* Play/Pause Button */}
       <button
         onClick={() => setIsPlaying(!isPlaying)}
-        className={`p-1.5 rounded-lg transition-colors ${
+        className={`w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${
           isPlaying
-            ? 'bg-amber-500 text-slate-950 hover:bg-amber-400'
-            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/30'
+            : 'bg-[#181c26] text-slate-300 hover:text-white border border-[#1e222d]'
         }`}
-        title={isPlaying ? 'Durdur' : 'Başlat'}
+        title={isPlaying ? 'Durdur' : 'Metronomu Başlat'}
       >
-        {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
+        {isPlaying ? <Square className="w-2.5 h-2.5 fill-current" /> : <Play className="w-2.5 h-2.5 fill-current ml-0.5" />}
+      </button>
+
+      {/* 4 LED Beat Indicators */}
+      <div className="flex items-center gap-1 px-1">
+        {[1, 2, 3, 4].map((b) => {
+          const isActive = beat === b;
+          return (
+            <span
+              key={b}
+              className={`w-2 h-2 rounded-full transition-all duration-75 ${
+                isActive
+                  ? b === 1
+                    ? 'bg-amber-400 scale-125 shadow-[0_0_8px_#f59e0b]'
+                    : 'bg-emerald-400 scale-110 shadow-[0_0_6px_#10b981]'
+                  : 'bg-[#1e222d]'
+              }`}
+            />
+          );
+        })}
+      </div>
+
+      {/* Digital BPM Readout with +/- Steppers */}
+      <div className="flex items-center gap-1 bg-[#0b0d12] border border-[#1e222d] rounded px-1.5 py-0.5">
+        <button
+          onClick={() => updateBpm(bpm - 1)}
+          className="text-slate-500 hover:text-white px-0.5 transition-colors"
+          title="-1 BPM"
+        >
+          <Minus className="w-2.5 h-2.5" />
+        </button>
+
+        <span className="font-mono font-bold text-amber-400 text-[11px] min-w-[3ch] text-center tracking-wider">
+          {bpm}
+        </span>
+
+        <span className="text-[9px] font-mono text-slate-500">BPM</span>
+
+        <button
+          onClick={() => updateBpm(bpm + 1)}
+          className="text-slate-500 hover:text-white px-0.5 transition-colors"
+          title="+1 BPM"
+        >
+          <Plus className="w-2.5 h-2.5" />
+        </button>
+      </div>
+
+      {/* Tap Tempo Button */}
+      <button
+        onClick={handleTapTempo}
+        className="px-1.5 py-0.5 bg-[#181c26] hover:bg-[#202534] border border-[#1e222d] rounded text-[10px] font-mono text-slate-400 hover:text-amber-400 transition-colors"
+        title="Ritmik olarak tıklayarak BPM yakala"
+      >
+        TAP
       </button>
     </div>
   );

@@ -5,26 +5,27 @@ import { getOrGenerateChord } from './data/chordLibrary';
 import { guitarAudio } from './audio/guitarAudio';
 import { getCapoRecommendation } from './utils/transpose';
 import { GUITAR_TUNINGS, getTuningById } from './data/tunings';
+import { getChordTheoryDetails, type ChordTone } from './utils/chordTheory';
+import { GUITAR_SCALES, getScaleNotes, extractRootNote } from './data/scales';
+import { STRUM_PATTERNS } from './data/strumPatterns';
 import { generateSongWithAI } from './services/aiChordGenerator';
 
 import { Fretboard } from './components/Fretboard';
 import { Guitar3D } from './components/Guitar3D';
-import { SongRoster } from './components/SongRoster';
-import { RackInspector } from './components/RackInspector';
-import { ChordDetailModal } from './components/ChordDetailModal';
 import { SongViewer } from './components/SongViewer';
 import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
-import { ChordDictionaryModal } from './components/ChordDictionaryModal';
 import { Metronome } from './components/Metronome';
 
 import {
-  Music,
   Play,
-  PanelLeft,
-  PanelRight,
-  Sparkles,
-  Info
+  Pause,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Plus,
+  Video,
+  Music
 } from 'lucide-react';
 
 const STORAGE_CUSTOM_SONGS = 'guitar_app_custom_songs';
@@ -46,51 +47,42 @@ export function App() {
   const [currentSong, setCurrentSong] = useState<Song>(SAMPLE_SONGS[0]);
   const [activeChord, setActiveChord] = useState<string>('Am');
   const [positionIdx, setPositionIdx] = useState<number>(0);
-  const [displayMode, setDisplayMode] = useState<FretboardDisplayMode>('fingers');
-  const [viewDimension, setViewDimension] = useState<'2d' | '3d' | 'dual'>(() => {
-    try {
-      const v = new URLSearchParams(window.location.search).get('view');
-      if (v === '3d') return '3d';
-      if (v === 'dual') return 'dual';
-    } catch {
-      // fallback
-    }
-    return '2d';
-  });
-
+  const [displayMode, setDisplayMode] = useState<FretboardDisplayMode>('degrees');
   const [isLeftHanded, setIsLeftHanded] = useState<boolean>(false);
   const [transposeOffset, setTransposeOffset] = useState<number>(0);
   const [selectedTuningId, setSelectedTuningId] = useState<string>('standard');
   const [selectedScaleId, setSelectedScaleId] = useState<string>('minor_pentatonic');
   const [selectedPatternId, setSelectedPatternId] = useState<string>('pop_rock_classic');
+  const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(false);
 
-  // Drawer collapses for responsive flexibility
-  const [isLeftRosterOpen, setIsLeftRosterOpen] = useState(true);
-  const [isRightInspectorOpen, setIsRightInspectorOpen] = useState(true);
-  const [isAiLoading, setIsAiLoading] = useState(false);
+  // Left column tab: 'theory' | 'setlist' | 'scales'
+  const [leftTab, setLeftTab] = useState<'theory' | 'setlist' | 'scales'>('theory');
 
-  // Modals state
-  const [searchParam] = useState(() => {
-    try {
-      return new URLSearchParams(window.location.search).get('search') || '';
-    } catch {
-      return '';
-    }
-  });
-  const [isSearchOpen, setIsSearchOpen] = useState(() => Boolean(searchParam));
+  // Search & custom modals
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
-  const [isDictionaryOpen, setIsDictionaryOpen] = useState(false);
-  const [isChordDetailOpen, setIsChordDetailOpen] = useState(false);
+  const [quickInput, setQuickInput] = useState('');
+  const [isAiLoading, setIsAiLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Active chord definition & position
+  // Active chord definition & theory details
   const chordDef = getOrGenerateChord(activeChord);
   const currentPosition = chordDef.positions[positionIdx] || chordDef.positions[0];
+  const theory = getChordTheoryDetails(activeChord, currentPosition);
+  const rootNote = extractRootNote(activeChord);
+
+  // Scale data
+  const activeScale = GUITAR_SCALES.find((s) => s.id === selectedScaleId) || GUITAR_SCALES[0];
+  const scaleNotes = getScaleNotes(rootNote, activeScale);
+
+  // Strum pattern data
+  const activePattern = STRUM_PATTERNS.find((p) => p.id === selectedPatternId) || STRUM_PATTERNS[0];
+  const [isPlayingStrumSeq, setIsPlayingStrumSeq] = useState(false);
 
   // Capo recommendation
   const capoAdvice = getCapoRecommendation(currentSong.key);
 
-  // Tuning adjustment in Web Audio engine
+  // Update Web Audio tuning
   useEffect(() => {
     const tuning = getTuningById(selectedTuningId);
     guitarAudio.setTuningFrequencies(tuning.frequencies);
@@ -101,30 +93,13 @@ export function App() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  // Handle chord selection from song, fretboard, or dictionary
   const handleSelectChord = (chord: string) => {
     setActiveChord(chord);
     setPositionIdx(0);
     const def = getOrGenerateChord(chord);
     if (def.positions[0]) {
-      guitarAudio.strumChord(def.positions[0], 'down', 24);
+      guitarAudio.strumChord(def.positions[0], 'down', 22);
     }
-  };
-
-  // Add and persist new custom song
-  const handleSaveCustomSong = (newSong: Song) => {
-    const updated = [newSong, ...songs];
-    setSongs(updated);
-    setCurrentSong(newSong);
-    setTransposeOffset(0);
-
-    try {
-      const customOnly = updated.filter((s) => s.isCustom);
-      localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(customOnly));
-    } catch (e) {
-      console.error(e);
-    }
-    showToast(`Track "${newSong.title}" added to local setlist.`);
   };
 
   const handleSelectSong = (song: Song) => {
@@ -151,378 +126,585 @@ export function App() {
     }
   };
 
-  // Quick AI extraction from SongRoster bar
-  const handleQuickAiImport = async (query: string) => {
+  const handleSaveCustomSong = (newSong: Song) => {
+    const updated = [newSong, ...songs];
+    setSongs(updated);
+    setCurrentSong(newSong);
+    setTransposeOffset(0);
+
+    try {
+      const customOnly = updated.filter((s) => s.isCustom);
+      localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(customOnly));
+    } catch (e) {
+      console.error(e);
+    }
+    showToast(`"${newSong.title}" setliste eklendi.`);
+  };
+
+  const handleQuickAiSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickInput.trim() || isAiLoading) return;
     setIsAiLoading(true);
     try {
-      const newSong = await generateSongWithAI(query);
+      const newSong = await generateSongWithAI(quickInput.trim());
       handleSaveCustomSong(newSong);
-      showToast(`AI RIG: Loaded "${newSong.title}" by ${newSong.artist}`);
+      setQuickInput('');
+      showToast(`AI RIG: "${newSong.title}" başarıyla çıkarıldı.`);
     } catch (err) {
       console.error(err);
-      showToast('AI extraction failed. Please try again.');
+      showToast('Akor çıkarma başarısız oldu.');
     } finally {
       setIsAiLoading(false);
     }
   };
 
-  // Keyboard shortcut: '/' opens search
+  const handlePlayStrumSequence = async () => {
+    if (!currentPosition || isPlayingStrumSeq) return;
+    setIsPlayingStrumSeq(true);
+    const msPerBeat = (60 / (activePattern.defaultBpm || 96)) * 480;
+
+    for (let i = 0; i < activePattern.strokes.length; i++) {
+      const stroke = activePattern.strokes[i];
+      if (stroke.type === 'down') {
+        guitarAudio.strumChord(currentPosition, 'down', 20);
+      } else if (stroke.type === 'up') {
+        guitarAudio.strumChord(currentPosition, 'up', 20);
+      } else if (stroke.type === 'bass') {
+        guitarAudio.strumBass(currentPosition);
+      }
+      await new Promise((r) => setTimeout(r, msPerBeat));
+    }
+    setIsPlayingStrumSeq(false);
+  };
+
+  // Keyboard shortcut: Cmd+K or '/' opens search
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === '/' && !isSearchOpen && !isCustomOpen && !isDictionaryOpen && !isChordDetailOpen) {
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !isSearchOpen && !isCustomOpen)) {
         e.preventDefault();
         setIsSearchOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSearchOpen, isCustomOpen, isDictionaryOpen, isChordDetailOpen]);
+  }, [isSearchOpen, isCustomOpen]);
 
   return (
-    <div className="min-h-screen bg-[#07080b] text-slate-100 flex flex-col font-sans selection:bg-amber-500/30">
-      {/* 1. TOP HARDWARE MASTER BAR (52px) */}
-      <header className="h-[52px] bg-[#0c0d12] border-b border-white/10 px-3 flex items-center justify-between gap-2 z-40 select-none">
-        {/* Left: Hardware Branding & Telemetry */}
+    <div className="w-screen h-screen overflow-hidden bg-[#0b0d12] text-slate-100 flex flex-col font-sans select-none">
+      {/* 1. SONGSTERR & ABLETON MASTER TRANSPORT BAR (48px) */}
+      <header className="h-[48px] bg-[#0e1017] border-b border-[#1e222d] px-3 flex items-center justify-between gap-2 z-40 select-none shrink-0">
+        {/* Left: Branding & Status Indicator */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setIsLeftRosterOpen(!isLeftRosterOpen)}
-              className={`p-1.5 rounded border transition-colors ${
-                isLeftRosterOpen
-                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-              }`}
-              title="Toggle Setlist Archive Panel"
-            >
-              <PanelLeft className="w-3.5 h-3.5" />
-            </button>
+            <span className="font-mono text-xs font-black tracking-wider text-white">
+              SONGSTERR // NERV-DSP
+            </span>
+            <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              STUDIO v3.4
+            </span>
+          </div>
 
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-xs font-black tracking-wider text-white">
-                  NERV // STUDIO RIG
-                </span>
-                <span className="font-mono text-[9px] px-1 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  v3.2
-                </span>
-              </div>
-              <div className="flex items-center gap-1.5 text-[9px] font-mono text-slate-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>48kHz WEBAUDIO ENGINE</span>
-              </div>
-            </div>
+          <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pl-2 border-l border-[#1e222d]">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>48kHz WEBAUDIO</span>
+          </div>
+        </div>
+
+        {/* Center: Ableton Transport Center (Play, Metronome, Transpose, Capo, Tuning) */}
+        <div className="flex items-center gap-2 font-mono text-xs">
+          {/* Global Play / Autoscroll */}
+          <button
+            onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors cursor-pointer font-bold ${
+              isAutoScrolling
+                ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/25'
+                : 'bg-[#181c26] text-slate-300 hover:text-white border border-[#1e222d]'
+            }`}
+            title="Auto-scroll ve ritim oynat"
+          >
+            {isAutoScrolling ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+            <span>{isAutoScrolling ? 'PAUSE' : 'PLAY'}</span>
+          </button>
+
+          {/* Songsterr Hardware Metronome */}
+          <Metronome initialBpm={currentSong.tempo || 100} />
+
+          {/* Transpose Controls */}
+          <div className="hidden md:flex items-center bg-[#11141c] border border-[#1e222d] rounded px-1.5 py-0.5">
+            <span className="text-[10px] text-slate-500 mr-1">TRP:</span>
+            <button
+              onClick={() => setTransposeOffset(transposeOffset - 1)}
+              className="p-1 hover:text-white text-slate-400 transition-colors"
+            >
+              <ChevronDown className="w-3 h-3" />
+            </button>
+            <span className={`px-1 font-bold ${transposeOffset !== 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+              {transposeOffset > 0 ? `+${transposeOffset}` : transposeOffset}
+            </span>
+            <button
+              onClick={() => setTransposeOffset(transposeOffset + 1)}
+              className="p-1 hover:text-white text-slate-400 transition-colors"
+            >
+              <ChevronUp className="w-3 h-3" />
+            </button>
           </div>
 
           {/* Master Tuning Selector */}
-          <div className="hidden md:flex items-center gap-1.5 bg-[#12141c] border border-white/10 px-2 py-1 rounded">
-            <span className="text-[10px] font-mono text-slate-400 font-semibold">TUNING:</span>
+          <div className="hidden lg:flex items-center gap-1 bg-[#11141c] border border-[#1e222d] px-2 py-0.5 rounded">
+            <span className="text-[10px] text-slate-500">TUNING:</span>
             <select
               value={selectedTuningId}
               onChange={(e) => setSelectedTuningId(e.target.value)}
-              className="bg-transparent text-[11px] font-mono font-bold text-amber-400 focus:outline-none cursor-pointer"
+              className="bg-transparent text-[11px] font-bold text-amber-400 focus:outline-none cursor-pointer"
             >
               {GUITAR_TUNINGS.map((t) => (
-                <option key={t.id} value={t.id} className="bg-[#12141c] text-white">
-                  {t.shortName} ({t.notes.join('')})
+                <option key={t.id} value={t.id} className="bg-[#11141c] text-white">
+                  {t.shortName}
                 </option>
               ))}
             </select>
           </div>
-        </div>
 
-        {/* Center: Master Metronome Engine */}
-        <div className="flex items-center gap-2">
-          <Metronome />
-        </div>
-
-        {/* Right: Stage View Switchers & Racks */}
-        <div className="flex items-center gap-2">
-          {/* 2D / 3D / DUAL Switcher */}
-          <div className="flex items-center bg-[#12141c] border border-white/10 rounded p-0.5 font-mono text-[10px]">
-            <button
-              onClick={() => setViewDimension('2d')}
-              className={`px-2 py-1 rounded transition-colors ${
-                viewDimension === '2d'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              [2D FRET]
-            </button>
-            <button
-              onClick={() => setViewDimension('3d')}
-              className={`px-2 py-1 rounded transition-colors ${
-                viewDimension === '3d'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              [3D RIG]
-            </button>
-            <button
-              onClick={() => setViewDimension('dual')}
-              className={`px-2 py-1 rounded transition-colors ${
-                viewDimension === 'dual'
-                  ? 'bg-amber-500 text-slate-950 font-bold'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              [DUAL]
-            </button>
+          {/* Capo Indicator & Advice */}
+          <div className="hidden xl:flex items-center gap-1 bg-[#11141c] border border-[#1e222d] px-2 py-0.5 rounded text-[11px]">
+            <span className="text-[10px] text-slate-500">CAPO:</span>
+            <span className="font-bold text-amber-400">
+              {currentSong.capo > 0 ? `${currentSong.capo}` : '0'}
+            </span>
+            {capoAdvice.recommendedCapo > 0 && currentSong.capo === 0 && (
+              <span className="text-[9px] text-amber-400/80 bg-amber-500/10 px-1 rounded" title={capoAdvice.reason}>
+                (Öneri: {capoAdvice.recommendedCapo})
+              </span>
+            )}
           </div>
 
-          {/* Quick Tools */}
+          {/* Left-Handed Toggle */}
+          <button
+            onClick={() => setIsLeftHanded(!isLeftHanded)}
+            className={`px-1.5 py-0.5 rounded border text-[10px] font-mono transition-colors cursor-pointer ${
+              isLeftHanded
+                ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
+                : 'bg-[#11141c] text-slate-400 border-[#1e222d] hover:text-white'
+            }`}
+            title="Solak gitarist klavye modu"
+          >
+            {isLeftHanded ? 'LH' : 'RH'}
+          </button>
+        </div>
+
+        {/* Right: Cmd+K Search & Quick Track Importer */}
+        <div className="flex items-center gap-2">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-300 rounded font-mono text-[11px] transition-colors"
-            title="Search songs and generate AI charts"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#181c26] hover:bg-[#202534] border border-[#1e222d] rounded font-mono text-xs text-slate-300 transition-colors cursor-pointer"
+            title="Şarkı Ara (Cmd+K)"
           >
-            <Sparkles className="w-3 h-3 text-indigo-400" />
-            <span>AI EXTRACT</span>
+            <Search className="w-3 h-3 text-amber-400" />
+            <span className="hidden sm:inline">ŞARKI ARA</span>
+            <kbd className="hidden sm:inline px-1 py-0.2 bg-[#0b0d12] border border-[#1e222d] rounded text-[9px] text-slate-500">
+              ⌘K
+            </kbd>
           </button>
 
           <button
-            onClick={() => setIsDictionaryOpen(true)}
-            className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 bg-white/5 hover:bg-white/10 border border-white/10 text-slate-300 rounded font-mono text-[11px] transition-colors"
+            onClick={() => setIsCustomOpen(true)}
+            className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded transition-colors cursor-pointer"
+            title="Yeni Şarkı Ekle"
           >
-            <span>CHORD BOOK</span>
-          </button>
-
-          <button
-            onClick={() => setIsRightInspectorOpen(!isRightInspectorOpen)}
-            className={`p-1.5 rounded border transition-colors ${
-              isRightInspectorOpen
-                ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
-                : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-            }`}
-            title="Toggle Rack Inspector Panel"
-          >
-            <PanelRight className="w-3.5 h-3.5" />
+            <Plus className="w-3 h-3" />
+            <span className="hidden md:inline">EKLE</span>
           </button>
         </div>
       </header>
 
-      {/* 2. THREE-COLUMN COCKPIT WORKSPACE */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* LEFT COLUMN: SONG ROSTER (280px) */}
-        {isLeftRosterOpen && (
-          <div className="w-[280px] shrink-0 h-[calc(100vh-52px)]">
-            <SongRoster
-              songs={songs}
-              currentSong={currentSong}
-              onSelectSong={handleSelectSong}
-              onOpenSearchModal={() => setIsSearchOpen(true)}
-              onOpenCustomModal={() => setIsCustomOpen(true)}
-              onQuickAiImport={handleQuickAiImport}
-              isAiLoading={isAiLoading}
-            />
+      {/* 2. THREE-COLUMN FIXED STUDIO SPLIT PANE */}
+      <div className="flex-1 grid grid-cols-[300px_1fr_480px] h-[calc(100vh-48px)] overflow-hidden">
+        {/* SOL SÜTUN (300px): OOLIMO CHORD ANALYZER & THEORY PANEL */}
+        <aside className="w-[300px] h-full flex flex-col bg-[#11141c] border-r border-[#1e222d] overflow-hidden select-none">
+          {/* Header Tabs */}
+          <div className="p-1.5 border-b border-[#1e222d] bg-[#0e1017] grid grid-cols-3 gap-1 font-mono text-[10px]">
+            {(['theory', 'setlist', 'scales'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setLeftTab(tab)}
+                className={`py-1 rounded border text-center transition-colors uppercase cursor-pointer ${
+                  leftTab === tab
+                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
+                    : 'bg-[#181c26] border-transparent text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab === 'theory' ? 'TEORİ' : tab === 'setlist' ? 'LİSTE' : 'GAMLAR'}
+              </button>
+            ))}
           </div>
-        )}
 
-        {/* CENTER COLUMN: MAIN INSTRUMENT RIG & STAGE (1fr) */}
-        <main className="flex-1 h-[calc(100vh-52px)] overflow-y-auto bg-[#07080b] p-3 flex flex-col gap-3 min-w-0">
-          {/* Active Voicing Cockpit HUD */}
-          <div className="bg-[#0e1017] border border-white/10 rounded-lg p-3 flex flex-wrap items-center justify-between gap-3 shadow-md">
-            {/* Left: Big Chord Telemetry */}
-            <div className="flex items-center gap-3">
-              <div className="px-3.5 py-1.5 bg-amber-500/10 border border-amber-500/40 rounded flex items-center gap-2">
-                <span className="font-mono text-2xl font-black text-amber-400 leading-none">
-                  {activeChord}
-                </span>
-                <div className="flex flex-col text-[10px] font-mono text-slate-400 leading-tight">
-                  <span className="text-white font-bold">{chordDef.suffix ? `${chordDef.root} ${chordDef.suffix}` : `${chordDef.root} MAJ`}</span>
-                  <span className="text-amber-300/80">POS #{positionIdx + 1}</span>
+          {/* TAB 1: OOLIMO CHORD THEORY & 6-STRING MATRIX */}
+          {leftTab === 'theory' && (
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs scrollbar-thin">
+              {/* Active Chord Banner */}
+              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-bold text-amber-400">{activeChord}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
+                    {theory.typeCategory}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+                  {theory.fullName} • {theory.mood}
+                </p>
+              </div>
+
+              {/* Oolimo Intervals Breakdown */}
+              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>FORMÜL ARALIKLARI</span>
+                  <span className="text-amber-400 font-bold">{theory.formula}</span>
+                </div>
+                <div className="flex flex-wrap gap-1 pt-1">
+                  {theory.tones.map((t: ChordTone, idx: number) => {
+                    const isRoot = t.isRoot || t.degree === '1';
+                    return (
+                      <div
+                        key={idx}
+                        className={`px-2 py-0.5 rounded border text-[11px] font-mono flex items-center gap-1 ${
+                          isRoot
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
+                            : t.degree.includes('3')
+                            ? 'bg-blue-500/20 border-blue-500/50 text-blue-300'
+                            : t.degree.includes('5')
+                            ? 'bg-slate-700/40 border-slate-600 text-slate-300'
+                            : 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+                        }`}
+                      >
+                        <span className="font-bold">{t.degree}</span>
+                        <span className="text-[10px] opacity-75">({t.note})</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Voicing Positions Switcher */}
+              {/* 6-String Voicing Matrix Table */}
+              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>6-STRING MATRİS</span>
+                  <span className="text-slate-400">STR 6-1</span>
+                </div>
+                <div className="border border-[#1e222d] rounded overflow-hidden">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-[#0b0d12] text-slate-500 text-[9px] border-b border-[#1e222d]">
+                      <tr>
+                        <th className="py-1 px-1.5">TEL</th>
+                        <th className="py-1 px-1">PRD</th>
+                        <th className="py-1 px-1">NOTA</th>
+                        <th className="py-1 px-1">DERECE</th>
+                        <th className="py-1 px-1 text-right">PARMAK</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#1e222d]">
+                      {theory.stringsAnalysis.map((str) => {
+                        const isMuted = str.status === 'muted';
+                        const isOpen = str.status === 'open';
+                        return (
+                          <tr
+                            key={str.stringIdx}
+                            onClick={() => {
+                              if (str.fret >= 0) guitarAudio.pluckNote(str.stringIdx, str.fret, 0.9);
+                            }}
+                            className="hover:bg-white/[0.03] cursor-pointer transition-colors"
+                          >
+                            <td className="py-1 px-1.5 font-bold text-slate-400">{str.stringNumber}</td>
+                            <td className="py-1 px-1">
+                              {isMuted ? (
+                                <span className="text-rose-400 font-bold">X</span>
+                              ) : isOpen ? (
+                                <span className="text-emerald-400 font-bold">0</span>
+                              ) : (
+                                <span className="text-amber-400 font-bold">{str.fret}</span>
+                              )}
+                            </td>
+                            <td className="py-1 px-1 font-semibold text-slate-200">{str.note}</td>
+                            <td className="py-1 px-1 text-[10px] text-slate-400">{str.degree}</td>
+                            <td className="py-1 px-1 text-right text-[10px] text-slate-400">
+                              {isMuted ? '-' : str.finger === 0 ? 'Boş' : `F${str.finger}`}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Voicing Positions Quick Switcher */}
               {chordDef.positions.length > 1 && (
-                <div className="flex items-center gap-1 bg-[#13151f] px-2 py-1 rounded border border-white/10 font-mono text-[11px]">
-                  <span className="text-slate-400 mr-1">VOICING:</span>
-                  {chordDef.positions.map((_, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => {
-                        setPositionIdx(idx);
-                        guitarAudio.strumChord(chordDef.positions[idx], 'down', 24);
-                      }}
-                      className={`px-1.5 py-0.5 rounded transition-colors ${
-                        positionIdx === idx
-                          ? 'bg-amber-500 text-slate-950 font-bold'
-                          : 'bg-white/5 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      #{idx + 1}
-                    </button>
-                  ))}
+                <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
+                    ALTERNATİF POZİSYONLAR
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {chordDef.positions.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setPositionIdx(idx);
+                          guitarAudio.strumChord(chordDef.positions[idx], 'down', 22);
+                        }}
+                        className={`flex-1 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                          positionIdx === idx
+                            ? 'bg-amber-500 text-slate-950 shadow-sm'
+                            : 'bg-[#11141c] text-slate-400 border border-[#1e222d] hover:text-white'
+                        }`}
+                      >
+                        #{idx + 1}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-
-              {/* Fast Strum Actions */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => guitarAudio.strumChord(currentPosition, 'down', 24)}
-                  className="px-2 py-1 bg-[#171924] hover:bg-[#222536] border border-white/10 rounded text-[11px] font-mono font-bold text-amber-400 flex items-center gap-1 transition-colors"
-                  title="Strum Down"
-                >
-                  <Play className="w-3 h-3 rotate-90 fill-current" />
-                  <span>STRUM</span>
-                </button>
-                <button
-                  onClick={() => guitarAudio.arpeggiateChord(currentPosition, 'pima', 110)}
-                  className="px-2 py-1 bg-[#171924] hover:bg-[#222536] border border-white/10 rounded text-[11px] font-mono font-bold text-emerald-400 flex items-center gap-1 transition-colors"
-                  title="Play Classical Arpeggio"
-                >
-                  <Music className="w-3 h-3" />
-                  <span>ARPEG</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Right: Display Mode & Handedness Controls */}
-            <div className="flex items-center gap-2 font-mono text-[11px]">
-              <div className="flex items-center bg-[#13151f] border border-white/10 rounded p-0.5">
-                <button
-                  onClick={() => setDisplayMode('fingers')}
-                  className={`px-2 py-0.5 rounded transition-colors ${
-                    displayMode === 'fingers'
-                      ? 'bg-white/10 text-amber-400 font-bold'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  FINGERS
-                </button>
-                <button
-                  onClick={() => setDisplayMode('notes')}
-                  className={`px-2 py-0.5 rounded transition-colors ${
-                    displayMode === 'notes'
-                      ? 'bg-white/10 text-amber-400 font-bold'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  NOTES
-                </button>
-              </div>
-
-              <button
-                onClick={() => setIsLeftHanded(!isLeftHanded)}
-                className={`px-2 py-1 rounded border transition-colors ${
-                  isLeftHanded
-                    ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-bold'
-                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
-                }`}
-                title="Toggle Left-Handed Fretboard Orientation"
-              >
-                {isLeftHanded ? 'LH (ACTIVE)' : 'RH'}
-              </button>
-
-              <button
-                onClick={() => setIsChordDetailOpen(true)}
-                className="px-2 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded text-slate-300 flex items-center gap-1 transition-colors"
-              >
-                <Info className="w-3.5 h-3.5 text-amber-400" />
-                <span>INFO</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Instrument Stage Rendering: 2D, 3D, or DUAL */}
-          <section className="bg-[#0b0c10] border border-white/10 rounded-lg p-2 relative shadow-lg">
-            {viewDimension === '2d' && (
-              <Fretboard
-                chordName={activeChord}
-                position={currentPosition}
-                displayMode={displayMode}
-                isLeftHanded={isLeftHanded}
-                onOpenChordDetail={() => setIsChordDetailOpen(true)}
-              />
-            )}
-
-            {viewDimension === '3d' && (
-              <Guitar3D
-                chordName={activeChord}
-                position={currentPosition}
-                isLeftHanded={isLeftHanded}
-                onOpenChordDetail={() => setIsChordDetailOpen(true)}
-                onSwitchTo2D={() => setViewDimension('2d')}
-              />
-            )}
-
-            {viewDimension === 'dual' && (
-              <div className="flex flex-col gap-3">
-                <Fretboard
-                  chordName={activeChord}
-                  position={currentPosition}
-                  displayMode={displayMode}
-                  isLeftHanded={isLeftHanded}
-                  onOpenChordDetail={() => setIsChordDetailOpen(true)}
-                />
-                <div className="h-[380px]">
-                  <Guitar3D
-                    chordName={activeChord}
-                    position={currentPosition}
-                    isLeftHanded={isLeftHanded}
-                    onOpenChordDetail={() => setIsChordDetailOpen(true)}
-                    onSwitchTo2D={() => setViewDimension('2d')}
-                  />
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Capo Recommendation Ribbon */}
-          {capoAdvice.recommendedCapo > 0 && currentSong.capo === 0 && (
-            <div className="flex items-center justify-between text-xs px-3 py-2 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono">
-              <span className="flex items-center gap-2">
-                <Info className="w-3.5 h-3.5 text-amber-400" />
-                <span>CAPO ADVICE: {capoAdvice.reason}</span>
-              </span>
-              <span className="font-bold text-amber-400">
-                RECOMMENDED: CAPO {capoAdvice.recommendedCapo}
-              </span>
             </div>
           )}
 
-          {/* Synchronized Song & Chords Sheet */}
-          <section className="flex-1 min-h-[500px]">
-            <SongViewer
-              song={currentSong}
-              activeChord={activeChord}
-              onSelectChord={handleSelectChord}
-              onOpenChordDetail={(chord) => {
-                handleSelectChord(chord);
-                setIsChordDetailOpen(true);
-              }}
-              transposeOffset={transposeOffset}
-              onTransposeChange={setTransposeOffset}
-            />
-          </section>
+          {/* TAB 2: SETLIST ARCHIVE & YOUTUBE EXTRACTOR */}
+          {leftTab === 'setlist' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Quick AI Extractor Strip */}
+              <form onSubmit={handleQuickAiSubmit} className="p-2 border-b border-[#1e222d] bg-[#0e1017]">
+                <div className="flex items-center gap-1.5">
+                  <div className="relative flex-1">
+                    <Video className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-red-400" />
+                    <input
+                      type="text"
+                      value={quickInput}
+                      onChange={(e) => setQuickInput(e.target.value)}
+                      placeholder="YouTube veya Şarkı..."
+                      disabled={isAiLoading}
+                      className="w-full bg-[#181c26] border border-[#1e222d] rounded pl-7 pr-2 py-1 text-[11px] font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isAiLoading || !quickInput.trim()}
+                    className="px-2 py-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[10px] font-bold rounded cursor-pointer"
+                  >
+                    {isAiLoading ? '...' : 'ÇIKAR'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Song List */}
+              <div className="flex-1 overflow-y-auto divide-y divide-[#1e222d] p-1">
+                {songs.map((song) => {
+                  const isSelected = song.id === currentSong.id;
+                  return (
+                    <button
+                      key={song.id}
+                      onClick={() => handleSelectSong(song)}
+                      className={`w-full text-left p-2 rounded transition-all flex flex-col gap-0.5 border cursor-pointer ${
+                        isSelected
+                          ? 'bg-amber-500/15 border-amber-500/40 text-white'
+                          : 'bg-transparent border-transparent hover:bg-white/[0.03] text-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        <span className="truncate">{song.title}</span>
+                        {song.isAiGenerated && (
+                          <span className="font-mono text-[8px] px-1 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            AI
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[11px] text-slate-400 truncate">{song.artist}</div>
+                      <div className="flex items-center gap-1.5 font-mono text-[9px] text-slate-500 mt-0.5">
+                        <span>KEY: {song.key}</span>
+                        {song.tempo && <span>• {song.tempo} BPM</span>}
+                        {song.capo > 0 && <span className="text-amber-400/90">• CAPO {song.capo}</span>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: SCALES & IMPROVISATION */}
+          {leftTab === 'scales' && (
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block">
+                  GAM SEÇİNİZ
+                </label>
+                <select
+                  value={selectedScaleId}
+                  onChange={(e) => setSelectedScaleId(e.target.value)}
+                  className="w-full bg-[#181c26] border border-[#1e222d] rounded p-1.5 text-xs text-slate-200 font-mono focus:outline-none"
+                >
+                  {GUITAR_SCALES.map((s) => (
+                    <option key={s.id} value={s.id} className="bg-[#181c26]">
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-amber-400">
+                    {rootNote} {activeScale.name}
+                  </span>
+                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                    {activeScale.category}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-sans leading-relaxed">
+                  {activeScale.description}
+                </p>
+              </div>
+
+              {/* Scale Notes Chips */}
+              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
+                  GAMDAKİ NOTALAR ({rootNote} TONU)
+                </span>
+                <div className="grid grid-cols-4 gap-1">
+                  {scaleNotes.map((note, idx) => {
+                    const degree = activeScale.degreeNames[idx] || `${idx + 1}`;
+                    const isRoot = degree === 'R' || degree === '1';
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-1.5 rounded border text-center font-mono ${
+                          isRoot
+                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
+                            : 'bg-[#11141c] border-[#1e222d] text-slate-300'
+                        }`}
+                      >
+                        <div className="text-xs font-bold">{note}</div>
+                        <div className="text-[8px] text-slate-500">{degree}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </aside>
+
+        {/* ORTA SÜTUN (1fr): CHORDIFY + ULTIMATE GUITAR PRO LIVE SONG SHEET */}
+        <main className="h-full flex flex-col bg-[#0b0d12] p-2 overflow-hidden min-w-0">
+          <SongViewer
+            song={currentSong}
+            activeChord={activeChord}
+            onSelectChord={handleSelectChord}
+            transposeOffset={transposeOffset}
+            onTransposeChange={setTransposeOffset}
+            isAutoScrolling={isAutoScrolling}
+            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
+          />
         </main>
 
-        {/* RIGHT COLUMN: RACK INSPECTOR (320px) */}
-        {isRightInspectorOpen && (
-          <div className="w-[320px] shrink-0 h-[calc(100vh-52px)]">
-            <RackInspector
+        {/* SAĞ SÜTUN (480px): POLYGONIUM GUITAR 3D STUDIO + OOLIMO FRETBOARD + 16-STEP SEQUENCER */}
+        <aside className="w-[480px] h-full flex flex-col bg-[#11141c] border-l border-[#1e222d] overflow-y-auto p-2.5 gap-2.5 select-none scrollbar-thin">
+          {/* 1. POLYGONIUM GUITAR 3D STUDIO */}
+          <div className="shrink-0">
+            <Guitar3D
               chordName={activeChord}
               position={currentPosition}
-              onOpenChordDetail={() => setIsChordDetailOpen(true)}
-              selectedScaleId={selectedScaleId}
-              onSelectScaleId={setSelectedScaleId}
-              selectedPatternId={selectedPatternId}
-              onSelectPatternId={setSelectedPatternId}
+              isLeftHanded={isLeftHanded}
+              onOpenChordDetail={() => setLeftTab('theory')}
             />
           </div>
-        )}
+
+          {/* 2. OOLIMO 2D FRETBOARD */}
+          <div className="shrink-0">
+            <Fretboard
+              chordName={activeChord}
+              position={currentPosition}
+              displayMode={displayMode}
+              isLeftHanded={isLeftHanded}
+              positionIdx={positionIdx}
+              totalPositions={chordDef.positions.length}
+              onPositionChange={setPositionIdx}
+              onDisplayModeChange={setDisplayMode}
+              onOpenChordDetail={() => setLeftTab('theory')}
+            />
+          </div>
+
+          {/* 3. 16-STEP STRUMMING SEQUENCER RACK */}
+          <div className="shrink-0 bg-[#11141c] border border-[#1e222d] rounded-lg p-2.5 text-xs font-mono space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-300 flex items-center gap-1.5">
+                <Music className="w-3.5 h-3.5 text-amber-400" />
+                <span>16-ADIMLI RİTİM SEQUENCER</span>
+              </span>
+              <span className="text-[10px] text-amber-400 font-bold">
+                {activePattern.timeSignature}
+              </span>
+            </div>
+
+            {/* Pattern Selector */}
+            <select
+              value={selectedPatternId}
+              onChange={(e) => setSelectedPatternId(e.target.value)}
+              className="w-full bg-[#0b0d12] border border-[#1e222d] rounded px-2 py-1 text-xs text-slate-200 font-mono focus:outline-none"
+            >
+              {STRUM_PATTERNS.map((p) => (
+                <option key={p.id} value={p.id} className="bg-[#0b0d12]">
+                  {p.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Visual Step Sequencer Grid */}
+            <div className="grid grid-cols-8 gap-1 pt-0.5">
+              {activePattern.strokes.map((stroke, idx) => (
+                <div
+                  key={idx}
+                  className={`py-1.5 px-0.5 rounded border text-center font-mono flex flex-col items-center justify-center gap-0.5 ${
+                    stroke.accent
+                      ? 'bg-amber-500/25 border-amber-500/50 text-amber-400 font-bold'
+                      : stroke.type === 'rest'
+                      ? 'bg-black/30 border-white/5 text-slate-600'
+                      : 'bg-[#181c26] border-[#1e222d] text-slate-300'
+                  }`}
+                >
+                  <span className="text-xs font-bold leading-none">{stroke.label}</span>
+                  <span className="text-[8px] text-slate-500 uppercase leading-none">
+                    {stroke.type === 'rest' ? 'ES' : stroke.accent ? 'ACC' : 'BEAT'}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Play Rhythm Pattern Action */}
+            <button
+              onClick={handlePlayStrumSequence}
+              disabled={isPlayingStrumSeq}
+              className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-mono text-xs font-bold rounded flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shadow-amber-500/20"
+            >
+              {isPlayingStrumSeq ? (
+                <>
+                  <span className="animate-spin text-xs">◌</span>
+                  <span>RİTİM OYNATILIYOR...</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>RİTİMİ TEST ET</span>
+                </>
+              )}
+            </button>
+          </div>
+        </aside>
       </div>
 
-      {/* MODALS */}
+      {/* QUICK SEARCH & CUSTOM SONG MODALS */}
       <SongSearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
         songs={songs}
         onSelectSong={handleSelectSong}
         onOpenCustomEditor={() => setIsCustomOpen(true)}
-        initialQuery={searchParam}
       />
 
       <CustomSongModal
@@ -531,33 +713,11 @@ export function App() {
         onSaveSong={handleSaveCustomSong}
       />
 
-      <ChordDictionaryModal
-        isOpen={isDictionaryOpen}
-        onClose={() => setIsDictionaryOpen(false)}
-        onSelectChord={handleSelectChord}
-      />
-
-      <ChordDetailModal
-        isOpen={isChordDetailOpen}
-        onClose={() => setIsChordDetailOpen(false)}
-        chordDef={chordDef}
-        chordName={activeChord}
-        onSelectPosition={setPositionIdx}
-        onApplyChord={(chord, posIdx) => {
-          handleSelectChord(chord);
-          if (posIdx !== undefined) setPositionIdx(posIdx);
-        }}
-      />
-
-      {/* STUDIO TELEMETRY TOAST */}
+      {/* TOAST TELEMETRY */}
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2.5 px-3.5 py-2 bg-[#12141c] border border-amber-500/40 rounded shadow-2xl font-mono text-xs text-amber-300 backdrop-blur-md">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2.5 px-3 py-1.5 bg-[#181c26] border border-amber-500/50 rounded shadow-2xl font-mono text-xs text-amber-300">
           <span>{toastMessage}</span>
-          <button
-            onClick={() => setToastMessage(null)}
-            className="ml-2 text-slate-500 hover:text-white"
-          >
+          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-500 hover:text-white">
             [X]
           </button>
         </div>
