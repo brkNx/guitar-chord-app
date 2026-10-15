@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Song } from '../types/guitar';
 import { parseChordPro, extractUniqueChords } from '../utils/chordPro';
-import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, Sparkles } from 'lucide-react';
+import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, Sparkles, X } from 'lucide-react';
 
 interface SongViewerProps {
   song: Song;
@@ -22,6 +22,7 @@ export const SongViewer = ({
 }: SongViewerProps) => {
   const [isAutoScrolling, setIsAutoScrolling] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(25); // Pixels per second
+  const [showYouTube, setShowYouTube] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   const parsedLines = parseChordPro(song.content, transposeOffset);
@@ -133,8 +134,49 @@ export const SongViewer = ({
               </div>
             )}
           </div>
+
+          {/* YouTube Button if available */}
+          {song.youtubeId && (
+            <button
+              onClick={() => setShowYouTube(!showYouTube)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                showYouTube
+                  ? 'bg-red-600 text-white shadow-md shadow-red-600/30 ring-2 ring-red-400'
+                  : 'bg-red-500/20 text-red-300 hover:bg-red-500/30 border border-red-500/40'
+              }`}
+              title="YouTube videosu ile birlikte çal"
+            >
+              <span className="text-xs">▶</span>
+              <span>{showYouTube ? 'Videoyu Kapat' : 'YouTube ile Çal'}</span>
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Embedded YouTube Play-Along Player */}
+      {showYouTube && song.youtubeId && (
+        <div className="bg-slate-950/95 border-b border-slate-800 p-4 flex flex-col items-center justify-center relative animate-in slide-in-from-top-3 duration-200">
+          <button
+            onClick={() => setShowYouTube(false)}
+            className="absolute top-3 right-3 p-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            title="Videoyu Kapat"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <div className="w-full max-w-xl aspect-video rounded-2xl overflow-hidden shadow-2xl border border-red-500/30 bg-black">
+            <iframe
+              src={`https://www.youtube.com/embed/${song.youtubeId}?autoplay=1&enablejsapi=1`}
+              title={song.title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-full border-0"
+            />
+          </div>
+          <p className="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1.5">
+            <span>🎸 Videoyu oynatıp aşağıdaki akorları ve parmak pozisyonlarını takip edebilirsin.</span>
+          </p>
+        </div>
+      )}
 
       {/* Song Chords Quick Tray */}
       <div className="px-4 py-2 bg-slate-900 border-b border-slate-800/80 flex items-center gap-2 overflow-x-auto scrollbar-none">

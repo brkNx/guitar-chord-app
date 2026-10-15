@@ -202,6 +202,76 @@ const ARTIST_PROFILES: Record<string, ArtistProfile> = {
     tempo: 85,
     difficulty: 'Kolay',
     suggestedPattern: 'Pop / Rock Klasik'
+  },
+  'lil baby': {
+    typicalKeys: ['Dm', 'Am', 'Cm'],
+    verseProgression: ['Dm', 'Bb', 'F', 'C'],
+    chorusProgression: ['Dm', 'Bb', 'C', 'Am'],
+    bridgeProgression: ['Bb', 'C', 'Dm', 'Am'],
+    capo: 1,
+    tempo: 130,
+    difficulty: 'Kolay',
+    suggestedPattern: 'Trap / Hip-Hop Guitar Loop (Fingerpicked Arpeggio)'
+  },
+  'drake': {
+    typicalKeys: ['Em', 'Bm', 'Am'],
+    verseProgression: ['Em', 'C', 'G', 'D'],
+    chorusProgression: ['C', 'D', 'Em', 'Bm'],
+    bridgeProgression: ['Am', 'Em', 'D', 'C'],
+    capo: 0,
+    tempo: 110,
+    difficulty: 'Kolay',
+    suggestedPattern: 'R&B / Hip-Hop Chill'
+  },
+  'travis scott': {
+    typicalKeys: ['Dm', 'Gm', 'Am'],
+    verseProgression: ['Dm', 'Am', 'Bb', 'C'],
+    chorusProgression: ['Dm', 'F', 'C', 'Bb'],
+    bridgeProgression: ['Gm', 'Dm', 'C', 'Bb'],
+    capo: 0,
+    tempo: 135,
+    difficulty: 'Orta',
+    suggestedPattern: 'Psychedelic Trap Beat'
+  },
+  'eminem': {
+    typicalKeys: ['Am', 'Dm', 'Em'],
+    verseProgression: ['Am', 'F', 'C', 'G'],
+    chorusProgression: ['F', 'C', 'G', 'Am'],
+    bridgeProgression: ['Dm', 'Am', 'E7', 'Am'],
+    capo: 0,
+    tempo: 88,
+    difficulty: 'Orta',
+    suggestedPattern: 'Rap Rock Strum'
+  },
+  'billie eilish': {
+    typicalKeys: ['Em', 'Am', 'C'],
+    verseProgression: ['Em', 'G', 'C', 'B7'],
+    chorusProgression: ['C', 'D', 'Em', 'G'],
+    bridgeProgression: ['Am', 'Em', 'B7', 'Em'],
+    capo: 2,
+    tempo: 82,
+    difficulty: 'Kolay',
+    suggestedPattern: 'Soft Fingerpicking'
+  },
+  'taylor swift': {
+    typicalKeys: ['C', 'G', 'D'],
+    verseProgression: ['C', 'G', 'Am', 'F'],
+    chorusProgression: ['F', 'G', 'C', 'Am'],
+    bridgeProgression: ['Dm', 'F', 'C', 'G'],
+    capo: 3,
+    tempo: 96,
+    difficulty: 'Kolay',
+    suggestedPattern: 'Pop Akustik Strum'
+  },
+  'the weeknd': {
+    typicalKeys: ['Dm', 'Am', 'Em'],
+    verseProgression: ['Dm', 'Bb', 'C', 'Am'],
+    chorusProgression: ['F', 'C', 'Dm', 'Bb'],
+    bridgeProgression: ['Gm', 'C', 'Dm', 'Am'],
+    capo: 0,
+    tempo: 124,
+    difficulty: 'Kolay',
+    suggestedPattern: 'Synthpop 80s Drive'
   }
 };
 
@@ -216,6 +286,128 @@ const DEFAULT_PROFILE: ArtistProfile = {
   suggestedPattern: 'Pop / Rock Klasik (D - D U - U D U)'
 };
 
+export interface YouTubeVideoInfo {
+  videoId: string;
+  url: string;
+  rawTitle: string;
+  title: string;
+  artist: string;
+  authorName: string;
+  thumbnailUrl: string;
+}
+
+/**
+ * Extracts 11-char YouTube Video ID from any URL or string
+ */
+export function extractYouTubeVideoId(input: string): string | null {
+  const trimmed = input.trim();
+  const ytMatch = trimmed.match(
+    /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|v\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i
+  );
+  return ytMatch ? ytMatch[1] : null;
+}
+
+/**
+ * Cleans YouTube video title and splits into Artist and Song Title
+ */
+export function parseTitleAndArtist(rawTitle: string, rawAuthor?: string): { artist: string; title: string } {
+  // Strip common YouTube fluff: (Official Video), [Official Audio], etc.
+  const clean = rawTitle
+    .replace(/\s*[\(\[](?:Official|Music|Video|Lyrics|Audio|HD|4K|Visualizer|Lyric Video|Clip Officiel|Official Lyric Video)[\s\S]*?[\)\]]/gi, '')
+    .trim();
+
+  let artist = '';
+  let title = clean;
+
+  if (clean.includes(' - ')) {
+    const parts = clean.split(' - ');
+    artist = parts[0].trim();
+    title = parts.slice(1).join(' - ').trim();
+  } else if (clean.includes('-')) {
+    const parts = clean.split('-');
+    artist = parts[0].trim();
+    title = parts.slice(1).join('-').trim();
+  } else {
+    const cleanAuthor = (rawAuthor || '')
+      .replace(/VEVO$/i, '')
+      .replace(/\s*-\s*Topic$/i, '')
+      .replace(/\s*(Official|Music|Records|Entertainment)$/i, '')
+      .trim();
+    artist = cleanAuthor || 'YouTube Sanatçısı';
+    title = clean;
+  }
+
+  return { artist, title };
+}
+
+/**
+ * Fetches real video title, channel, and thumbnail from YouTube oEmbed API
+ */
+export async function fetchYouTubeMetadata(input: string): Promise<YouTubeVideoInfo | null> {
+  const videoId = extractYouTubeVideoId(input);
+  if (!videoId) return null;
+
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  const defaultThumbnail = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const { artist, title } = parseTitleAndArtist(data.title || '', data.author_name || '');
+      return {
+        videoId,
+        url,
+        rawTitle: data.title || '',
+        title: title || data.title || `YouTube Video (${videoId})`,
+        artist: artist || data.author_name || 'YouTube Sanatçısı',
+        authorName: data.author_name || '',
+        thumbnailUrl: data.thumbnail_url || defaultThumbnail
+      };
+    }
+  } catch {
+    // Fallback if blocked or offline
+  }
+
+  try {
+    const res = await fetch(`https://noembed.com/embed?url=${encodeURIComponent(url)}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.title) {
+        const { artist, title } = parseTitleAndArtist(data.title, data.author_name);
+        return {
+          videoId,
+          url,
+          rawTitle: data.title,
+          title: title || data.title,
+          artist: artist || data.author_name || 'YouTube Sanatçısı',
+          authorName: data.author_name || '',
+          thumbnailUrl: data.thumbnail_url || defaultThumbnail
+        };
+      }
+    }
+  } catch {
+    // Secondary fallback
+  }
+
+  return {
+    videoId,
+    url,
+    rawTitle: `YouTube Video (${videoId})`,
+    title: `YouTube Parçası (${videoId.slice(0, 6)})`,
+    artist: 'YouTube Sanatçısı',
+    authorName: 'YouTube',
+    thumbnailUrl: defaultThumbnail
+  };
+}
+
 /**
  * Checks if input is a YouTube URL and cleans/extracts song title info
  */
@@ -225,17 +417,17 @@ export function parseYouTubeOrSearchInput(input: string): {
   videoId?: string;
 } {
   const trimmed = input.trim();
-  const ytMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|v\/|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i
-  );
+  const videoId = extractYouTubeVideoId(trimmed);
 
-  if (ytMatch) {
-    const videoId = ytMatch[1];
-    // Check if user also provided an artist or title in the string
-    const withoutUrl = trimmed.replace(ytMatch[0], '').trim();
+  if (videoId) {
+    const withoutUrl = trimmed.replace(
+      /(?:https?:\/\/)?(?:www\.|m\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/|v\/|embed\/)|youtu\.be\/)[a-zA-Z0-9_-]{11}[^\s]*/gi,
+      ''
+    ).trim();
+
     return {
       isYouTube: true,
-      cleanQuery: withoutUrl || `YouTube Parçası (${videoId.slice(0, 6)})`,
+      cleanQuery: withoutUrl || `YouTube Video (${videoId})`,
       videoId
     };
   }
@@ -252,22 +444,43 @@ export function parseYouTubeOrSearchInput(input: string): {
  */
 export async function generateSongWithAI(
   rawInput: string,
-  userLyrics?: string
+  userLyrics?: string,
+  preloadedYtInfo?: YouTubeVideoInfo
 ): Promise<Song> {
-  // Simulate neural harmonic audio/chord extraction processing (350ms)
-  await new Promise((resolve) => setTimeout(resolve, 350));
+  // Simulate neural harmonic audio/chord extraction processing (300ms)
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
-  const { isYouTube, cleanQuery, videoId: _videoId } = parseYouTubeOrSearchInput(rawInput);
-  let artist = isYouTube ? 'YouTube Canlı Performans' : 'Bilinmeyen Sanatçı';
-  let title = cleanQuery;
+  let ytInfo: YouTubeVideoInfo | null = preloadedYtInfo || null;
+  const videoId = extractYouTubeVideoId(rawInput);
+  const isYouTube = !!videoId || !!ytInfo;
 
-  // Parse "Artist - Title" format
-  if (cleanQuery.includes('-')) {
-    const parts = cleanQuery.split('-');
-    artist = parts[0].trim();
-    title = parts.slice(1).join('-').trim();
-  } else if (!isYouTube && cleanQuery.length > 0) {
-    title = cleanQuery;
+  if (isYouTube && !ytInfo) {
+    try {
+      ytInfo = await fetchYouTubeMetadata(rawInput);
+    } catch {
+      // Continue with fallback
+    }
+  }
+
+  let artist = 'Bilinmeyen Sanatçı';
+  let title = rawInput.trim();
+
+  if (ytInfo) {
+    artist = ytInfo.artist;
+    title = ytInfo.title;
+  } else {
+    const { cleanQuery } = parseYouTubeOrSearchInput(rawInput);
+    if (cleanQuery.includes(' - ')) {
+      const parts = cleanQuery.split(' - ');
+      artist = parts[0].trim();
+      title = parts.slice(1).join(' - ').trim();
+    } else if (cleanQuery.includes('-')) {
+      const parts = cleanQuery.split('-');
+      artist = parts[0].trim();
+      title = parts.slice(1).join('-').trim();
+    } else if (cleanQuery.length > 0) {
+      title = cleanQuery;
+    }
   }
 
   const artistLower = artist.toLowerCase();
@@ -277,12 +490,17 @@ export async function generateSongWithAI(
   for (const [key, profile] of Object.entries(ARTIST_PROFILES)) {
     if (artistLower.includes(key) || titleLower.includes(key)) {
       matchedProfile = profile;
-      if (artist === 'Bilinmeyen Sanatçı' || artist === 'YouTube Canlı Performans') {
+      if (artist === 'Bilinmeyen Sanatçı' || artist === 'YouTube Sanatçısı') {
         artist = key.charAt(0).toUpperCase() + key.slice(1);
       }
       break;
     }
   }
+
+  // Detect if music is English / Western or Hip-Hop
+  const isEnglishOrRap =
+    /^[a-zA-Z0-9\s.,'!?&()#/-]+$/.test(title) &&
+    !/[çğıöşüÇĞİÖŞÜ]/.test(title + ' ' + artist);
 
   const key = matchedProfile.typicalKeys[0];
   const vp = matchedProfile.verseProgression;
@@ -311,8 +529,49 @@ export async function generateSongWithAI(
         return `[${c1}]${trimmed.slice(0, mid)} [${c2}]${trimmed.slice(mid)}`;
       })
       .join('\n');
+  } else if (isEnglishOrRap) {
+    // Generate English / Modern Hip-Hop / Pop ChordPro structure
+    chordProContent = `{title: ${title}}
+{artist: ${artist}}
+{key: ${key}}
+{capo: ${matchedProfile.capo}}
+{tempo: ${matchedProfile.tempo}}
+
+{c: Intro / Riff}
+[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[3]}]
+
+{c: Verse 1}
+[${vp[0]}]Step in the room with the [${vp[1]}]rhythm in my head
+[${vp[2]}]Never look back at the [${vp[3]}]words that they said
+[${vp[0]}]Moving too fast through the [${vp[1]}]city after dark
+[${vp[2]}]Leaving a trail and we're [${vp[3]}]leaving a mark
+
+{c: Hook / Chorus}
+[${cp[0]}]Yeah we keep it moving [${cp[1]}]all night long
+[${cp[2]}]Feel the heavy baseline [${cp[3]}]in this song
+[${cp[0]}]Every single chord and [${cp[1]}]every single beat
+[${cp[2]}]Bringing all the fire [${cp[3]}]down to the street
+
+{c: Verse 2}
+[${vp[0]}]Turn the tempo up and [${vp[1]}]never let it fall
+[${vp[2]}]Standing at the top till we [${vp[3]}]answer the call
+[${vp[0]}]Got the guitar rolling [${vp[1]}]vibes on high
+[${vp[2]}]Watch the skyline reach up [${vp[3]}]to the sky
+
+{c: Bridge}
+[${bp[0]}]Never lose focus [${bp[1]}]living in the sound
+[${bp[2]}]Hold the groove down and [${bp[3]}]stand your ground
+
+{c: Hook / Chorus}
+[${cp[0]}]Yeah we keep it moving [${cp[1]}]all night long
+[${cp[2]}]Feel the heavy baseline [${cp[3]}]in this song
+[${cp[0]}]Every single chord and [${cp[1]}]every single beat
+[${cp[2]}]Bringing all the fire [${cp[3]}]down to the street
+
+{c: Outro}
+[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[0]}]`;
   } else {
-    // Generate full acoustic song structure with rich ChordPro metadata
+    // Generate Turkish Acoustic / Rock structure
     chordProContent = `{title: ${title}}
 {artist: ${artist}}
 {key: ${key}}
@@ -365,6 +624,9 @@ export async function generateSongWithAI(
     content: chordProContent,
     isCustom: true,
     isAiGenerated: true,
+    youtubeId: ytInfo?.videoId || videoId || undefined,
+    youtubeUrl: ytInfo?.url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
+    thumbnailUrl: ytInfo?.thumbnailUrl,
     tags: [
       'Yapay Zeka',
       isYouTube ? 'YouTube' : 'Yeni Şarkı',

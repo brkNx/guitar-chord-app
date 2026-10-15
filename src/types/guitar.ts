@@ -46,6 +46,9 @@ export interface Song {
   tags?: string[];
   isCustom?: boolean;
   isAiGenerated?: boolean;
+  youtubeId?: string;
+  youtubeUrl?: string;
+  thumbnailUrl?: string;
 }
 
 export type FretboardDisplayMode = 'fingers' | 'notes' | 'degrees';
