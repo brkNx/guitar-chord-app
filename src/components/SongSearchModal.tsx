@@ -25,6 +25,7 @@ interface SongSearchModalProps {
   songs: Song[];
   onSelectSong: (song: Song) => void;
   onOpenCustomEditor: () => void;
+  initialQuery?: string;
 }
 
 const POPULAR_SUGGESTIONS = [
@@ -42,12 +43,19 @@ export const SongSearchModal = ({
   onClose,
   songs,
   onSelectSong,
-  onOpenCustomEditor
+  onOpenCustomEditor,
+  initialQuery = ''
 }: SongSearchModalProps) => {
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState(initialQuery);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStep, setGenerationStep] = useState<string>('');
   const [ytInfo, setYtInfo] = useState<YouTubeVideoInfo | null>(null);
+
+  useEffect(() => {
+    if (initialQuery) {
+      setQuery(initialQuery);
+    }
+  }, [initialQuery]);
   const [isYtLoading, setIsYtLoading] = useState(false);
 
   const parsedInput = useMemo(() => parseYouTubeOrSearchInput(query), [query]);

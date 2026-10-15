@@ -49,7 +49,14 @@ export function App() {
   const [transposeOffset, setTransposeOffset] = useState<number>(0);
 
   // Modals state
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchParam] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('search') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [isSearchOpen, setIsSearchOpen] = useState(() => Boolean(searchParam));
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [isDictionaryOpen, setIsDictionaryOpen] = useState(false);
   const [isChordDetailOpen, setIsChordDetailOpen] = useState(false);
@@ -375,6 +382,7 @@ export function App() {
         songs={songs}
         onSelectSong={handleSelectSong}
         onOpenCustomEditor={() => setIsCustomOpen(true)}
+        initialQuery={searchParam}
       />
 
       <CustomSongModal
