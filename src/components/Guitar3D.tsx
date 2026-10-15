@@ -625,9 +625,9 @@ export const Guitar3D = ({
       </div>
 
       {/* Interactive Footer Tip */}
-      <div className="flex items-center justify-between text-xs text-slate-400 mt-2.5 px-2">
-        <span>💡 <b>İpucu:</b> 3D gitardaki tellere dokunarak notalarını tınlatabilir, fareyle gitarı 360° çevirebilirsiniz.</span>
-        <span>POV / Karşıdan / Tam Gitar butonlarıyla açıyı değiştirin.</span>
+      <div className="flex items-center justify-between text-[11px] font-mono text-slate-400 mt-2.5 px-2">
+        <span>[RIG TIP] Tellere tıklayarak notaları çalabilir, fare ile 360° döndürebilirsiniz.</span>
+        <span>POV / KARŞIDAN / TAM AÇI</span>
       </div>
     </div>
   );

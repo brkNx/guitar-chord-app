@@ -174,15 +174,15 @@ export const ChordDetailModal = ({
                 }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
-                <span>{isPlayingArpeggio ? 'Arpej...' : '⚡ Arpej (P-I-M-A)'}</span>
+                <span>{isPlayingArpeggio ? 'Arpej...' : 'Arpej (P-I-M-A)'}</span>
               </button>
 
               <button
                 onClick={handleBassOnly}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/60 transition-colors"
+                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700/60 transition-colors font-mono"
                 title="Sadece en kalın bas notayı çalar"
               >
-                🎸 Bas Nota
+                BAS NOTA
               </button>
             </div>
           </div>
@@ -214,8 +214,8 @@ export const ChordDetailModal = ({
                     >
                       {tone.degree}
                     </span>
-                    <span className="text-xs text-slate-400 group-hover:text-amber-400">
-                      Tıkla Dinle 🔊
+                    <span className="text-xs text-slate-400 group-hover:text-amber-400 font-mono">
+                      [PLAY]
                     </span>
                   </div>
                   <div className="text-xl font-black text-white group-hover:text-amber-300 transition-colors">

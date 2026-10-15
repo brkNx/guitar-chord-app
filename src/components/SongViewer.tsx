@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import type { Song } from '../types/guitar';
 import { parseChordPro, extractUniqueChords } from '../utils/chordPro';
-import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, Sparkles, X } from 'lucide-react';
+import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, Sparkles, X, Radio } from 'lucide-react';
 
 interface SongViewerProps {
   song: Song;
@@ -172,8 +172,9 @@ export const SongViewer = ({
               className="w-full h-full border-0"
             />
           </div>
-          <p className="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1.5">
-            <span>🎸 Videoyu oynatıp aşağıdaki akorları ve parmak pozisyonlarını takip edebilirsin.</span>
+          <p className="text-[11px] text-slate-400 mt-2 font-medium flex items-center gap-1.5 font-mono">
+            <Radio className="w-3 h-3 text-red-400 animate-pulse" />
+            <span>YOUTUBE PLAY-ALONG // Şarkıyı dinlerken aşağıdaki akorları takip edin.</span>
           </p>
         </div>
       )}
