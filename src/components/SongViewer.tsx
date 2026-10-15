@@ -7,6 +7,7 @@ interface SongViewerProps {
   song: Song;
   activeChord: string;
   onSelectChord: (chord: string) => void;
+  onOpenChordDetail?: (chord: string) => void;
   transposeOffset: number;
   onTransposeChange: (offset: number) => void;
 }
@@ -15,6 +16,7 @@ export const SongViewer = ({
   song,
   activeChord,
   onSelectChord,
+  onOpenChordDetail,
   transposeOffset,
   onTransposeChange
 }: SongViewerProps) => {
@@ -145,14 +147,24 @@ export const SongViewer = ({
             return (
               <button
                 key={chord}
-                onClick={() => onSelectChord(chord)}
-                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                onClick={() => {
+                  if (isActive && onOpenChordDetail) {
+                    onOpenChordDetail(chord);
+                  } else {
+                    onSelectChord(chord);
+                  }
+                }}
+                className={`flex items-center gap-1 px-3 py-1 rounded-xl text-xs font-bold transition-all ${
                   isActive
-                    ? 'bg-amber-500 text-slate-950 scale-105 shadow-md shadow-amber-500/20'
+                    ? 'bg-amber-500 text-slate-950 scale-105 shadow-md shadow-amber-500/25 ring-2 ring-amber-400'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                 }`}
+                title={isActive ? 'Akor teorisini ve 3D detayını aç' : 'Akoru seç ve gitarda çal'}
               >
-                {chord}
+                <span>{chord}</span>
+                {isActive && onOpenChordDetail && (
+                  <span className="text-[10px] opacity-75 font-normal ml-0.5">ℹ</span>
+                )}
               </button>
             );
           })}
@@ -195,12 +207,19 @@ export const SongViewer = ({
                     {/* Floating Clickable Chord Badge */}
                     {seg.chord ? (
                       <button
-                        onClick={() => onSelectChord(seg.chord)}
+                        onClick={() => {
+                          if (isActive && onOpenChordDetail) {
+                            onOpenChordDetail(seg.chord);
+                          } else {
+                            onSelectChord(seg.chord);
+                          }
+                        }}
                         className={`text-xs font-bold px-1.5 py-0.5 rounded transition-all transform mb-0.5 ${
                           isActive
-                            ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-400 font-extrabold shadow-sm'
+                            ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-400 font-extrabold shadow-sm scale-105'
                             : 'bg-slate-800/80 text-amber-400 hover:bg-amber-500/20 hover:text-amber-300'
                         }`}
+                        title={isActive ? '3D Akor detayını aç' : 'Akoru çal'}
                       >
                         {seg.chord}
                       </button>

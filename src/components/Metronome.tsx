@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { guitarAudio } from '../audio/guitarAudio';
 import { Play, Pause, Activity } from 'lucide-react';
 
@@ -6,27 +6,28 @@ export const Metronome = () => {
   const [bpm, setBpm] = useState(100);
   const [isPlaying, setIsPlaying] = useState(false);
   const [beat, setBeat] = useState(0);
-  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (isPlaying) {
-      const intervalMs = (60 / bpm) * 1000;
-      intervalRef.current = window.setInterval(() => {
-        setBeat((prev) => {
-          const nextBeat = (prev % 4) + 1;
-          guitarAudio.playClick(nextBeat === 1);
-          return nextBeat;
-        });
-      }, intervalMs);
+      guitarAudio.startMetronome(bpm, (currentBeat) => {
+        setBeat(currentBeat);
+      });
     } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      guitarAudio.stopMetronome();
       setBeat(0);
     }
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      guitarAudio.stopMetronome();
     };
-  }, [isPlaying, bpm]);
+  }, [isPlaying]);
+
+  const handleBpmChange = (newBpm: number) => {
+    setBpm(newBpm);
+    if (isPlaying) {
+      guitarAudio.setMetronomeBpm(newBpm);
+    }
+  };
 
   return (
     <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs shadow-md">
@@ -40,7 +41,7 @@ export const Metronome = () => {
         {[1, 2, 3, 4].map((b) => (
           <span
             key={b}
-            className={`w-2 h-2 rounded-full transition-all ${
+            className={`w-2 h-2 rounded-full transition-all duration-75 ${
               beat === b
                 ? b === 1
                   ? 'bg-amber-400 scale-125 shadow-sm shadow-amber-400'
@@ -57,7 +58,7 @@ export const Metronome = () => {
           min="40"
           max="220"
           value={bpm}
-          onChange={(e) => setBpm(Number(e.target.value))}
+          onChange={(e) => handleBpmChange(Number(e.target.value))}
           className="w-16 h-1.5 accent-amber-500 bg-slate-700 rounded-lg cursor-pointer"
         />
         <span className="font-mono font-bold text-amber-400 min-w-[28px] text-right">

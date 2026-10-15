@@ -49,3 +49,40 @@ export interface Song {
 }
 
 export type FretboardDisplayMode = 'fingers' | 'notes' | 'degrees';
+
+export interface TuningDefinition {
+  id: string;
+  name: string;
+  shortName: string;
+  description: string;
+  notes: string[]; // Strings 6 (low) to 1 (high), e.g. ['E', 'A', 'D', 'G', 'B', 'E']
+  octaves: number[]; // e.g. [2, 2, 3, 3, 3, 4]
+  frequencies: number[]; // e.g. [82.41, 110.00, 146.83, 196.00, 246.94, 329.63]
+}
+
+export interface ScaleDefinition {
+  id: string;
+  name: string;
+  category: 'pentatonic' | 'diatonic' | 'blues' | 'minor_variant' | 'mode';
+  intervals: number[]; // Semitone intervals from root: [0, 2, 4, 5, 7, 9, 11]
+  degreeNames: string[]; // e.g. ['R', '2', '3', '4', '5', '6', '7'] or ['R', 'b3', '4', 'b5', '5', 'b7']
+  description: string;
+}
+
+export type StrumStrokeType = 'down' | 'up' | 'mute' | 'bass' | 'rest';
+
+export interface StrumStroke {
+  type: StrumStrokeType;
+  label: string; // '↓' | '↑' | 'X' | 'Bas' | '•'
+  accent?: boolean;
+  pluckStrings?: number[]; // 0-indexed string indices for fingerpicking/arpeggio
+}
+
+export interface StrumPattern {
+  id: string;
+  name: string;
+  timeSignature: '4/4' | '3/4' | '6/8';
+  description: string;
+  defaultBpm: number;
+  strokes: StrumStroke[];
+}
