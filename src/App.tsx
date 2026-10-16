@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
-import type { Song, FretboardDisplayMode } from './types/guitar';
+import type { Song, FretboardDisplayMode, FretboardViewMode } from './types/guitar';
 import { SAMPLE_SONGS } from './data/sampleSongs';
-import { getOrGenerateChord } from './data/chordLibrary';
+import { getOrGenerateChord, NOTES, getNoteAtFret } from './data/chordLibrary';
 import { guitarAudio, type VirtualGuitaristMode } from './audio/guitarAudio';
 import { getCapoRecommendation } from './utils/transpose';
 import { extractUniqueChords } from './utils/chordPro';
 import { GUITAR_TUNINGS, getTuningById } from './data/tunings';
 import { getChordTheoryDetails, type ChordTone } from './utils/chordTheory';
-import { GUITAR_SCALES, getScaleNotes, extractRootNote } from './data/scales';
+import { GUITAR_SCALES, getScaleNotes, getScaleNoteInfo, extractRootNote } from './data/scales';
+import { CAGED_BOXES, getCagedBoxFretRange, getFretShapesIntervalStyle } from './data/caged';
 import { STRUM_PATTERNS } from './data/strumPatterns';
 import { generateSongWithAI } from './services/aiChordGenerator';
 
@@ -16,6 +17,7 @@ import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
 import { ChordDictionaryModal } from './components/ChordDictionaryModal';
 import { ChordDetailModal } from './components/ChordDetailModal';
+import { GuitarTunerModal } from './components/GuitarTunerModal';
 import { Metronome } from './components/Metronome';
 import { GuitarStage } from './components/stage/GuitarStage';
 import './App.css';
@@ -29,7 +31,8 @@ import {
   Plus,
   Video,
   BookOpen,
-  Sparkles
+  Sparkles,
+  Radio
 } from 'lucide-react';
 
 const STORAGE_CUSTOM_SONGS = 'guitar_app_custom_songs';
@@ -85,6 +88,10 @@ export function App() {
   const [isCustomOpen, setIsCustomOpen] = useState(false);
   const [isDictionaryOpen, setIsDictionaryOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isTunerOpen, setIsTunerOpen] = useState(false);
+  const [fretboardViewMode, setFretboardViewMode] = useState<FretboardViewMode>('chord');
+  const [selectedCagedBox, setSelectedCagedBox] = useState<number>(1);
+  const [scaleRootNote, setScaleRootNote] = useState<string>('A');
   const [detailChord, setDetailChord] = useState<string>('Am');
   const [quickInput, setQuickInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -99,11 +106,9 @@ export function App() {
   const chordDef = getOrGenerateChord(activeChord);
   const currentPosition = chordDef.positions[positionIdx] || chordDef.positions[0];
   const theory = getChordTheoryDetails(activeChord, currentPosition);
-  const rootNote = extractRootNote(activeChord);
 
   // Scale data
   const activeScale = GUITAR_SCALES.find((s) => s.id === selectedScaleId) || GUITAR_SCALES[0];
-  const scaleNotes = getScaleNotes(rootNote, activeScale);
 
   // Strum pattern data
   const activePattern = STRUM_PATTERNS.find((p) => p.id === selectedPatternId) || STRUM_PATTERNS[0];
@@ -173,6 +178,8 @@ export function App() {
   const handleSelectChord = (chord: string, silent = false) => {
     setActiveChord(chord);
     setPositionIdx(0);
+    const r = extractRootNote(chord);
+    if (r) setScaleRootNote(r);
     const def = getOrGenerateChord(chord);
     const pos = def.positions[0];
     if (pos) {
@@ -264,17 +271,23 @@ export function App() {
     setIsPlayingStrumSeq(false);
   };
 
-  // Keyboard shortcut: Cmd+K or '/' opens search
+  // Keyboard shortcut: Cmd+K or '/' opens search, 'T' opens tuner
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
       if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || (e.key === '/' && !isSearchOpen && !isCustomOpen)) {
         e.preventDefault();
         setIsSearchOpen(true);
+      } else if ((e.key === 't' || e.key === 'T') && !isTunerOpen) {
+        e.preventDefault();
+        setIsTunerOpen(true);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSearchOpen, isCustomOpen]);
+  }, [isSearchOpen, isCustomOpen, isTunerOpen]);
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-[#090a0f] text-slate-100 flex flex-col font-sans select-none studio-layout">
@@ -407,8 +420,20 @@ export function App() {
           </button>
         </div>
 
-        {/* Right: Cmd+K Quick Search, Chords Dictionary & Add Song */}
+        {/* Right: Tuner, Cmd+K Quick Search, Chords Dictionary & Add Song */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <button
+            onClick={() => setIsTunerOpen(true)}
+            className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 hover:border-emerald-400 text-xs font-bold text-emerald-300 transition-all cursor-pointer active:scale-95 shadow-sm"
+            title="Guitartuna Canlı Gitar Akort Cihazı (T)"
+          >
+            <Radio className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">AKORT</span>
+            <span className="font-mono text-[9px] px-1 py-0.2 bg-emerald-500/25 rounded text-emerald-300 border border-emerald-500/40 hidden lg:inline">
+              TUNER
+            </span>
+          </button>
+
           <button
             onClick={() => setIsDictionaryOpen(true)}
             className="flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
@@ -672,17 +697,40 @@ export function App() {
             </div>
           )}
 
-          {/* TAB 3: SCALES & IMPROVISATION */}
+          {/* TAB 3: FRETSHAPES SCALES & CAGED SYSTEM */}
           {leftTab === 'scales' && (
             <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
-              <div className="space-y-1.5">
+              {/* Root Note Picker */}
+              <div className="space-y-1">
+                <label className="text-[10px] text-slate-500 uppercase tracking-wider block">
+                  KÖK NOTA (ROOT)
+                </label>
+                <div className="grid grid-cols-6 gap-1">
+                  {NOTES.map((n) => (
+                    <button
+                      key={n}
+                      onClick={() => setScaleRootNote(n)}
+                      className={`py-1 rounded text-center font-bold text-[11px] transition-all cursor-pointer ${
+                        scaleRootNote === n
+                          ? 'bg-amber-500 text-slate-950 shadow-sm'
+                          : 'bg-[#191c26] text-slate-300 hover:text-white border border-white/5'
+                      }`}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Scale Picker */}
+              <div className="space-y-1">
                 <label className="text-[10px] text-slate-500 uppercase tracking-wider block">
                   GAM SEÇİNİZ
                 </label>
                 <select
                   value={selectedScaleId}
                   onChange={(e) => setSelectedScaleId(e.target.value)}
-                  className="w-full bg-[#191c26] border border-white/10 rounded-md p-2 text-xs text-slate-200 font-mono focus:outline-none"
+                  className="w-full bg-[#191c26] border border-white/10 rounded-md p-2 text-xs text-slate-200 font-mono focus:outline-none cursor-pointer"
                 >
                   {GUITAR_SCALES.map((s) => (
                     <option key={s.id} value={s.id} className="bg-[#191c26]">
@@ -692,10 +740,11 @@ export function App() {
                 </select>
               </div>
 
+              {/* Active Scale Info Card */}
               <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-amber-400">
-                    {rootNote} {activeScale.name}
+                    {scaleRootNote} {activeScale.name}
                   </span>
                   <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
                     {activeScale.category}
@@ -706,26 +755,105 @@ export function App() {
                 </p>
               </div>
 
-              {/* Scale Notes Chips */}
+              {/* CAGED 5-Box Shapes Visualizer Selector */}
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">
+                    CAGED KUTU (SHAPE) SEÇİMİ
+                  </span>
+                  <span className="text-[10px] text-sky-400 font-bold">
+                    {getCagedBoxFretRange(scaleRootNote, selectedCagedBox).label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-1">
+                  {CAGED_BOXES.map((box) => {
+                    const isSelected = selectedCagedBox === box.number;
+                    const range = getCagedBoxFretRange(scaleRootNote, box.number);
+                    return (
+                      <button
+                        key={box.id}
+                        onClick={() => {
+                          setSelectedCagedBox(box.number);
+                          setFretboardViewMode('scale');
+                        }}
+                        className={`p-1.5 rounded text-center transition-all cursor-pointer border ${
+                          isSelected
+                            ? 'bg-sky-400 text-slate-950 border-sky-300 font-black shadow-sm'
+                            : 'bg-[#121520] text-slate-300 hover:text-white border-white/5'
+                        }`}
+                        title={box.description}
+                      >
+                        <div className="text-[10px] font-bold leading-tight">
+                          {box.number === 0 ? 'TÜM SAP' : `KUTU ${box.number}`}
+                        </div>
+                        <div className="text-[8px] opacity-75 truncate">
+                          {box.number === 0 ? '0-14' : range.label.replace(' Perde', '')}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Quick Scale Actions */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => {
+                    setFretboardViewMode('scale');
+                    setMobileTab('stage');
+                    showToast(`${scaleRootNote} ${activeScale.name} klavyede açıldı.`);
+                  }}
+                  className="py-2 px-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 shadow-sm cursor-pointer active:scale-95"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>SAPTA GÖSTER</span>
+                </button>
+
+                <button
+                  onClick={async () => {
+                    const range = getCagedBoxFretRange(scaleRootNote, selectedCagedBox);
+                    const minF = selectedCagedBox === 0 ? 0 : range.minFret;
+                    const maxF = selectedCagedBox === 0 ? 12 : range.maxFret;
+
+                    for (let str = 0; str <= 5; str++) {
+                      for (let f = minF; f <= maxF; f++) {
+                        const note = getNoteAtFret(str, f);
+                        const info = getScaleNoteInfo(note, scaleRootNote, activeScale);
+                        if (info.inScale) {
+                          guitarAudio.pluckNote(str, f, 0.9);
+                          await new Promise((r) => setTimeout(r, 130));
+                        }
+                      }
+                    }
+                  }}
+                  className="py-2 px-2 bg-[#121520] hover:bg-[#1a1e2d] border border-white/10 text-amber-400 font-bold text-[10px] rounded-lg transition-all flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                >
+                  <Play className="w-3 h-3 fill-current" />
+                  <span>DİZİYİ ÇAL</span>
+                </button>
+              </div>
+
+              {/* Scale Notes Chips with fretShapes Colors */}
               <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
                 <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
-                  GAMDAKİ NOTALAR ({rootNote} TONU)
+                  GAMDAKİ NOTALAR ({scaleRootNote} TONU)
                 </span>
                 <div className="grid grid-cols-4 gap-1.5">
-                  {scaleNotes.map((note, idx) => {
+                  {getScaleNotes(scaleRootNote, activeScale).map((note, idx) => {
                     const degree = activeScale.degreeNames[idx] || `${idx + 1}`;
-                    const isRoot = degree === 'R' || degree === '1';
+                    const style = getFretShapesIntervalStyle(degree);
                     return (
                       <div
                         key={idx}
-                        className={`p-2 rounded-md border text-center font-mono ${
-                          isRoot
-                            ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
-                            : 'bg-[#11131a] border-white/10 text-slate-300'
-                        }`}
+                        onClick={() => {
+                          const strIdx = NOTES.indexOf(note) % 6;
+                          guitarAudio.pluckNote(strIdx, 0, 0.9);
+                        }}
+                        className={`p-1.5 rounded-md border text-center font-mono cursor-pointer transition-transform hover:scale-105 ${style.badge}`}
                       >
-                        <div className="text-xs font-bold">{note}</div>
-                        <div className="text-[8px] text-slate-500">{degree}</div>
+                        <div className="text-xs font-black">{note}</div>
+                        <div className="text-[8px] opacity-80">{degree}</div>
                       </div>
                     );
                   })}
@@ -757,6 +885,12 @@ export function App() {
             virtualGuitaristMode={virtualGuitaristMode}
             onToggleVirtualGuitarist={handleToggleVirtualGuitarist}
             onVirtualGuitaristModeChange={handleVirtualGuitaristModeChange}
+            viewMode={fretboardViewMode}
+            onViewModeChange={setFretboardViewMode}
+            activeScaleId={selectedScaleId}
+            scaleRoot={scaleRootNote}
+            cagedBox={selectedCagedBox}
+            onCagedBoxChange={setSelectedCagedBox}
           />
         </main>
 
@@ -851,6 +985,13 @@ export function App() {
           if (typeof pos === 'number') setPositionIdx(pos);
           showToast(`${chord} akoru uygulandı.`);
         }}
+      />
+
+      {/* GUITARTUNA DSP LIVE GUITAR TUNER MODAL */}
+      <GuitarTunerModal
+        isOpen={isTunerOpen}
+        onClose={() => setIsTunerOpen(false)}
+        initialTuningId={selectedTuningId}
       />
 
       {/* TOAST NOTIFICATION */}

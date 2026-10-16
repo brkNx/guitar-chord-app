@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Lightformer, OrbitControls } from '@react-three/drei';
 import type { OrbitControls as OrbitControlsImpl } from 'three-stdlib';
-import type { ChordPosition, FretboardDisplayMode } from '../../types/guitar';
+import type { ChordPosition, FretboardDisplayMode, FretboardViewMode } from '../../types/guitar';
 import { getChordTheoryDetails } from '../../utils/chordTheory';
 import { STRUM_PATTERNS } from '../../data/strumPatterns';
 import { guitarAudio } from '../../audio/guitarAudio';
@@ -33,6 +33,12 @@ interface GuitarStageProps {
   virtualGuitaristMode?: VirtualGuitaristMode;
   onToggleVirtualGuitarist?: () => void;
   onVirtualGuitaristModeChange?: (mode: VirtualGuitaristMode) => void;
+  viewMode?: FretboardViewMode;
+  onViewModeChange?: (mode: FretboardViewMode) => void;
+  activeScaleId?: string;
+  scaleRoot?: string;
+  cagedBox?: number;
+  onCagedBoxChange?: (box: number) => void;
 }
 
 export type CamPreset = 'overview' | 'front' | 'pov' | 'neck';
@@ -170,6 +176,12 @@ export function GuitarStage({
   virtualGuitaristMode = 'arpeggio',
   onToggleVirtualGuitarist,
   onVirtualGuitaristModeChange,
+  viewMode,
+  onViewModeChange,
+  activeScaleId,
+  scaleRoot,
+  cagedBox,
+  onCagedBoxChange,
 }: GuitarStageProps) {
   const initialNeck = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -531,6 +543,12 @@ export function GuitarStage({
           onOpenChordDetail={onOpenChordDetail}
           onStrum={triggerStrum}
           onStringPluck={triggerPluck}
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          activeScaleId={activeScaleId}
+          scaleRoot={scaleRoot}
+          cagedBox={cagedBox}
+          onCagedBoxChange={onCagedBoxChange}
         />
       </div>
 

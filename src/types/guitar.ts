@@ -53,6 +53,7 @@ export interface Song {
 }
 
 export type FretboardDisplayMode = 'fingers' | 'notes' | 'degrees';
+export type FretboardViewMode = 'chord' | 'scale';
 
 export interface TuningDefinition {
   id: string;

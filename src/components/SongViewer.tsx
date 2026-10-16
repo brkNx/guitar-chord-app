@@ -4,7 +4,23 @@ import { parseChordPro, extractUniqueChords } from '../utils/chordPro';
 import { STRUM_PATTERNS } from '../data/strumPatterns';
 import { guitarAudio, type VirtualGuitaristMode } from '../audio/guitarAudio';
 import { getOrGenerateChord } from '../data/chordLibrary';
-import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { RockStarChordCard } from './RockStarChordCard';
+import {
+  Play,
+  Pause,
+  ChevronUp,
+  ChevronDown,
+  RotateCcw,
+  X,
+  Radio,
+  Video,
+  Volume2,
+  VolumeX,
+  Sparkles,
+  Mic,
+  Layers,
+  ArrowRight
+} from 'lucide-react';
 
 interface SongViewerProps {
   song: Song;
@@ -46,6 +62,10 @@ export const SongViewer = ({
   const [showYouTube, setShowYouTube] = useState<boolean>(() => Boolean(song.youtubeId));
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [playheadIdx, setPlayheadIdx] = useState<number>(0);
+
+  // RockStar Cards & Karaoke Stage View states
+  const [showRockStarCards, setShowRockStarCards] = useState<boolean>(true);
+  const [showKaraokeStage, setShowKaraokeStage] = useState<boolean>(true);
 
   // Virtual Guitarist local fallback states & live step telemetry
   const [internalVirtualGuitarist, setInternalVirtualGuitarist] = useState(false);
@@ -408,6 +428,11 @@ export const SongViewer = ({
   };
 
   const activeEvent = chordEvents[playheadIdx] || null;
+  const upcomingEvent =
+    chordEvents.length > 1
+      ? chordEvents[(playheadIdx + 1) % chordEvents.length]
+      : null;
+  const activeLineObj = activeEvent ? parsedLines[activeEvent.lineIdx] : null;
 
   return (
     <div className="flex flex-col h-full bg-[#0c0e14] border border-white/[0.08] rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] overflow-hidden text-slate-200 select-none">
@@ -552,6 +577,36 @@ export const SongViewer = ({
             <span>{soundEnabled ? 'GİTAR SESİ' : 'SESSİZ'}</span>
           </button>
 
+          {/* RockStar Karaoke Stage View Toggle */}
+          <button
+            onClick={() => setShowKaraokeStage(!showKaraokeStage)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+              showKaraokeStage
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
+                : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
+            }`}
+            title="RockStar Sahne & Canlı Şarkı Sözü Karaoke Modu"
+          >
+            <Mic className="w-3 h-3 text-amber-400" />
+            <span className="hidden sm:inline">{showKaraokeStage ? 'SAHNE: AÇIK' : 'SAHNE'}</span>
+            <span className="sm:hidden">SAHNE</span>
+          </button>
+
+          {/* RockStar Chord Cards Toggle */}
+          <button
+            onClick={() => setShowRockStarCards(!showRockStarCards)}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+              showRockStarCards
+                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sm'
+                : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
+            }`}
+            title="RockStar Renkli Parmak Şemalı Akor Kartları"
+          >
+            <Layers className="w-3 h-3 text-sky-400" />
+            <span className="hidden sm:inline">{showRockStarCards ? 'KARTLAR: AÇIK' : 'KARTLAR'}</span>
+            <span className="sm:hidden">KARTLAR</span>
+          </button>
+
           {/* YouTube Video Toggle */}
           {song.youtubeId && (
             <button
@@ -593,30 +648,113 @@ export const SongViewer = ({
         </div>
       )}
 
-      {/* Moises Quick Chord Tray Bar */}
-      <div className="px-3.5 py-2 bg-[#0e1017] border-b border-white/10 flex items-center gap-2 overflow-x-auto scrollbar-none font-mono text-xs">
-        <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
-          AKORLAR:
-        </span>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {uniqueChords.map((chord) => {
-            const isActive = activeChord === chord;
-            return (
-              <button
-                key={chord}
-                onClick={() => handleChordClick(chord)}
-                className={`px-3 py-1 rounded-md text-xs font-bold font-mono transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/35 scale-105'
-                    : 'bg-[#191c26] text-amber-400 border border-white/10 hover:border-amber-500/50 hover:bg-[#222634]'
-                }`}
-              >
-                {chord}
-              </button>
-            );
-          })}
+      {/* RockStar High-Craft Chord Cards Shelf (or fallback pills) */}
+      {showRockStarCards ? (
+        <div className="px-3.5 py-2.5 bg-[#0a0c12] border-b border-white/[0.08] flex items-center gap-2 overflow-x-auto scrollbar-thin">
+          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
+            <Layers className="w-3.5 h-3.5 text-sky-400" />
+            <span className="hidden sm:inline">ROCKSTAR KARTLARI:</span>
+            <span className="sm:hidden">AKORLAR:</span>
+          </span>
+          <div className="flex items-center gap-2">
+            {uniqueChords.map((chord) => {
+              const isActive = activeChord === chord;
+              return (
+                <RockStarChordCard
+                  key={chord}
+                  chordName={chord}
+                  isActive={isActive}
+                  compact={true}
+                  onSelectChord={(c) => handleChordClick(c)}
+                />
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Minimal Pills Mode */
+        <div className="px-3.5 py-2 bg-[#0e1017] border-b border-white/10 flex items-center gap-2 overflow-x-auto scrollbar-none font-mono text-xs">
+          <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
+            AKORLAR:
+          </span>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {uniqueChords.map((chord) => {
+              const isActive = activeChord === chord;
+              return (
+                <button
+                  key={chord}
+                  onClick={() => handleChordClick(chord)}
+                  className={`px-3 py-1 rounded-md text-xs font-bold font-mono transition-all cursor-pointer ${
+                    isActive
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/35 scale-105'
+                      : 'bg-[#191c26] text-amber-400 border border-white/10 hover:border-amber-500/50 hover:bg-[#222634]'
+                  }`}
+                >
+                  {chord}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* RockStar Sing-Along Live Stage & Karaoke Cockpit */}
+      {showKaraokeStage && (
+        <div className="px-4 py-3 bg-gradient-to-r from-[#111420] via-[#0d1017] to-[#121422] border-b border-white/[0.08] shadow-inner flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 font-mono text-[10px] font-bold text-amber-400 uppercase shadow-sm">
+                <Mic className="w-3 h-3 text-amber-400 animate-pulse" />
+                <span>ROCKSTAR CANLI SAHNE // KARAOKE</span>
+              </span>
+              <span className="font-mono text-[10px] text-slate-400 hidden xs:inline">
+                {isAutoScrolling ? 'ŞARKI AKIYOR' : 'PLAY İLE CANLI AKIŞI BAŞLATIN'}
+              </span>
+            </div>
+
+            {/* Upcoming Next Chord Preview */}
+            {upcomingEvent && upcomingEvent.chord !== activeChord && (
+              <div className="flex items-center gap-1.5 font-mono text-[11px] bg-white/[0.04] border border-white/10 px-2.5 py-0.5 rounded-full">
+                <span className="text-slate-400">SIRADAKİ:</span>
+                <span className="font-black text-amber-400">{upcomingEvent.chord}</span>
+                <ArrowRight className="w-3 h-3 text-slate-500" />
+              </div>
+            )}
+          </div>
+
+          {/* Large Hero Active Singing Phrase */}
+          <div className="py-0.5 min-h-[42px] flex items-center">
+            {activeLineObj && activeLineObj.type === 'chord-lyric' && activeLineObj.segments ? (
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-base sm:text-lg font-bold font-sans">
+                {activeLineObj.segments.map((seg, sIdx) => {
+                  const isSegmentActive = activeEvent?.segIdx === sIdx;
+                  return (
+                    <span
+                      key={sIdx}
+                      className={`transition-all duration-150 ${
+                        isSegmentActive
+                          ? 'text-amber-300 font-black scale-105 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.85)]'
+                          : 'text-slate-200'
+                      }`}
+                    >
+                      {seg.chord && (
+                        <span className="text-xs font-mono font-bold text-amber-400/90 mr-1 block sm:inline">
+                          [{seg.chord}]
+                        </span>
+                      )}
+                      {seg.lyric || ''}
+                    </span>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-slate-400 italic text-sm font-sans">
+                Akor geçişleri ve sözler çalarken canlı vurgulanır.
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 16-Step Strumming & Fingerpicking Visualizer Strip */}
       <div className="px-3.5 py-1.5 bg-[#090a0f] border-b border-white/10 flex items-center justify-between text-[10px] font-mono text-slate-400">

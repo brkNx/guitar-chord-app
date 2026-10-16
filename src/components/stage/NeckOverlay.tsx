@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { ChordPosition, FretboardDisplayMode } from '../../types/guitar';
+import type { ChordPosition, FretboardDisplayMode, FretboardViewMode } from '../../types/guitar';
 import { Fretboard } from '../Fretboard';
 import { ArrowLeft, ArrowDown, ArrowUp } from 'lucide-react';
 
@@ -19,6 +19,12 @@ interface NeckOverlayProps {
   onOpenChordDetail: () => void;
   onStrum: (direction: 'down' | 'up') => void;
   onStringPluck: (stringIdx: number, fret: number) => void;
+  viewMode?: FretboardViewMode;
+  onViewModeChange?: (mode: FretboardViewMode) => void;
+  activeScaleId?: string;
+  scaleRoot?: string;
+  cagedBox?: number;
+  onCagedBoxChange?: (box: number) => void;
 }
 
 export function NeckOverlay({
@@ -37,6 +43,12 @@ export function NeckOverlay({
   onOpenChordDetail,
   onStrum,
   onStringPluck,
+  viewMode,
+  onViewModeChange,
+  activeScaleId,
+  scaleRoot,
+  cagedBox,
+  onCagedBoxChange,
 }: NeckOverlayProps) {
   useEffect(() => {
     if (!visible) return;
@@ -138,6 +150,12 @@ export function NeckOverlay({
           onOpenChordDetail={onOpenChordDetail}
           onStringPluck={onStringPluck}
           onStrum={onStrum}
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          activeScaleId={activeScaleId}
+          scaleRoot={scaleRoot}
+          cagedBox={cagedBox}
+          onCagedBoxChange={onCagedBoxChange}
         />
       </div>
     </div>
