@@ -208,7 +208,7 @@ export const Fretboard = ({
         >
           {/* Fretboard Wood Background */}
           <rect
-            x={30 + nutWidth}
+            x={36 + nutWidth}
             y={18}
             width={numFrets * fretWidth}
             height={5 * stringSpacing}
@@ -219,7 +219,7 @@ export const Fretboard = ({
 
           {/* Bone Nut at Fret 0 */}
           <rect
-            x={30}
+            x={36}
             y={17}
             width={nutWidth}
             height={5 * stringSpacing + 2}
@@ -229,7 +229,7 @@ export const Fretboard = ({
 
           {/* Pearloid Inlay Dots on Frets 3, 5, 7, 9 */}
           {singleDotFrets.map((fret) => {
-            const cx = 30 + nutWidth + (fret - 0.5) * fretWidth;
+            const cx = 36 + nutWidth + (fret - 0.5) * fretWidth;
             const cy = 18 + 2.5 * stringSpacing;
             return (
               <circle
@@ -245,14 +245,14 @@ export const Fretboard = ({
 
           {/* Double Dots on Fret 12 (Octave) */}
           <circle
-            cx={30 + nutWidth + (doubleDotFret - 0.5) * fretWidth}
+            cx={36 + nutWidth + (doubleDotFret - 0.5) * fretWidth}
             cy={18 + 1.5 * stringSpacing}
             r="4"
             fill="#64748b"
             opacity="0.4"
           />
           <circle
-            cx={30 + nutWidth + (doubleDotFret - 0.5) * fretWidth}
+            cx={36 + nutWidth + (doubleDotFret - 0.5) * fretWidth}
             cy={18 + 3.5 * stringSpacing}
             r="4"
             fill="#64748b"
@@ -261,7 +261,7 @@ export const Fretboard = ({
 
           {/* Nickel Frets & Fret Numbers */}
           {Array.from({ length: numFrets }).map((_, i) => {
-            const fretX = 30 + nutWidth + (i + 1) * fretWidth;
+            const fretX = 36 + nutWidth + (i + 1) * fretWidth;
             return (
               <g key={`fret-${i}`}>
                 <line
@@ -289,9 +289,9 @@ export const Fretboard = ({
 
           {/* Barre Bar representation if chord has a barre */}
           {position.barres?.map((barre, bIdx) => {
-            const x = 30 + nutWidth + (barre.fret - 0.5) * fretWidth;
-            const fromY = 18 + (6 - barre.fromString) * stringSpacing;
-            const toY = 18 + (6 - barre.toString) * stringSpacing;
+            const x = 36 + nutWidth + (barre.fret - 0.5) * fretWidth;
+            const fromY = 18 + (barre.fromString - 1) * stringSpacing;
+            const toY = 18 + (barre.toString - 1) * stringSpacing;
             const topY = Math.min(fromY, toY);
             const height = Math.abs(toY - fromY);
 
@@ -311,20 +311,35 @@ export const Fretboard = ({
             );
           })}
 
-          {/* 6 Guitar Strings */}
+          {/* 6 Guitar Strings: strIdx 0=Low E (bottom, row 5) .. 5=High e (top, row 0) */}
           {[0, 1, 2, 3, 4, 5].map((strIdx) => {
-            const y = 18 + strIdx * stringSpacing;
+            const row = 5 - strIdx;
+            const y = 18 + row * stringSpacing;
             const gauge = stringGauges[strIdx];
             const isVibrating = vibratingStrings.has(strIdx);
             const boardLen = numFrets * fretWidth;
+            const stringLabel = ['E', 'A', 'D', 'G', 'B', 'e'][strIdx];
 
             return (
               <g key={`string-${strIdx}`}>
+                {/* String Tuning Label on Left */}
+                <text
+                  x="7"
+                  y={y + 3.5}
+                  textAnchor="middle"
+                  fill="#64748b"
+                  fontSize="10"
+                  fontFamily="monospace"
+                  fontWeight="bold"
+                >
+                  {stringLabel}
+                </text>
+
                 {/* Visible Guitar String */}
                 <line
-                  x1={28}
+                  x1={34}
                   y1={y}
-                  x2={30 + nutWidth + boardLen}
+                  x2={36 + nutWidth + boardLen}
                   y2={y}
                   stroke={isVibrating ? '#fef08a' : '#94a3b8'}
                   strokeWidth={gauge}
@@ -334,7 +349,7 @@ export const Fretboard = ({
                 {/* Per-fret clickable hit cells (frets 1..numFrets) */}
                 {Array.from({ length: numFrets }).map((_, fIdx) => {
                   const fNum = fIdx + 1;
-                  const cellX = 30 + nutWidth + fIdx * fretWidth;
+                  const cellX = 36 + nutWidth + fIdx * fretWidth;
                   const cx = cellX + fretWidth / 2;
                   const isHovered = hoverCell?.stringIdx === strIdx && hoverCell?.fret === fNum;
                   const isPluckedCell = activeNote?.stringIdx === strIdx && activeNote?.fret === fNum;
@@ -390,11 +405,11 @@ export const Fretboard = ({
                   if (fret === -1) {
                     return (
                       <text
-                        x="16"
+                        x="23"
                         y={y + 4}
                         textAnchor="middle"
                         fill="#ef4444"
-                        fontSize="12"
+                        fontSize="11"
                         fontFamily="monospace"
                         fontWeight="bold"
                         className="cursor-pointer"
@@ -415,14 +430,14 @@ export const Fretboard = ({
                         onClick={() => handleStringClick(strIdx, 0)}
                       >
                         <circle
-                          cx="16"
+                          cx="23"
                           cy={y}
                           r="5.5"
                           fill="#11141c"
                           stroke={oolimo.fill}
                           strokeWidth="2"
                         />
-                        <circle cx="16" cy={y} r="2" fill={oolimo.fill} />
+                        <circle cx="23" cy={y} r="2" fill={oolimo.fill} />
                       </g>
                     );
                   }
@@ -433,7 +448,7 @@ export const Fretboard = ({
                 {(() => {
                   const fret = position.frets[strIdx];
                   if (fret > 0) {
-                    const cx = 30 + nutWidth + (fret - 0.5) * fretWidth;
+                    const cx = 36 + nutWidth + (fret - 0.5) * fretWidth;
                     const finger = position.fingers[strIdx];
                     const note = getNoteAtFret(strIdx, fret);
                     const strAnalysis = theory.stringsAnalysis[strIdx];

@@ -1,4 +1,5 @@
 import { NOTES, normalizeChordName, getNoteAtFret } from '../data/chordLibrary';
+import { noteToIndex } from './transpose';
 import type { ChordPosition } from '../types/guitar';
 
 export interface ChordTone {
@@ -95,6 +96,12 @@ const CHORD_FORMULAS: Record<
     fullName: 'Gecikmeli 4’lü (Sus4)',
     mood: 'Üçlüsü olmayan, majöre çözülmeyi bekleyen havadar gerilim.'
   },
+  '7sus4': {
+    category: 'Yedili Askıda Dörtlü (7sus4)',
+    intervals: [0, 5, 7, 10],
+    fullName: 'Dominant 7sus4 Akoru',
+    mood: 'Britpop ve akustik rock parçalarında karakteristik açık gerilim.'
+  },
   'sus2': {
     category: 'Askıda İkili (Suspended)',
     intervals: [0, 2, 7],
@@ -166,12 +173,16 @@ export function getChordTheoryDetails(
     suffix = match[2];
   }
 
+  const cleanSuffix = suffix.replace(/\/[A-G][#b]?$/, '');
+
   // Look up formula or fallback
   const formulaInfo =
-    CHORD_FORMULAS[suffix] ||
-    (suffix.toLowerCase().startsWith('m') ? CHORD_FORMULAS['m'] : CHORD_FORMULAS['']);
+    CHORD_FORMULAS[cleanSuffix] ||
+    (cleanSuffix.toLowerCase().startsWith('m') && !cleanSuffix.toLowerCase().startsWith('maj')
+      ? CHORD_FORMULAS['m']
+      : CHORD_FORMULAS['']);
 
-  const rootIdx = NOTES.indexOf(root);
+  const rootIdx = noteToIndex(root);
   const safeRootIdx = rootIdx >= 0 ? rootIdx : 0;
 
   // Build tones
@@ -219,9 +230,9 @@ export function getChordTheoryDetails(
         });
       } else {
         const note = getNoteAtFret(strIdx, fret);
-        const noteIdx = NOTES.indexOf(note);
+        const noteIdx = noteToIndex(note);
         const semitoneFromRoot = (noteIdx - safeRootIdx + 12) % 12;
-        const toneMatch = tones.find((t) => t.note === note);
+        const toneMatch = tones.find((t) => noteToIndex(t.note) === noteIdx);
         const degree = toneMatch
           ? toneMatch.degree
           : DEGREE_INFO[semitoneFromRoot]?.degree || 'Uyum';

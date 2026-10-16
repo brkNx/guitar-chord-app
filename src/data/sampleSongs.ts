@@ -15,95 +15,132 @@ export const SAMPLE_SONGS: Song[] = [
 {key: Am}
 
 {c: Giriş}
-[Am]    [C]    [G]    [Am]
+[Am]    [G]    [F]    [E]
+[Am]    [G]    [F]    [E]
 
 {c: Kıta 1}
-[Am]Akdeniz akşamları [C]bir başka oluyor
-[G]Hele bir de aylardan [Am]aşk olursa
-[Am]Akdeniz akşamları [C]bir başka oluyor
-[G]Hele bir de aylardan [Am]aşk olursa
+[Am]Akdeniz akşamları [G]bir başka oluyor
+[F]Hele bir de aylardan [E]temmuz ise bambaşka
+[Am]Sahilde insanlar [G]kol kola sımsıcak
+[F]Coşmamak elde mi [E]böyle bir akşamda
 
 {c: Nakarat}
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
+[Am]İşte ben böyle [G]bir akşamda aşık oldum
+[F]Aşık oldum [E]sırılsıklam
+[Am]Gördüğüm o güzel [G]gözlere vuruldum
+[F]O gece [E]sabaha kadar
 
 {c: Kıta 2}
-[Am]Gözlerin gözlerime [C]değdiği an
-[G]Akdeniz susuyor [Am]zaman duruyor
-[Am]Gözlerin gözlerime [C]değdiği an
-[G]Akdeniz susuyor [Am]zaman duruyor
+[Am]Akdeniz akşamları [G]bir başka oluyor
+[F]Hele bir de aylardan [E]temmuz ise bambaşka
+[Am]Sahilde insanlar [G]kol kola sımsıcak
+[F]Coşmamak elde mi [E]böyle bir akşamda
 
 {c: Nakarat}
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
-
-{c: Kıta 3}
-[Am]Sahilde dalgalar [C]seni fısıldar
-[G]Akdeniz akşamları [Am]bizi anlatır
-[Am]Sahilde dalgalar [C]seni fısıldar
-[G]Akdeniz akşamları [Am]bizi anlatır
-
-{c: Nakarat (Final)}
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
-[Am]Bir başka kayıyor [C]yıldızlar
-[G]Bir başka parıldıyor [Am]ay
+[Am]İşte ben böyle [G]bir akşamda aşık oldum
+[F]Aşık oldum [E]sırılsıklam
+[Am]Gördüğüm o güzel [G]gözlere vuruldum
+[F]O gece [E]sabaha kadar
 
 {c: Çıkış}
-[Am]    [C]    [G]    [Am]`
+[Am]    [G]    [F]    [E]    [Am]`
+  },
+  {
+    id: 'senden-daha-guzel',
+    title: 'Senden Daha Güzel',
+    artist: 'Duman',
+    key: 'Am',
+    capo: 0,
+    tempo: 112,
+    difficulty: 'Kolay',
+    tags: ['Türkçe Rock', 'Duman', 'Klasik'],
+    content: `{title: Senden Daha Güzel}
+{artist: Duman}
+{key: Am}
+
+{c: Giriş}
+[Am]    [Am]    [B]    [B]
+[Am]    [Am]    [B]    [B]
+
+{c: Kıta 1}
+[Am]Kimseyi görmedim [B]ben
+Senden daha [Am]güzel
+Kimseyi tanımadım [B]ben
+Senden daha [Am]özel
+Kimselere de [B]bakmadım
+Aklımdan [Am]geçer
+Kimseyi tanımadım [B]ben
+Senden daha [Am]güzel
+
+{c: Nakarat}
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzeeel  [B]
+
+{c: Kıta 2}
+[Am]Sana nerden [B]rastladım
+Oldum [Am]derbeder
+Kendimi sana [B]sakladım
+Senden daha [Am]güzel
+Kimseleri de [B]takmadım
+Ölsem [Am]değişmem
+Kimseyi tanımadım [B]ben
+Senden daha [Am]güzel
+
+{c: Nakarat}
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzel    [B]
+Senden daha [Am]güzeeel  [B]
+
+{c: Çıkış}
+[Am]    [B]    [Am]    [B]    [Am]`
   },
   {
     id: 'haberin-yok-oluyorum',
     title: 'Haberin Yok Ölüyorum',
     artist: 'Duman',
     key: 'Em',
-    capo: 0,
-    tempo: 110,
+    capo: 2,
+    tempo: 108,
     difficulty: 'Kolay',
     tags: ['Türkçe Rock', 'Duman', 'Akustik'],
     content: `{title: Haberin Yok Ölüyorum}
 {artist: Duman}
 {key: Em}
+{capo: 2}
 
 {c: Giriş}
-[Em]    [G]    [D]    [Am]
+[Em]    [C]    [Am]    [B7]
+[Em]    [C]    [Am]    [B7]
 
 {c: Kıta 1}
-[Em]Sensiz ben [G]nefes alamam
-[D]Buralarda hiç [Am]duramam
-[Em]Tek başıma [G]yalnız kalamam
-[D]Senin kokunu [Am]özlerim
+[Em]Yürüyorum [C]dikenlerin üstünde
+[Am]Yaralıyam [B7]korların içinde
+[Em]Susuyorum [C]söylenecek çok şey var
+[Am]Sensiz geçen [B7]gecelerin içinde
 
 {c: Nakarat}
-[C]Haberin yok [G]ölüyorum
-[D]Kör kuyularda [Em]görüyorum
-[C]Haberin yok [G]ölüyorum
-[D]Sen diye aşkı [Em]biliyorum
+[Em]Haberin yok [C]ben ölüyorum
+[Am]Yavaş yavaş [B7]eriyorum
+[Em]Haberin yok [C]ben ölüyorum
+[Am]Bile bile [B7]gidiyorum
 
 {c: Kıta 2}
-[Em]Geceler [G]sabah olmuyor
-[D]Gözlerim uyku [Am]tutmuyor
-[Em]Yüreğim sensiz [G]çarpmıyor
-[D]Aşkın içimden [Am]gitmiyor
+[Em]Bakıyorum [C]resmine her gece
+[Am]Ağlıyorum [B7]kendi halime
+[Em]Soruyorum [C]nerdesin şimdi sen
+[Am]Yanıyorum [B7]kendi derdime
 
 {c: Nakarat}
-[C]Haberin yok [G]ölüyorum
-[D]Kör kuyularda [Em]görüyorum
-[C]Haberin yok [G]ölüyorum
-[D]Sen diye aşkı [Em]biliyorum
-
-{c: Nakarat (Final)}
-[C]Haberin yok [G]ölüyorum
-[D]Kör kuyularda [Em]görüyorum
-[C]Haberin yok [G]ölüyorum
-[D]Sen diye aşkı [Em]biliyorum
+[Em]Haberin yok [C]ben ölüyorum
+[Am]Yavaş yavaş [B7]eriyorum
+[Em]Haberin yok [C]ben ölüyorum
+[Am]Bile bile [B7]gidiyorum
 
 {c: Çıkış}
-[Em]    [G]    [D]    [Am]`
+[Em]    [C]    [Am]    [B7]    [Em]`
   },
   {
     id: 'gulpembe',
@@ -111,7 +148,7 @@ export const SAMPLE_SONGS: Song[] = [
     artist: 'Barış Manço',
     key: 'Am',
     capo: 0,
-    tempo: 100,
+    tempo: 98,
     difficulty: 'Orta',
     tags: ['Anadolu Rock', 'Efsane', 'Barış Manço'],
     content: `{title: Gülpembe}
@@ -119,34 +156,31 @@ export const SAMPLE_SONGS: Song[] = [
 {key: Am}
 
 {c: Giriş}
-[Am]    [Dm]    [G]    [C]    [E7]
+[Am]    [Dm]    [G]    [C]
+[F]     [Dm]    [E]    [Am]
 
 {c: Kıta 1}
-[Am]Sen gülünce güller açar [Dm]Gülpembe
-[G]Bülbüller seni söyler [C]biz dinlerdik [E7]Gülpembe
-[Am]Sen gelince bahar gelir [Dm]Gülpembe
-[G]Dereler seni çağlar [C]sevinirdik [E7]Gülpembe
+[Am]Sen gülünce [Dm]güller açar [G]Gülpembe
+[C]Bülbüller [F]seni söyler [Dm]biz dinlerdik [E]Gülpembe
+[Am]Sen gelince [Dm]bahar gelir [G]Gülpembe
+[C]Dereler [F]seni çağlar [Dm]sevinirdik [E]Gülpembe
 
 {c: Nakarat}
-[Dm]Güz yağmurlarıyla [G]bir gün göçtün gittin
-[C]İnanamadık [Am]Gülpembe
-[Dm]Bizim iller sessiz [G]bizim iller sensiz
-[E7]Olamadı [Am]Gülpembe
+[Dm]Güz yağmurlarıyla [G]bir gün göçtün [C]gittin [F]inanamadık [Dm]Gülpembe [E]
+[Dm]Bizim iller [G]sessiz bizim [C]iller [F]sensiz [Dm]olamadı [E]Gülpembe [Am]
 
 {c: Kıta 2}
-[Am]Dudağımda son bir türkü [Dm]Gülpembe
-[G]Hala hep seni söyler [C]seni çağırır [E7]Gülpembe
-[Am]Gözlerimde son bir bulut [Dm]Gülpembe
-[G]Hala hep seni arar [C]seni bekler [E7]Gülpembe
+[Am]Dudağımda [Dm]son bir türkü [G]Gülpembe
+[C]Hala hep [F]seni söyler [Dm]seni çağırır [E]Gülpembe
+[Am]Gözlerimde [Dm]son bir bulut [G]Gülpembe
+[C]Hala hep [F]seni arar [Dm]seni bekler [E]Gülpembe
 
 {c: Nakarat}
-[Dm]Güz yağmurlarıyla [G]bir gün göçtün gittin
-[C]İnanamadık [Am]Gülpembe
-[Dm]Bizim iller sessiz [G]bizim iller sensiz
-[E7]Olamadı [Am]Gülpembe
+[Dm]Güz yağmurlarıyla [G]bir gün göçtün [C]gittin [F]inanamadık [Dm]Gülpembe [E]
+[Dm]Bizim iller [G]sessiz bizim [C]iller [F]sensiz [Dm]olamadı [E]Gülpembe [Am]
 
 {c: Çıkış}
-[Am]    [Dm]    [G]    [C]    [Am]`
+[Am]    [Dm]    [G]    [C]    [F]    [Dm]    [E]    [Am]`
   },
   {
     id: 'paramparca',
@@ -154,7 +188,7 @@ export const SAMPLE_SONGS: Song[] = [
     artist: 'Teoman',
     key: 'Am',
     capo: 0,
-    tempo: 115,
+    tempo: 112,
     difficulty: 'Kolay',
     tags: ['Rock', 'Teoman'],
     content: `{title: Paramparça}
@@ -162,34 +196,46 @@ export const SAMPLE_SONGS: Song[] = [
 {key: Am}
 
 {c: Giriş}
-[Am]    [F]    [C]    [G]
+[Am]    [Dm]    [G]    [C]    [F]    [Dm]    [E]
 
 {c: Kıta 1}
-[Am]Suç kimin [F]kime ne
-[C]Hayat hızla [G]akıp giderken
-[Am]Biten bir [F]aşkın ardından
-[C]Bakakalmak [G]neden
+[Am]Suç kimin [Dm]kime ne
+[G]Sözlerin [C]yalan mıydı yine
+[F]Cehennem [Dm]buz tutuncaya [E]dek
+[Am]Aşkımız [Dm]sürecek
+[G]Demiştin [C]bana bir gece
+[F]Şimdi [Dm]neredesin [E]söyle
 
 {c: Nakarat}
-[F]Bugün benim doğum günüm [G]hem sarhoşum hem yastayım
-[Am]Bir bar taburesi üstünde [Em]babamın öldüğü yaştayım
-[F]Bugün benim doğum günüm [G]kelimeler büyüyor ağzımda
-[Am]Bildiğim tüm hayatlar [Em]paramparça, paramparça
+[Am]Bugün benim [Dm]doğum günüm
+[G]Hem sarhoşum [C]hem yastayım
+[F]Bir bar taburesi [Dm]üstünde
+[E]Babamın öldüğü [Am]yaştayım
+[Am]Bugün benim [Dm]doğum günüm
+[G]Kelimeler [C]büyüyor ağzımda
+[F]Bildiğim tüm [Dm]hayatlar
+[E]Paramparça [Am]paramparça
 
 {c: Kıta 2}
-[Am]Takvimlerden [F]habersiz
-[C]Saatler durmuş [G]sanki birden
-[Am]Yalnızlık [F]eski bir dost gibi
-[C]Çalar kapımı [G]yeniden
+[Am]Takvimlerden [Dm]habersiz
+[G]Saatler [C]durmuş sanki birden
+[F]Yalnızlık [Dm]eski bir dost [E]gibi
+[Am]Çalar [Dm]kapımı
+[G]Soğuk bir [C]kış gecesinde
+[F]Sensiz [Dm]kaldım [E]yine
 
 {c: Nakarat}
-[F]Bugün benim doğum günüm [G]hem sarhoşum hem yastayım
-[Am]Bir bar taburesi üstünde [Em]babamın öldüğü yaştayım
-[F]Bugün benim doğum günüm [G]kelimeler büyüyor ağzımda
-[Am]Bildiğim tüm hayatlar [Em]paramparça, paramparça
+[Am]Bugün benim [Dm]doğum günüm
+[G]Hem sarhoşum [C]hem yastayım
+[F]Bir bar taburesi [Dm]üstünde
+[E]Babamın öldüğü [Am]yaştayım
+[Am]Bugün benim [Dm]doğum günüm
+[G]Kelimeler [C]büyüyor ağzımda
+[F]Bildiğim tüm [Dm]hayatlar
+[E]Paramparça [Am]paramparça
 
 {c: Çıkış}
-[Am]    [F]    [C]    [G]`
+[Am]    [Dm]    [G]    [C]    [F]    [Dm]    [E]    [Am]`
   },
   {
     id: 'knockin-on-heavens-door',
@@ -247,30 +293,30 @@ export const SAMPLE_SONGS: Song[] = [
 {capo: 2}
 
 {c: Intro}
-[Em]    [G]    [D]    [A7]
+[Em7]    [G]    [Dsus4]    [A7sus4]
 
 {c: Verse 1}
-[Em]Today is gonna be the day that they're [G]gonna throw it back to you
-[D]By now you should've somehow realized [A7]what you gotta do
-[Em]I don't believe that anybody [G]feels the way I do
-About you [D]now [A7]
+[Em7]Today is gonna be the day that they're [G]gonna throw it back to you
+[Dsus4]By now you should've somehow realized [A7sus4]what you gotta do
+[Em7]I don't believe that anybody [G]feels the way I do
+About you [Dsus4]now [A7sus4]
 
 {c: Chorus}
-[C]And all the roads that [D]lead you there were [Em]winding
-[C]And all the lights that [D]lead the way are [Em]blinding
-[C]Because maybe [D]you're gonna be the one that [Em]saves me
-And after [C]all [Em]you're my [G]wonderwall
+[Cadd9]And all the roads that [Dsus4]lead you there were [Em7]winding
+[Cadd9]And all the lights that [Dsus4]lead the way are [Em7]blinding
+[Cadd9]Because maybe [Dsus4]you're gonna be the one that [G]saves [D/F#]me [Em7]
+And after [Cadd9]all [Dsus4]you're my [Em7]wonderwall
 
 {c: Verse 2}
-[Em]Back beat, the word is on the street that the [G]fire in your heart is out
-[D]I'm sure you've heard it all before, but you [A7]never really had a doubt
-[Em]I don't believe that anybody [G]feels the way I do
-About you [D]now [A7]
+[Em7]Back beat, the word is on the street that the [G]fire in your heart is out
+[Dsus4]I'm sure you've heard it all before, but you [A7sus4]never really had a doubt
+[Em7]I don't believe that anybody [G]feels the way I do
+About you [Dsus4]now [A7sus4]
 
 {c: Chorus}
-[C]And all the roads that [D]lead you there were [Em]winding
-[C]And all the lights that [D]lead the way are [Em]blinding
-[C]Because maybe [D]you're gonna be the one that [Em]saves me
-And after [C]all [Em]you're my [G]wonderwall`
+[Cadd9]And all the roads that [Dsus4]lead you there were [Em7]winding
+[Cadd9]And all the lights that [Dsus4]lead the way are [Em7]blinding
+[Cadd9]Because maybe [Dsus4]you're gonna be the one that [G]saves [D/F#]me [Em7]
+And after [Cadd9]all [Dsus4]you're my [Em7]wonderwall`
   }
 ];

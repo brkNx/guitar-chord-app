@@ -34,8 +34,8 @@ const OVERVIEW_CAM_POS = new THREE.Vector3(0.24, 0.04, 1.82);
 const OVERVIEW_TARGET = new THREE.Vector3(0, -0.02, 0);
 
 const NECK_WORLD_Y = NECK_FOCUS_Y - MODEL_CENTER_Y;
-const NECK_CAM_POS = new THREE.Vector3(0, NECK_WORLD_Y + 0.02, 0.78);
-const NECK_TARGET = new THREE.Vector3(0, NECK_WORLD_Y + 0.02, 0.04);
+const NECK_CAM_POS = new THREE.Vector3(-NECK_WORLD_Y - 0.035, -0.09, 0.64);
+const NECK_TARGET = new THREE.Vector3(-NECK_WORLD_Y - 0.035, -0.09, 0.05);
 
 interface CameraRigProps {
   stageMode: StageMode;
@@ -67,18 +67,18 @@ function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
   }, [stageMode]);
 
   useFrame((_, delta) => {
-    const dt = Math.min(delta, 0.05);
+    const dt = Math.min(delta, 0.15);
     const ctrl = controlsRef.current;
 
     if (stageMode === 'neck') {
-      camera.position.x = THREE.MathUtils.damp(camera.position.x, NECK_CAM_POS.x, 7.5, dt);
-      camera.position.y = THREE.MathUtils.damp(camera.position.y, NECK_CAM_POS.y, 7.5, dt);
-      camera.position.z = THREE.MathUtils.damp(camera.position.z, NECK_CAM_POS.z, 7.5, dt);
+      camera.position.x = THREE.MathUtils.damp(camera.position.x, NECK_CAM_POS.x, 10, dt);
+      camera.position.y = THREE.MathUtils.damp(camera.position.y, NECK_CAM_POS.y, 10, dt);
+      camera.position.z = THREE.MathUtils.damp(camera.position.z, NECK_CAM_POS.z, 10, dt);
 
       if (ctrl) {
-        ctrl.target.x = THREE.MathUtils.damp(ctrl.target.x, NECK_TARGET.x, 8, dt);
-        ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, NECK_TARGET.y, 8, dt);
-        ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, NECK_TARGET.z, 8, dt);
+        ctrl.target.x = THREE.MathUtils.damp(ctrl.target.x, NECK_TARGET.x, 10, dt);
+        ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, NECK_TARGET.y, 10, dt);
+        ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, NECK_TARGET.z, 10, dt);
         camera.lookAt(ctrl.target);
       } else {
         camera.lookAt(NECK_TARGET);

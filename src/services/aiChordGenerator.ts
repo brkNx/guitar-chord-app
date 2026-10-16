@@ -497,7 +497,14 @@ async function fetchLyricsFromApis(artist: string, title: string): Promise<strin
 async function resolveCanonicalTrackAndLyrics(
   initialArtist: string,
   initialTitle: string
-): Promise<{ artist: string; title: string; lyrics: string | null }> {
+): Promise<{
+  artist: string;
+  title: string;
+  lyrics: string | null;
+  chordPro?: string;
+  key?: string;
+  capo?: number;
+}> {
   let artist = initialArtist;
   let title = initialTitle;
 
@@ -506,16 +513,26 @@ async function resolveCanonicalTrackAndLyrics(
       ? `${artist} ${title}`
       : title;
 
-  // 1. Try local Vite backend lyrics resolver (/api/lyrics -> Genius + LRCLIB, zero CORS)
+  // 1. Try local Vite backend lyrics & chords resolver (/api/lyrics -> Ultimate Guitar + Genius + LRCLIB)
   try {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 6000);
+    const timer = setTimeout(() => controller.abort(), 7500);
     const res = await fetch(`/api/lyrics?q=${encodeURIComponent(query)}`, {
       signal: controller.signal
     });
     clearTimeout(timer);
     if (res.ok) {
       const data = await res.json();
+      if (typeof data?.chordPro === 'string' && data.chordPro.trim().length > 40) {
+        return {
+          artist: data.artist || artist,
+          title: data.title || title,
+          lyrics: null,
+          chordPro: data.chordPro.trim(),
+          key: data.key,
+          capo: typeof data.capo === 'number' ? data.capo : undefined
+        };
+      }
       if (typeof data?.lyrics === 'string' && data.lyrics.trim().length > 25) {
         return {
           artist: data.artist || artist,
@@ -754,13 +771,19 @@ export async function generateSongWithAI(
     }
   }
 
-  // Resolve real artist, canonical Turkish/International title, and real lyrics from APIs
+  // Resolve real artist, canonical Turkish/International title, and real chords/lyrics from APIs
   let fetchedLyrics: string | null = null;
+  let resolvedChordPro: string | undefined;
+  let resolvedKey: string | undefined;
+  let resolvedCapo: number | undefined;
   if (!userLyrics || userLyrics.trim().length <= 10) {
     const resolved = await resolveCanonicalTrackAndLyrics(artist, title);
     artist = resolved.artist;
     title = resolved.title;
     fetchedLyrics = resolved.lyrics;
+    resolvedChordPro = resolved.chordPro;
+    resolvedKey = resolved.key;
+    resolvedCapo = resolved.capo;
   }
 
   const artistLower = artist.toLowerCase();
@@ -777,7 +800,8 @@ export async function generateSongWithAI(
     }
   }
 
-  const key = matchedProfile.typicalKeys[0];
+  const key = resolvedKey || matchedProfile.typicalKeys[0];
+  const capo = typeof resolvedCapo === 'number' ? resolvedCapo : matchedProfile.capo;
   const vp = matchedProfile.verseProgression;
   const cp = matchedProfile.chorusProgression;
   const bp = matchedProfile.bridgeProgression;
@@ -787,12 +811,14 @@ export async function generateSongWithAI(
 
   let chordProContent = '';
 
-  if (effectiveLyrics) {
+  if (resolvedChordPro && (!userLyrics || userLyrics.trim().length <= 10)) {
+    chordProContent = resolvedChordPro;
+  } else if (effectiveLyrics) {
     chordProContent = buildChordProFromLyrics(
       title,
       artist,
       key,
-      matchedProfile.capo,
+      capo,
       matchedProfile.tempo,
       effectiveLyrics,
       vp,
@@ -804,7 +830,7 @@ export async function generateSongWithAI(
     chordProContent = `{title: ${title}}
 {artist: ${artist}}
 {key: ${key}}
-{capo: ${matchedProfile.capo}}
+{capo: ${capo}}
 {tempo: ${matchedProfile.tempo}}
 
 {c: Giriş / Ana Riff}
@@ -834,7 +860,7 @@ export async function generateSongWithAI(
     title,
     artist,
     key,
-    capo: matchedProfile.capo,
+    capo,
     tempo: matchedProfile.tempo,
     difficulty: matchedProfile.difficulty,
     content: chordProContent,
@@ -844,7 +870,7 @@ export async function generateSongWithAI(
     youtubeUrl: ytInfo?.url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
     thumbnailUrl: ytInfo?.thumbnailUrl,
     tags: [
-      'Yapay Zeka',
+      resolvedChordPro ? 'Gerçek Akor' : 'Yapay Zeka',
       isYouTube ? 'YouTube' : 'Yeni Şarkı',
       key,
       matchedProfile.suggestedPattern || '4/4'

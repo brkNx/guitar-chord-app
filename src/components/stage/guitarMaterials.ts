@@ -143,9 +143,9 @@ const WOOD_COLOR = /* glsl */ `
         float lip = 1.0 - step(0.0016, rr);
         col = mix(col, ROSE_DARK, lip);
       }
-      // Tortoise pickguard on the bass side below the soundhole.
-      vec2 q = (p.xy - vec2(-0.078, 0.292));
-      q = mat2(0.94, 0.34, -0.34, 0.94) * q;
+      // Tortoise pickguard on the treble side below the soundhole.
+      vec2 q = (p.xy - vec2(0.078, 0.292));
+      q = mat2(0.94, -0.34, 0.34, 0.94) * q;
       float guard = length(q / vec2(0.042, 0.07));
       if (guard < 1.0 && rr > 0.016) {
         float tort = wFbm(p * vec3(260.0, 260.0, 260.0));

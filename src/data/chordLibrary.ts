@@ -72,6 +72,15 @@ export const CHORD_LIBRARY: Record<string, ChordDefinition> = {
       { frets: [-1, 0, 2, 2, 0, 0], fingers: [0, 0, 1, 2, 0, 0], baseFret: 1 }
     ]
   },
+  'A7sus4': {
+    name: 'A7sus4',
+    root: 'A',
+    suffix: '7sus4',
+    positions: [
+      { frets: [-1, 0, 2, 0, 3, 0], fingers: [0, 0, 1, 0, 3, 0], baseFret: 1 },
+      { frets: [-1, 0, 2, 0, 3, 3], fingers: [0, 0, 1, 0, 3, 4], baseFret: 1 }
+    ]
+  },
 
   // B CHORDS
   'B': {
@@ -108,6 +117,14 @@ export const CHORD_LIBRARY: Record<string, ChordDefinition> = {
     positions: [
       { frets: [-1, 2, 0, 2, 0, 2], fingers: [0, 1, 0, 2, 0, 3], baseFret: 1 },
       { frets: [-1, 2, 4, 2, 3, 2], fingers: [0, 1, 3, 1, 2, 1], baseFret: 2, barres: [{ fret: 2, fromString: 5, toString: 1, finger: 1 }] }
+    ]
+  },
+  'Bdim': {
+    name: 'Bdim',
+    root: 'B',
+    suffix: 'dim',
+    positions: [
+      { frets: [-1, 2, 3, 4, 3, -1], fingers: [0, 1, 2, 4, 3, 0], baseFret: 1 }
     ]
   },
 
@@ -149,6 +166,14 @@ export const CHORD_LIBRARY: Record<string, ChordDefinition> = {
     positions: [
       { frets: [-1, 3, 5, 5, 4, 3], fingers: [0, 1, 3, 4, 2, 1], baseFret: 3, barres: [{ fret: 3, fromString: 5, toString: 1, finger: 1 }] },
       { frets: [8, 10, 10, 8, 8, 8], fingers: [1, 3, 4, 1, 1, 1], baseFret: 8, barres: [{ fret: 8, fromString: 6, toString: 1, finger: 1 }] }
+    ]
+  },
+  'Cm7': {
+    name: 'Cm7',
+    root: 'C',
+    suffix: 'm7',
+    positions: [
+      { frets: [-1, 3, 5, 3, 4, 3], fingers: [0, 1, 3, 1, 2, 1], baseFret: 3, barres: [{ fret: 3, fromString: 5, toString: 1, finger: 1 }] }
     ]
   },
   'C7': {
@@ -214,6 +239,23 @@ export const CHORD_LIBRARY: Record<string, ChordDefinition> = {
     positions: [
       { frets: [-1, -1, 0, 2, 3, 1], fingers: [0, 0, 0, 2, 3, 1], baseFret: 1 },
       { frets: [-1, 5, 7, 7, 6, 5], fingers: [0, 1, 3, 4, 2, 1], baseFret: 5, barres: [{ fret: 5, fromString: 5, toString: 1, finger: 1 }] }
+    ]
+  },
+  'Dm7': {
+    name: 'Dm7',
+    root: 'D',
+    suffix: 'm7',
+    positions: [
+      { frets: [-1, -1, 0, 2, 1, 1], fingers: [0, 0, 0, 2, 1, 1], baseFret: 1, barres: [{ fret: 1, fromString: 2, toString: 1, finger: 1 }] },
+      { frets: [-1, 5, 7, 5, 6, 5], fingers: [0, 1, 3, 1, 2, 1], baseFret: 5, barres: [{ fret: 5, fromString: 5, toString: 1, finger: 1 }] }
+    ]
+  },
+  'Dmaj7': {
+    name: 'Dmaj7',
+    root: 'D',
+    suffix: 'maj7',
+    positions: [
+      { frets: [-1, -1, 0, 2, 2, 2], fingers: [0, 0, 0, 1, 2, 3], baseFret: 1 }
     ]
   },
   'D7': {

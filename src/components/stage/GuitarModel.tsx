@@ -182,7 +182,7 @@ export function GuitarModel({
   }, [chordName, position, pluckPulse.seq]);
 
   useFrame((state, delta) => {
-    const dt = Math.min(delta, 0.05);
+    const dt = Math.min(delta, 0.15);
 
     // 1. Turntable rotation: 3D studio stance in overview, horizontal neck in neck mode
     if (turntableRef.current) {
@@ -190,26 +190,32 @@ export function GuitarModel({
         turntableRef.current.rotation.y = THREE.MathUtils.damp(
           turntableRef.current.rotation.y,
           0,
-          7,
+          10,
           dt
         );
         turntableRef.current.rotation.x = THREE.MathUtils.damp(
           turntableRef.current.rotation.x,
           0,
-          7,
+          10,
           dt
         );
         turntableRef.current.rotation.z = THREE.MathUtils.damp(
           turntableRef.current.rotation.z,
-          0,
-          7,
+          Math.PI / 2,
+          10,
           dt
         );
       } else {
+        turntableRef.current.rotation.x = THREE.MathUtils.damp(
+          turntableRef.current.rotation.x,
+          0,
+          6,
+          dt
+        );
         turntableRef.current.rotation.z = THREE.MathUtils.damp(
           turntableRef.current.rotation.z,
           -0.2,
-          4,
+          6,
           dt
         );
         if (!userInteracting) {
@@ -312,7 +318,11 @@ export function GuitarModel({
   const bodyMesh = nodes.acoustic_body;
 
   return (
-    <group ref={turntableRef} scale={[isLeftHanded ? -1 : 1, 1, 1]}>
+    <group
+      ref={turntableRef}
+      rotation={[0, 0, stageMode === 'neck' ? Math.PI / 2 : -0.2]}
+      scale={[isLeftHanded ? -1 : 1, 1, 1]}
+    >
       {/* Model-space group centered at origin */}
       <group ref={modelSpaceRef} position={[0, -MODEL_CENTER_Y, 0]}>
         {/* GLB Acoustic Body + Strings + Tuning Pegs (scale 100, -90deg X) */}
