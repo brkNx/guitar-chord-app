@@ -12,46 +12,41 @@ export const SAMPLE_SONGS: Song[] = [
     youtubeId: 'XgdUYLzsVcI',
     tags: ['Akustik', 'Sufle', 'Pop Rock', 'YouTube'],
     timings: [
-      // Giriş / Akustik İntro (0.0s - 7.0s)
+      // Giriş / Akustik İntro (0.0s - 7.5s)
       { time: 0.0, chord: 'Bm' },
-      { time: 1.8, chord: 'D' },
-      { time: 3.4, chord: 'G' },
-      { time: 5.0, chord: 'Em' },
-      { time: 6.2, chord: 'F#' },
+      { time: 2.0, chord: 'D' },
+      { time: 4.0, chord: 'G' },
+      { time: 6.0, chord: 'Em' },
+      { time: 7.2, chord: 'F#' },
 
-      // Kıta 1 (7.2s - 27.5s)
-      { time: 7.2, chord: 'Bm' },  // "Pus, dağılmaz mı yine"
-      { time: 11.5, chord: 'D' },  // "dağılmaz mı kuşlar"
-      { time: 16.0, chord: 'G' },  // "Gözümü kapattım"
-      { time: 20.5, chord: 'Em' }, // "ve hep biter mi aşklar"
-      { time: 24.5, chord: 'F#' }, // "diye soramadım, ah"
+      // Kıta 1 (8.2s - 38.0s)
+      { time: 8.2, chord: 'Bm' },  // "Pus, dağılmaz mı yine"
+      { time: 12.0, chord: 'D' },  // "dağılmaz mı kuşlar"
+      { time: 23.0, chord: 'G' },  // "Ben gözümü kapattım ve"
+      { time: 27.0, chord: 'Em' }, // "hep biter mi aşklar"
+      { time: 31.8, chord: 'F#' }, // "diye soramadım"
 
-      { time: 28.0, chord: 'Bm' }, // "Diyecek sözün var mı"
-      { time: 32.5, chord: 'D' },  // "kapıda gözün var mı"
-      { time: 37.0, chord: 'G' },  // "Kalacak kalacak"
-      { time: 41.5, chord: 'Em' }, // "kalacak yüzün"
-      { time: 44.5, chord: 'F#' }, // "var mı"
+      // Kıta 2 (40.7s - 54.5s)
+      { time: 40.7, chord: 'Bm' }, // "Diyecek sözün var mı"
+      { time: 44.4, chord: 'D' },  // "kapıda gözün var mı"
+      { time: 48.1, chord: 'G' },  // "Kalacak kalacak"
+      { time: 51.5, chord: 'Em' }, // "kalacak yüzün"
+      { time: 53.0, chord: 'F#' }, // "var mı"
 
-      // Nakarat (48.0s - 82.0s)
-      { time: 48.0, chord: 'Bm' }, // "Şimdi gidersen"
-      { time: 53.0, chord: 'D' },  // "Arkama baktım sevgilim"
-      { time: 58.0, chord: 'G' },  // "Sözlerine inanmıştım"
-      { time: 62.5, chord: 'Em' }, // "başka gözlerde"
-      { time: 65.5, chord: 'F#' }, // "çok aramıştım seni"
+      // Nakarat 1 (54.8s - 68.5s)
+      { time: 54.8, chord: 'Bm' }, // "Şimdi gidersen diye diye tıkandım"
+      { time: 58.5, chord: 'D' },  // "Arkama baktım sevgilim nerede kaldın"
+      { time: 62.7, chord: 'G' },  // "Sözlerine inanmıştım"
+      { time: 65.5, chord: 'Em' }, // "başka gözlerde"
+      { time: 67.5, chord: 'F#' }, // "çok aramıştım seni"
 
-      { time: 68.5, chord: 'Bm' }, // "Ah bir bilsen"
-      { time: 72.0, chord: 'D' },  // "nasıl kapıldım"
-      { time: 75.5, chord: 'G' },  // "Arkama baktım sevgilim"
-      { time: 78.5, chord: 'Em' }, // "nerde kaldın"
-      { time: 80.5, chord: 'F#' }, // "(ara)"
-
-      // Çıkış (82.0s - 86.0s)
-      { time: 82.0, chord: 'Bm' },
-      { time: 83.0, chord: 'D' },
-      { time: 84.0, chord: 'G' },
-      { time: 84.8, chord: 'Em' },
-      { time: 85.4, chord: 'F#' },
-      { time: 85.8, chord: 'Bm' },
+      // Nakarat 2 & Bitiş (68.8s - 85.6s)
+      { time: 68.8, chord: 'Bm' }, // "Ah bir bilsen nasıl kapıldım"
+      { time: 73.8, chord: 'D' },  // "Arkama baktım sevgilim nerede kaldın"
+      { time: 77.8, chord: 'G' },  // "Sözlerime inanmıştım"
+      { time: 81.0, chord: 'Em' }, // "başka gözlerde"
+      { time: 83.0, chord: 'F#' }, // "çok aramıştım"
+      { time: 85.0, chord: 'Bm' }, // "seni"
     ],
     content: `{title: Pus (Kalacak Yüzün Var Mı)}
 {artist: Sufle}
@@ -64,19 +59,16 @@ export const SAMPLE_SONGS: Song[] = [
 
 {c: Kıta}
 [Bm]Pus, dağılmaz mı yine [D]dağılmaz mı kuşlar
-[G]Gözümü kapattım ve [Em]hep biter mi aşklar [F#]diye soramadım, ah
+[G]Ben gözümü kapattım ve [Em]hep biter mi aşklar [F#]diye soramadım
 [Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
 [G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
 
 {c: Nakarat}
 [Bm]Şimdi gidersen diye diye tıkandım
-[D]Arkama baktım sevgilim nerde kaldın
+[D]Arkama baktım sevgilim nerede kaldın
 [G]Sözlerine inanmıştım [Em]başka gözlerde [F#]çok aramıştım seni
-[Bm]Ah bir bilsen [D]nasıl kapıldım
-[G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
-
-{c: Çıkış / Bitiş}
-[Bm]    [D]    [G]    [Em] [F#] [Bm]`,
+[Bm]Ah bir bilsen nasıl kapıldım [D]arkama baktım sevgilim nerede kaldın
+[G]Sözlerime inanmıştım [Em]başka gözlerde [F#]çok aramıştım [Bm]seni`,
   },
   {
     id: 'akdeniz-aksamlari',
