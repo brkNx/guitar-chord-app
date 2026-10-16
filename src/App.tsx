@@ -14,6 +14,8 @@ import { generateSongWithAI } from './services/aiChordGenerator';
 import { SongViewer } from './components/SongViewer';
 import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
+import { ChordDictionaryModal } from './components/ChordDictionaryModal';
+import { ChordDetailModal } from './components/ChordDetailModal';
 import { Metronome } from './components/Metronome';
 import { GuitarStage } from './components/stage/GuitarStage';
 import './App.css';
@@ -25,7 +27,8 @@ import {
   ChevronUp,
   Search,
   Plus,
-  Video
+  Video,
+  BookOpen
 } from 'lucide-react';
 
 const STORAGE_CUSTOM_SONGS = 'guitar_app_custom_songs';
@@ -71,12 +74,20 @@ export function App() {
   // Left column tab: 'theory' | 'setlist' | 'scales'
   const [leftTab, setLeftTab] = useState<'theory' | 'setlist' | 'scales'>('theory');
 
-  // Search & custom modals
+  // Search, custom & chord modals
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
+  const [isDictionaryOpen, setIsDictionaryOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailChord, setDetailChord] = useState<string>('Am');
   const [quickInput, setQuickInput] = useState('');
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const handleOpenChordDetail = (chordName?: string) => {
+    setDetailChord(chordName || activeChord);
+    setIsDetailOpen(true);
+  };
 
   // Active chord definition & theory details
   const chordDef = getOrGenerateChord(activeChord);
@@ -319,8 +330,17 @@ export function App() {
           </button>
         </div>
 
-        {/* Right: Cmd+K Quick Search & Add Song */}
+        {/* Right: Cmd+K Quick Search, Chords Dictionary & Add Song */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setIsDictionaryOpen(true)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono text-xs text-slate-200 transition-colors cursor-pointer"
+            title="Akor Kütüphanesi & Sözlük"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+            <span className="hidden sm:inline">AKORLAR</span>
+          </button>
+
           <button
             onClick={() => setIsSearchOpen(true)}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono text-xs text-slate-200 transition-colors cursor-pointer"
@@ -369,9 +389,20 @@ export function App() {
           {leftTab === 'theory' && (
             <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
               {/* Active Chord Summary Card */}
-              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1">
+              <div
+                onClick={() => handleOpenChordDetail(activeChord)}
+                className="p-3 rounded-lg bg-[#191c26] border border-white/10 hover:border-amber-500/40 space-y-1 transition-all cursor-pointer group shadow-sm"
+                title="Detaylı akor analizini aç"
+              >
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-amber-400">{activeChord}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl font-bold text-amber-400 group-hover:text-amber-300 transition-colors">
+                      {activeChord}
+                    </span>
+                    <span className="text-[9px] text-slate-500 font-mono group-hover:text-amber-400/80 transition-colors">
+                      [DETAY ↗]
+                    </span>
+                  </div>
                   <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
                     {theory.typeCategory}
                   </span>
@@ -380,6 +411,15 @@ export function App() {
                   {theory.fullName} • {theory.mood}
                 </p>
               </div>
+
+              {/* Quick Chord Dictionary Button */}
+              <button
+                onClick={() => setIsDictionaryOpen(true)}
+                className="w-full py-1.5 px-2 bg-[#141722] hover:bg-[#1c2130] border border-white/10 hover:border-amber-500/40 rounded-lg text-[10px] font-bold text-amber-400 flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>TÜM AKORLAR SÖZLÜĞÜ (KÜTÜPHANE)</span>
+              </button>
 
               {/* Intervals Breakdown */}
               <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
@@ -631,14 +671,14 @@ export function App() {
             onSelectChord={handleSelectChord}
             onPositionChange={setPositionIdx}
             onDisplayModeChange={setDisplayMode}
-            onOpenChordDetail={() => setLeftTab('theory')}
+            onOpenChordDetail={() => handleOpenChordDetail(activeChord)}
             onSelectPattern={setSelectedPatternId}
             onPlayStrumSequence={handlePlayStrumSequence}
           />
         </main>
 
-        {/* SAĞ SÜTUN (440px): MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
-        <aside className="w-[440px] h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0 p-2 gap-2">
+        {/* SAĞ SÜTUN: MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
+        <aside className="w-full h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0 p-2 gap-2">
           <SongViewer
             song={currentSong}
             activeChord={activeChord}
@@ -664,6 +704,27 @@ export function App() {
         isOpen={isCustomOpen}
         onClose={() => setIsCustomOpen(false)}
         onSaveSong={handleSaveCustomSong}
+      />
+
+      {/* CHORD DICTIONARY & DETAIL MODALS */}
+      <ChordDictionaryModal
+        isOpen={isDictionaryOpen}
+        onClose={() => setIsDictionaryOpen(false)}
+        onSelectChord={(chord) => {
+          handleSelectChord(chord);
+          showToast(`${chord} akoru seçildi.`);
+        }}
+      />
+
+      <ChordDetailModal
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        chordName={detailChord}
+        onApplyChord={(chord, pos) => {
+          handleSelectChord(chord);
+          if (typeof pos === 'number') setPositionIdx(pos);
+          showToast(`${chord} akoru uygulandı.`);
+        }}
       />
 
       {/* TOAST NOTIFICATION */}

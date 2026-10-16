@@ -403,9 +403,10 @@ export function GuitarStage({
         {stageMode === 'overview' && (
           <div className="
             absolute bottom-3 left-1/2 -translate-x-1/2 z-10
-            flex items-center gap-3 px-4 py-1.5 rounded-full whitespace-nowrap
+            max-w-[calc(100%-24px)] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full
             bg-[#191c26]/90 border border-white/10 backdrop-blur-md
-            font-mono text-[11px] text-slate-300 shadow-xl pointer-events-none
+            font-mono text-[10px] text-slate-300 shadow-xl pointer-events-none
+            whitespace-nowrap overflow-hidden
           ">
             <span
               className={
@@ -414,7 +415,7 @@ export function GuitarStage({
                   : 'text-slate-300'
               }
             >
-              Sapa tıkla: Akor Klavyesini Aç
+              🎸 Sapa Tıkla: Klavye
             </span>
             <span className="text-slate-600">•</span>
             <span
@@ -424,10 +425,10 @@ export function GuitarStage({
                   : 'text-slate-400'
               }
             >
-              Gövdeye tıkla: Akoru Tınlat
+              Gövdeye Tıkla: Tınlat
             </span>
-            <span className="text-slate-600">•</span>
-            <span className="text-slate-500">Sürükle: 360° Döndür</span>
+            <span className="text-slate-600 hidden sm:inline">•</span>
+            <span className="text-slate-500 hidden sm:inline">360° Çevir</span>
           </div>
         )}
 
@@ -452,16 +453,16 @@ export function GuitarStage({
       </div>
 
       {/* BOTTOM DOCK: COMPACT 16-STEP STRUMMING SEQUENCER */}
-      <div className="shrink-0 bg-[#0e1017] border-t border-white/10 px-3 py-2.5 font-mono text-xs flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-300 flex items-center gap-1.5 text-[11px]">
+      <div className="shrink-0 bg-[#0e1017] border-t border-white/10 px-3 py-2 font-mono text-xs flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="font-bold text-slate-300 flex items-center gap-1.5 text-[11px] shrink-0">
             <Music className="w-3.5 h-3.5 text-amber-400" />
-            <span>RİTİM DOCK</span>
+            <span className="hidden sm:inline">RİTİM DOCK</span>
           </span>
           <select
             value={selectedPatternId}
             onChange={(e) => onSelectPattern(e.target.value)}
-            className="bg-[#191c26] border border-white/10 rounded-md px-2 py-1 text-[11px] text-slate-200 font-mono focus:outline-none"
+            className="bg-[#191c26] border border-white/10 rounded-md px-2 py-1 text-[11px] text-slate-200 font-mono focus:outline-none max-w-[160px] sm:max-w-[210px] truncate"
           >
             {STRUM_PATTERNS.map((p) => (
               <option key={p.id} value={p.id} className="bg-[#11131a]">
@@ -472,11 +473,11 @@ export function GuitarStage({
         </div>
 
         {/* Step Grid */}
-        <div className="flex items-center gap-1 flex-1 max-w-xl justify-center">
+        <div className="flex items-center gap-1 shrink-0 justify-center">
           {activePattern.strokes.map((stroke, idx) => (
             <div
               key={idx}
-              className={`flex-1 min-w-[28px] py-1 px-1 rounded border text-center font-mono flex flex-col items-center justify-center ${
+              className={`w-7 py-1 px-0.5 rounded border text-center font-mono flex flex-col items-center justify-center shrink-0 ${
                 stroke.accent
                   ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold shadow-sm'
                   : stroke.type === 'rest'
@@ -498,7 +499,7 @@ export function GuitarStage({
             onPlayStrumSequence();
           }}
           disabled={isPlayingStrumSeq}
-          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25"
+          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25 shrink-0 whitespace-nowrap"
         >
           <Play className="w-3 h-3 fill-current" />
           <span>{isPlayingStrumSeq ? 'ÇALINIYOR...' : 'RİTİM TEST'}</span>

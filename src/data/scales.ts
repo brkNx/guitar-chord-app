@@ -79,10 +79,17 @@ export function extractRootNote(input: string): string {
 }
 
 // Get the notes present in the scale for a given root note
-export function getScaleNotes(root: string, scale: ScaleDefinition): string[] {
+export function getScaleNotes(root: string, scaleOrDef?: ScaleDefinition | string): string[] {
   const cleanRoot = extractRootNote(root);
   const rootIdx = NOTES.indexOf(cleanRoot);
   if (rootIdx === -1) return [];
+
+  const scale =
+    typeof scaleOrDef === 'string'
+      ? GUITAR_SCALES.find((s) => s.id === scaleOrDef) || DEFAULT_SCALE
+      : scaleOrDef || DEFAULT_SCALE;
+
+  if (!scale || !scale.intervals) return [];
 
   return scale.intervals.map((interval) => {
     const noteIdx = (rootIdx + interval) % 12;
@@ -94,13 +101,20 @@ export function getScaleNotes(root: string, scale: ScaleDefinition): string[] {
 export function getScaleNoteInfo(
   note: string,
   root: string,
-  scale: ScaleDefinition
+  scaleOrDef?: ScaleDefinition | string
 ): { inScale: boolean; degreeName?: string; isRoot?: boolean } {
   const cleanRoot = extractRootNote(root);
   const rootIdx = NOTES.indexOf(cleanRoot);
   const noteIdx = NOTES.indexOf(note);
 
   if (rootIdx === -1 || noteIdx === -1) return { inScale: false };
+
+  const scale =
+    typeof scaleOrDef === 'string'
+      ? GUITAR_SCALES.find((s) => s.id === scaleOrDef) || DEFAULT_SCALE
+      : scaleOrDef || DEFAULT_SCALE;
+
+  if (!scale || !scale.intervals) return { inScale: false };
 
   let semitones = (noteIdx - rootIdx) % 12;
   if (semitones < 0) semitones += 12;
@@ -112,7 +126,7 @@ export function getScaleNoteInfo(
 
   return {
     inScale: true,
-    degreeName: scale.degreeNames[intervalIndex] || `d${intervalIndex + 1}`,
+    degreeName: scale.degreeNames?.[intervalIndex] || `d${intervalIndex + 1}`,
     isRoot: semitones === 0
   };
 }
