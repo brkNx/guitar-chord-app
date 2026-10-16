@@ -1,8 +1,8 @@
 import type { ParsedLine, SongSegment } from '../types/guitar';
 import { transposeChord } from './transpose';
 
-// Regex to test if a token looks like a guitar chord
-const CHORD_REGEX = /^[A-G][#b]?(m|maj|min|dim|aug|sus[24]|add[9]|7|9|11|13|m7|maj7|m7b5)?(\/[A-G][#b]?)?$/;
+// Comprehensive regex to validate guitar chord tokens (including 7sus4, add9, slash chords, etc.)
+const CHORD_REGEX = /^[A-G][#b]?(m|min|maj|dim|aug|sus[24]?|7sus[24]|add[249]|maj[79]|m7b5|dim7|aug7|[m]?[679]|11|13|5)?(\/[A-G][#b]?)?$/;
 
 export function isChordToken(token: string): boolean {
   if (!token) return false;

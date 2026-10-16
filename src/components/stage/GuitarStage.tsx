@@ -222,90 +222,96 @@ export function GuitarStage({
             'radial-gradient(ellipse 75% 70% at 50% 48%, #1c2234 0%, #10121a 55%, #07080c 100%)',
         }}
       >
-        {/* TOP-LEFT HUD: ACTIVE CHORD TELEMETRY BADGE */}
-        <div className="absolute top-3 left-3 sm:top-3.5 sm:left-3.5 z-10 flex items-center gap-2 sm:gap-2.5 bg-[#0e1017]/85 border border-white/[0.08] rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-          <button
-            onClick={onOpenChordDetail}
-            className="px-2 sm:px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-extrabold rounded-lg cursor-pointer hover:bg-amber-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)]"
-            title="Akor teorisini incele"
-          >
-            {chordName}
-          </button>
-          <div className="flex flex-col font-mono">
-            <span className="text-[10px] sm:text-[11px] font-bold text-slate-200 leading-tight">
-              {theory.typeCategory}
-            </span>
-            <span className="text-[9px] sm:text-[10px] text-slate-400 leading-tight">
-              {position.baseFret > 1 ? `${position.baseFret}. Perde` : 'Açık'} • #{positionIdx + 1}/{totalPositions}
-            </span>
+        {/* TOP HUD: ZERO-COLLISION RESPONSIVE DUAL-WING BAR */}
+        <div className="absolute top-2.5 sm:top-3.5 inset-x-2.5 sm:inset-x-3.5 z-10 flex items-center justify-between gap-1.5 sm:gap-2.5 pointer-events-none">
+          {/* Left Wing: Active Chord Telemetry Badge */}
+          <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 bg-[#0e1017]/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] shrink-0">
+            <button
+              onClick={onOpenChordDetail}
+              className="px-2 sm:px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-extrabold rounded-lg cursor-pointer hover:bg-amber-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+              title="Akor teorisini incele"
+            >
+              {chordName}
+            </button>
+            <div className="flex flex-col font-mono">
+              <span className="text-[10px] sm:text-[11px] font-bold text-slate-200 leading-tight">
+                {theory.typeCategory}
+              </span>
+              <span className="text-[9px] sm:text-[10px] text-slate-400 leading-tight">
+                {position.baseFret > 1 ? `${position.baseFret}. Prd` : 'Açık'} • #{positionIdx + 1}/{totalPositions}
+              </span>
+            </div>
+            <button
+              onClick={() => triggerStrum('down')}
+              className="ml-0.5 sm:ml-1 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 bg-white/[0.04] hover:bg-white/[0.08] border border-amber-500/30 text-amber-400 font-mono text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95"
+              title="Akoru Tınlat"
+            >
+              <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden xs:inline">TINLAT</span>
+            </button>
           </div>
-          <button
-            onClick={() => triggerStrum('down')}
-            className="ml-0.5 sm:ml-1 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 bg-white/[0.04] hover:bg-white/[0.08] border border-amber-500/30 text-amber-400 font-mono text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95"
-          >
-            <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-            <span className="hidden xs:inline">TINLAT</span>
-          </button>
-        </div>
 
-        {/* TOP-RIGHT HUD: POLYGONIUM 3D CAMERA FLOATING PILLS */}
-        <div className="absolute top-16 right-3 sm:top-3.5 sm:right-3.5 z-10 flex items-center gap-1 bg-[#0e1017]/85 border border-white/[0.08] rounded-full p-1 backdrop-blur-xl shadow-2xl font-mono text-[10px]">
-          <button
-            onClick={() => {
-              setStageMode('overview');
-              setCamPreset('pov');
-            }}
-            className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
-              stageMode === 'overview' && camPreset === 'pov'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'text-slate-300 hover:text-white'
-            }`}
-            title="Oyuncu Bakış Açısı (POV)"
-          >
-            POV
-          </button>
-          <button
-            onClick={() => {
-              setStageMode('overview');
-              setCamPreset('front');
-            }}
-            className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
-              stageMode === 'overview' && camPreset === 'front'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'text-slate-300 hover:text-white'
-            }`}
-            title="Önden Bakış Açısı"
-          >
-            KARŞIDAN
-          </button>
-          <button
-            onClick={() => {
-              setStageMode('overview');
-              setCamPreset('overview');
-            }}
-            className={`px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
-              stageMode === 'overview' && camPreset === 'overview'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'text-slate-300 hover:text-white'
-            }`}
-            title="Tam Gitar Görünümü"
-          >
-            TAM GİTAR
-          </button>
-          <button
-            onClick={() => {
-              enterNeckMode();
-            }}
-            className={`flex items-center gap-1 px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
-              stageMode === 'neck'
-                ? 'bg-amber-500 text-slate-950 shadow-sm'
-                : 'text-slate-300 hover:text-white'
-            }`}
-            title="Sap ve 2D Akor Klavyesi"
-          >
-            <Layers className="w-3 h-3" />
-            <span>KLAVYE</span>
-          </button>
+          {/* Right Wing: Polygonium 3D Camera Floating Pills */}
+          <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1 bg-[#0e1017]/90 border border-white/[0.08] rounded-full p-1 backdrop-blur-xl shadow-2xl font-mono text-[9px] sm:text-[10px] shrink-0">
+            <button
+              onClick={() => {
+                setStageMode('overview');
+                setCamPreset('pov');
+              }}
+              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+                stageMode === 'overview' && camPreset === 'pov'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Oyuncu Bakış Açısı (POV)"
+            >
+              POV
+            </button>
+            <button
+              onClick={() => {
+                setStageMode('overview');
+                setCamPreset('front');
+              }}
+              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+                stageMode === 'overview' && camPreset === 'front'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Önden Bakış Açısı"
+            >
+              <span className="hidden sm:inline">KARŞIDAN</span>
+              <span className="sm:hidden">ÖN</span>
+            </button>
+            <button
+              onClick={() => {
+                setStageMode('overview');
+                setCamPreset('overview');
+              }}
+              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+                stageMode === 'overview' && camPreset === 'overview'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Tam Gitar Görünümü"
+            >
+              <span className="hidden sm:inline">TAM GİTAR</span>
+              <span className="sm:hidden">3D</span>
+            </button>
+            <button
+              onClick={() => {
+                enterNeckMode();
+              }}
+              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+                stageMode === 'neck'
+                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="Sap ve 2D Akor Klavyesi"
+            >
+              <Layers className="w-3 h-3" />
+              <span>KLAVYE</span>
+            </button>
+          </div>
         </div>
 
         {/* THREE.JS WEBGL CANVAS */}
@@ -323,18 +329,18 @@ export function GuitarStage({
           gl={{
             antialias: true,
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.0,
+            toneMappingExposure: 1.05,
           }}
         >
           <Suspense fallback={null}>
             {/* Studio 3-Point Master Lighting with Warm Key and Crisp Rim Kicker */}
-            <ambientLight intensity={0.25} color="#181c28" />
+            <ambientLight intensity={0.32} color="#151926" />
 
             {/* Warm Key Studio Spotlight (front-right) */}
             <directionalLight
-              position={[2.4, 3.0, 2.8]}
-              intensity={1.6}
-              color="#fff8ed"
+              position={[2.2, 2.8, 2.6]}
+              intensity={1.35}
+              color="#fffbf2"
               castShadow
               shadow-mapSize-width={2048}
               shadow-mapSize-height={2048}
@@ -343,15 +349,15 @@ export function GuitarStage({
 
             {/* Cool Daylight Fill Light (left) */}
             <directionalLight
-              position={[-2.8, 1.4, 2.0]}
-              intensity={0.7}
-              color="#a5c4e8"
+              position={[-2.6, 1.2, 1.8]}
+              intensity={0.55}
+              color="#a8c5ea"
             />
 
             {/* Golden Rim Spotlight (high-rear backlight creating acoustic silhouette) */}
             <spotLight
-              position={[0.2, 3.8, -2.4]}
-              intensity={2.2}
+              position={[0.2, 3.4, -2.4]}
+              intensity={2.0}
               angle={0.65}
               penumbra={0.85}
               color="#f59e0b"
@@ -359,17 +365,17 @@ export function GuitarStage({
 
             {/* Warm Lower Bounce Light */}
             <pointLight
-              position={[0, -2.2, 1.2]}
-              intensity={0.4}
-              color="#92400e"
+              position={[0, -1.8, 1.2]}
+              intensity={0.35}
+              color="#854d0e"
               distance={3.5}
             />
 
             {/* Backdrop Glow Point behind soundboard */}
             <pointLight
-              position={[0, -0.05, -0.8]}
-              intensity={0.7}
-              color="#d97706"
+              position={[0, 0.0, -0.9]}
+              intensity={0.6}
+              color="#b45309"
               distance={3.0}
               decay={2}
             />

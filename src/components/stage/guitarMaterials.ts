@@ -64,140 +64,191 @@ const WOOD_COLOR = /* glsl */ `
   vec3 p = vGPos;
   vec3 nn = normalize(vGNrm);
   float ax = abs(p.x);
-  float woodRough = 0.18;
+  float woodRough = 0.20;
   float woodCoat = 1.0;
   float neckMask = 0.0;
   vec3 col;
 
-  // Premium Sitka Spruce (golden honey top with warm amber resonance)
-  const vec3 SPRUCE = vec3(0.64, 0.38, 0.14);
-  const vec3 SPRUCE_LATE = vec3(0.46, 0.24, 0.08);
-  const vec3 SPRUCE_AMBER = vec3(0.50, 0.26, 0.08);
+  // Studio-Calibrated Solid Sitka Spruce (rich warm honey-amber with luminous acoustic resonance)
+  const vec3 SPRUCE_BASE = vec3(0.48, 0.28, 0.11);
+  const vec3 SPRUCE_GRAIN = vec3(0.26, 0.12, 0.035);
+  const vec3 SPRUCE_VIGNETTE = vec3(0.24, 0.08, 0.015);
 
-  // Luxury East Indian Rosewood (dark chocolate with espresso streaks)
-  const vec3 ROSE = vec3(0.14, 0.055, 0.028);
-  const vec3 ROSE_DARK = vec3(0.042, 0.016, 0.008);
+  // Luxury East Indian Rosewood (dark chocolate with rich espresso figure)
+  const vec3 ROSE = vec3(0.12, 0.045, 0.022);
+  const vec3 ROSE_DARK = vec3(0.032, 0.012, 0.006);
 
-  // Rich African Mahogany (neck & headstock)
-  const vec3 MAHOGANY = vec3(0.25, 0.09, 0.038);
-  const vec3 MAHOGANY_DARK = vec3(0.12, 0.04, 0.016);
+  // African Mahogany (warm acoustic neck & sides)
+  const vec3 MAHOGANY = vec3(0.22, 0.075, 0.030);
+  const vec3 MAHOGANY_DARK = vec3(0.09, 0.028, 0.012);
 
-  // African Gaboon Ebony (fretboard, headstock face & bridge)
-  const vec3 EBONY = vec3(0.024, 0.018, 0.015);
-  const vec3 EBONY_BROWN = vec3(0.065, 0.038, 0.024);
+  // Deep African Gaboon Ebony (fretboard, bridge & headstock faceplate)
+  const vec3 EBONY = vec3(0.015, 0.012, 0.010);
+  const vec3 EBONY_WARM = vec3(0.045, 0.028, 0.018);
 
-  // Polished Vintage Bone (nut & saddle)
-  const vec3 BONE = vec3(0.92, 0.88, 0.78);
+  // Aged Natural Bone (compensated saddle, nut & pins)
+  const vec3 BONE = vec3(0.92, 0.89, 0.80);
 
-  // Deep Soundhole Interior
-  const vec3 HOLE = vec3(0.006, 0.004, 0.003);
+  // Deep Acoustic Soundhole Cavity
+  const vec3 HOLE = vec3(0.004, 0.003, 0.002);
 
   float fbHalf = 0.021 + 0.01429 * (${f(NUT_Y)} - p.y);
   float holeD = length(p.xy - vec2(0.0, ${f(SOUNDHOLE.y)}));
 
   if (!gl_FrontFacing || (holeD < ${f(SOUNDHOLE.radius + 0.002)} && p.z < 0.049 && p.y < ${f(FRETBOARD_END_Y)})) {
-    // Interior seen through the soundhole.
+    // Interior resonance chamber seen through the soundhole
     col = HOLE;
-    woodRough = 0.95;
+    woodRough = 0.98;
     woodCoat = 0.0;
   } else if (p.y > ${f(NUT_Y + 0.004)}) {
-    // Headstock: glossy dark ebony face veneer, flamed mahogany back/sides.
-    if (nn.z > 0.45 && p.z > 0.02) {
-      col = EBONY * (0.85 + 0.25 * wFbm(p * vec3(300.0, 60.0, 300.0)));
-      woodRough = 0.25;
-      woodCoat = 0.9;
+    // Headstock: full polished jet-black ebony faceplate veneer with golden crest
+    if (p.z > 0.038) {
+      col = EBONY * (0.90 + 0.15 * wFbm(p * vec3(200.0, 50.0, 200.0)));
+      // Golden custom shop diamond crest in upper center
+      float crestY = p.y - 0.965;
+      float crestD = length(vec2(p.x * 1.6, crestY));
+      if (crestD < 0.012 && crestD > 0.007) {
+        col = vec3(0.85, 0.70, 0.28);
+      }
+      woodRough = 0.14;
+      woodCoat = 0.98;
     } else {
-      col = mix(MAHOGANY, MAHOGANY_DARK, wGrain(p.x + p.z, p, 1600.0, 0.006) * 0.6);
-      woodRough = 0.28;
-      woodCoat = 0.85;
+      col = mix(MAHOGANY, MAHOGANY_DARK, wGrain(p.x + p.z * 0.5, p, 1200.0, 0.005) * 0.55);
+      woodRough = 0.22;
+      woodCoat = 0.88;
     }
     neckMask = 1.0;
   } else if (p.y > ${f(NUT_Y - 0.0035)} && ax < 0.024 && p.z > 0.05) {
+    // Polished Bone Nut
     col = BONE;
-    woodRough = 0.22;
-    woodCoat = 0.5;
+    woodRough = 0.18;
+    woodCoat = 0.6;
     neckMask = 1.0;
   } else if (p.y > ${f(NECK_JOINT_Y)} && ax < 0.034) {
     if (p.z > 0.0525) {
-      // Dark rosewood / ebony fretboard: rich dark espresso, open pores, smooth oiled finish
-      float pores = wFbm(p * vec3(900.0, 70.0, 900.0));
-      col = mix(EBONY, EBONY_BROWN, wGrain(p.x, p, 2400.0, 0.004) * 0.45 + pores * 0.30);
-      woodRough = 0.52;
-      woodCoat = 0.18;
+      // Dense African Ebony fretboard: fine pores, satin-oiled feel
+      float pores = wFbm(p * vec3(800.0, 60.0, 800.0));
+      col = mix(EBONY, EBONY_WARM * 0.7, wGrain(p.x, p, 1800.0, 0.003) * 0.4 + pores * 0.25);
+      woodRough = 0.40;
+      woodCoat = 0.22;
     } else {
-      // Mahogany neck
-      col = mix(MAHOGANY, MAHOGANY_DARK, wGrain(p.x + p.z * 0.5, p, 1500.0, 0.006) * 0.55);
-      woodRough = 0.22;
-      woodCoat = 0.95;
+      // Mahogany neck: fast player finish
+      col = mix(MAHOGANY, MAHOGANY_DARK, wGrain(p.x + p.z * 0.5, p, 1300.0, 0.005) * 0.55);
+      woodRough = 0.20;
+      woodCoat = 0.92;
     }
     neckMask = 1.0;
   } else {
     bool topFace = nn.z > 0.6 && p.z > 0.044;
     if (topFace && p.y > ${f(FRETBOARD_END_Y)} && ax < fbHalf + 0.0006 && p.z > 0.052) {
-      float pores = wFbm(p * vec3(900.0, 70.0, 900.0));
-      col = mix(EBONY, EBONY_BROWN, pores * 0.4);
-      woodRough = 0.52;
-      woodCoat = 0.18;
+      // Fretboard tongue over soundboard
+      float pores = wFbm(p * vec3(800.0, 60.0, 800.0));
+      col = mix(EBONY, EBONY_WARM * 0.7, pores * 0.35);
+      woodRough = 0.40;
+      woodCoat = 0.22;
     } else if (topFace && holeD < ${f(SOUNDHOLE.radius)}) {
       col = HOLE;
-      woodRough = 0.95;
+      woodRough = 0.98;
       woodCoat = 0.0;
     } else if (p.y > ${f(BRIDGE.minY)} && p.y < ${f(BRIDGE.maxY)} && ax < ${f(BRIDGE.halfWidth)} && p.z > 0.0512) {
-      // Polished dark ebony / rosewood bridge with bone saddle
-      col = p.z > 0.0606 && ax < 0.04 ? BONE : mix(ROSE_DARK * 0.9, ROSE * 0.8, wFbm(p * vec3(500.0, 80.0, 500.0)) * 0.5);
-      woodRough = p.z > 0.0606 && ax < 0.04 ? 0.20 : 0.26;
-      woodCoat = 0.6;
+      // Carved Ebony Bridge with Compensated Bone Saddle & 6 Inlaid Bridge Pins
+      bool isSaddle = p.z > 0.0604 && ax < 0.042 && p.y > 0.188 && p.y < 0.206;
+      if (isSaddle) {
+        col = BONE;
+        woodRough = 0.16;
+        woodCoat = 0.7;
+      } else {
+        float ebonyGrain = wFbm(p * vec3(450.0, 70.0, 450.0));
+        col = mix(EBONY, EBONY_WARM * 0.75, ebonyGrain * 0.35);
+        woodRough = 0.22;
+        woodCoat = 0.65;
+
+        // 6 Inlaid Bridge Pins with authentic abalone eye
+        if (p.y > 0.170 && p.y < 0.184) {
+          float pinSpacing = 0.0105;
+          float pinIdx = round(p.x / pinSpacing);
+          if (abs(pinIdx) <= 2.5) {
+            float pinDist = length(vec2(p.x - pinIdx * pinSpacing, p.y - 0.177));
+            if (pinDist < 0.0022) {
+              if (pinDist < 0.0009) {
+                // Abalone dot
+                col = vec3(0.12, 0.55, 0.60);
+              } else {
+                // Bone pin collar
+                col = BONE * 0.96;
+              }
+              woodRough = 0.12;
+              woodCoat = 0.95;
+            }
+          }
+        }
+      }
     } else if (topFace) {
-      // Sitka spruce top: tight straight grain + soft medullary flecks
-      float g = wGrain(p.x, p, 950.0, 0.008);
-      float g2 = wGrain(p.x * 1.8 + 0.3, p, 2800.0, 0.003);
-      col = mix(SPRUCE, SPRUCE_LATE, smoothstep(0.50, 1.0, g) * 0.42 + g2 * 0.14);
-      col *= 0.95 + 0.10 * wFbm(p * vec3(18.0, 6.0, 18.0));
+      // Master-grade Sitka spruce top: distinct, calibrated annual rings + medullary silking
+      float g = wGrain(p.x, p, 460.0, 0.006);
+      float g2 = wGrain(p.x * 2.2 + 0.15, p, 1100.0, 0.003);
+      col = mix(SPRUCE_BASE, SPRUCE_GRAIN, smoothstep(0.38, 0.95, g) * 0.46 + g2 * 0.18);
 
-      // Warm golden edge darkening / vintage honey vignette around perimeter
-      float edgeDist = length(vec2(p.x * 2.2, p.y - 0.22));
-      float vignette = smoothstep(0.24, 0.48, edgeDist);
-      col = mix(col, SPRUCE_AMBER * 0.88, vignette * 0.32);
+      // Medullary flecks (cross-silking shimmer)
+      float flecks = wFbm(p * vec3(140.0, 12.0, 140.0));
+      col *= 0.92 + 0.15 * smoothstep(0.35, 0.75, flecks);
 
-      // Subtle chatoyancy / viewing angle sheen
-      float sheen = pow(1.0 - max(dot(nn, vec3(0.0, 0.2, 0.98)), 0.0), 3.0);
-      col += vec3(0.10, 0.07, 0.03) * sheen;
+      // Warm vintage golden-amber sunburst vignette around perimeter
+      float edgeDist = length(vec2(p.x * 2.1, p.y - 0.21));
+      float vignette = smoothstep(0.20, 0.46, edgeDist);
+      col = mix(col, SPRUCE_VIGNETTE, vignette * 0.45);
 
-      // Rosette rings around the soundhole with genuine iridescent abalone pearl
+      // Subtle optical chatoyancy / viewing-angle sheen
+      float sheen = pow(1.0 - max(dot(nn, vec3(0.0, 0.25, 0.96)), 0.0), 2.8);
+      col += vec3(0.08, 0.05, 0.02) * sheen;
+
+      // Authentic Martin-style rosette with iridescent abalone pearl
       float rr = holeD - ${f(SOUNDHOLE.radius)};
-      if (rr < 0.018) {
-        float outer = step(0.003, rr) * (1.0 - step(0.015, rr));
-        col = mix(col, ROSE_DARK, outer * 0.9);
-        float pearl = (step(0.0058, rr) - step(0.0078, rr)) + (step(0.0102, rr) - step(0.0122, rr));
-        vec3 abalone = vec3(0.62, 0.72, 0.68) + vec3(0.08, -0.04, 0.06) * sin(p.x * 320.0 + p.y * 180.0);
-        col = mix(col, abalone, pearl * 0.9);
-        float lip = 1.0 - step(0.0016, rr);
-        col = mix(col, ROSE_DARK, lip);
+      if (rr < 0.020) {
+        float outerPurfling = step(0.0025, rr) * (1.0 - step(0.0175, rr));
+        col = mix(col, ROSE_DARK, outerPurfling * 0.88);
+
+        float pearlBand = (step(0.0055, rr) - step(0.0095, rr)) + (step(0.0125, rr) - step(0.0155, rr));
+        vec3 abalone = vec3(0.68, 0.82, 0.76) +
+                       vec3(0.14, -0.06, 0.12) * sin(p.x * 240.0 + p.y * 140.0) +
+                       vec3(-0.06, 0.12, 0.08) * cos(p.x * 160.0 - p.y * 220.0);
+        col = mix(col, abalone, pearlBand * 0.92);
+
+        float innerLip = 1.0 - step(0.0018, rr);
+        col = mix(col, ROSE_DARK, innerLip);
       }
 
-      // Tortoise pickguard on the treble side below the soundhole
+      // Luxury Tortoiseshell Pickguard with cognac-amber swirls and glossy beveled edge
       vec2 q = (p.xy - vec2(0.078, 0.292));
       q = mat2(0.94, -0.34, 0.34, 0.94) * q;
       float guard = length(q / vec2(0.042, 0.07));
       if (guard < 1.0 && rr > 0.016) {
-        float tort = wFbm(p * vec3(280.0, 280.0, 280.0));
-        col = mix(vec3(0.018, 0.006, 0.002), vec3(0.35, 0.11, 0.025), smoothstep(0.38, 0.82, tort));
-        woodRough = 0.10;
+        float tort = wFbm(p * vec3(240.0, 240.0, 240.0));
+        float tort2 = wNoise(p * vec3(70.0, 70.0, 70.0));
+        vec3 tortAmber = vec3(0.38, 0.12, 0.02);
+        vec3 tortDark = vec3(0.014, 0.005, 0.002);
+        vec3 tortGold = vec3(0.48, 0.22, 0.04);
+        col = mix(tortDark, tortAmber, smoothstep(0.35, 0.72, tort));
+        col = mix(col, tortGold, smoothstep(0.65, 0.92, tort2) * 0.45);
+
+        float edgeBevel = smoothstep(0.85, 1.0, guard);
+        col = mix(col, vec3(0.40, 0.18, 0.04), edgeBevel * 0.6);
+        woodRough = 0.06;
         woodCoat = 1.0;
       } else {
-        woodRough = 0.28;
-        woodCoat = 0.85;
+        woodRough = 0.24;
+        woodCoat = 0.90;
       }
     } else {
-      // East Indian rosewood back and sides with cream/ivoroid binding
+      // East Indian rosewood back and sides with aged ivoroid binding
       float across = nn.z < -0.6 ? abs(p.x) : (p.z + p.x * 0.3);
-      float g = wGrain(across, p, 1100.0, 0.012);
-      col = mix(ROSE, ROSE_DARK, smoothstep(0.35, 1.0, g) * 0.75);
+      float g = wGrain(across, p, 1100.0, 0.010);
+      col = mix(ROSE, ROSE_DARK, smoothstep(0.35, 1.0, g) * 0.80);
       col *= 0.88 + 0.25 * wFbm(p * vec3(12.0, 4.0, 12.0));
-      // Aged cream binding along soundboard edge
+      // Aged cream ivoroid binding
       if (p.z > 0.0455 && abs(nn.z) < 0.6) col = vec3(0.88, 0.84, 0.72);
-      woodRough = 0.24;
-      woodCoat = 0.9;
+      woodRough = 0.20;
+      woodCoat = 0.94;
     }
   }
   diffuseColor.rgb = col;
@@ -209,8 +260,8 @@ export function createWoodMaterial(neckHover: { value: number }): THREE.MeshPhys
     color: 0xffffff,
     roughness: 1,
     metalness: 0,
-    clearcoat: 0.85,
-    clearcoatRoughness: 0.12,
+    clearcoat: 0.90,
+    clearcoatRoughness: 0.10,
     side: THREE.DoubleSide,
   });
   mat.onBeforeCompile = (shader) => {
@@ -234,7 +285,7 @@ export function createWoodMaterial(neckHover: { value: number }): THREE.MeshPhys
         )
       );
   };
-  mat.customProgramCacheKey = () => 'guitar-wood-v2';
+  mat.customProgramCacheKey = () => 'guitar-wood-v3';
   return mat;
 }
 
