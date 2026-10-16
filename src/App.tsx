@@ -36,8 +36,11 @@ export function App() {
       const saved = localStorage.getItem(STORAGE_CUSTOM_SONGS);
       if (saved) {
         const parsed: Song[] = JSON.parse(saved);
+        const sampleIds = new Set(SAMPLE_SONGS.map((s) => s.id));
         const cleaned = parsed.filter(
           (s) =>
+            s.isCustom &&
+            !sampleIds.has(s.id) &&
             !s.content?.includes('Step in the room with the') &&
             !s.content?.includes('Rüzgar eser yine') &&
             !s.content?.includes('1. Ölçü (') &&
@@ -613,21 +616,8 @@ export function App() {
           )}
         </aside>
 
-        {/* ORTA SÜTUN (1fr): MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
-        <main className="h-full flex flex-col bg-[#090a0f] overflow-hidden min-w-0 p-2.5">
-          <SongViewer
-            song={currentSong}
-            activeChord={activeChord}
-            onSelectChord={handleSelectChord}
-            transposeOffset={transposeOffset}
-            onTransposeChange={setTransposeOffset}
-            isAutoScrolling={isAutoScrolling}
-            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
-          />
-        </main>
-
-        {/* SAĞ SÜTUN (450px): LIVE INSTRUMENT DOCK (3D/2D GUITAR & RHYTHM SEQUENCER) */}
-        <aside className="w-full h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0">
+        {/* ORTA SÜTUN (1fr): 3D AKUSTİK GİTAR & KLAVYE STÜDYO SAHNESİ */}
+        <main className="h-full flex flex-col bg-[#090a0f] overflow-hidden min-w-0">
           <GuitarStage
             chordName={activeChord}
             position={currentPosition}
@@ -644,6 +634,19 @@ export function App() {
             onOpenChordDetail={() => setLeftTab('theory')}
             onSelectPattern={setSelectedPatternId}
             onPlayStrumSequence={handlePlayStrumSequence}
+          />
+        </main>
+
+        {/* SAĞ SÜTUN (440px): MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
+        <aside className="w-[440px] h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0 p-2 gap-2">
+          <SongViewer
+            song={currentSong}
+            activeChord={activeChord}
+            onSelectChord={handleSelectChord}
+            transposeOffset={transposeOffset}
+            onTransposeChange={setTransposeOffset}
+            isAutoScrolling={isAutoScrolling}
+            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
           />
         </aside>
       </div>

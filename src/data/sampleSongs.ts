@@ -19,34 +19,38 @@ export const SAMPLE_SONGS: Song[] = [
       { time: 5.0, chord: 'Em' },
       { time: 6.2, chord: 'F#' },
 
-      // Kıta (7.2s - 27.5s)
+      // Kıta 1 (7.2s - 27.5s)
       { time: 7.2, chord: 'Bm' },  // "Pus, dağılmaz mı yine"
-      { time: 12.0, chord: 'D' },  // "dağılmaz mı kuşlar"
-      { time: 17.0, chord: 'G' },  // "Gözümü kapattım ve hep biter mi aşklar"
-      { time: 22.5, chord: 'Em' }, // "Diye soramadım,"
-      { time: 25.5, chord: 'F#' }, // "ah"
+      { time: 11.5, chord: 'D' },  // "dağılmaz mı kuşlar"
+      { time: 16.0, chord: 'G' },  // "Gözümü kapattım"
+      { time: 20.5, chord: 'Em' }, // "ve hep biter mi aşklar"
+      { time: 24.5, chord: 'F#' }, // "diye soramadım, ah"
 
-      // Nakarat (28.0s - 1:18.0)
-      { time: 28.0, chord: 'Bm' }, // "Diyecek sözün var mı,"
-      { time: 33.2, chord: 'D' },  // "kapıda gözün var mı"
-      { time: 38.5, chord: 'G' },  // "Kalacak kalacak"
-      { time: 43.5, chord: 'Em' }, // "kalacak yüzün"
-      { time: 46.5, chord: 'F#' }, // "var mı"
-      { time: 51.5, chord: 'Bm' }, // "Ah bir bilsen"
-      { time: 56.8, chord: 'D' },  // "nasıl kapıldım"
-      { time: 62.2, chord: 'G' },  // "Arkama baktım sevgilim"
-      { time: 67.5, chord: 'Em' }, // "nerde kaldın"
-      { time: 70.5, chord: 'F#' }, // "nerde kaldın (ara)"
-      { time: 73.5, chord: 'Bm' }, // "Sözlerine inanmıştım"
-      { time: 77.0, chord: 'D' },  // "başka gözlerde"
-      { time: 79.5, chord: 'G' },  // "Çok aramıştım"
-      { time: 81.8, chord: 'Em' }, // "seni"
-      { time: 83.2, chord: 'F#' }, // "seni (bitiş)"
+      { time: 28.0, chord: 'Bm' }, // "Diyecek sözün var mı"
+      { time: 32.5, chord: 'D' },  // "kapıda gözün var mı"
+      { time: 37.0, chord: 'G' },  // "Kalacak kalacak"
+      { time: 41.5, chord: 'Em' }, // "kalacak yüzün"
+      { time: 44.5, chord: 'F#' }, // "var mı"
 
-      // Çıkış / Bitiş (84.0s - 86.0s)
-      { time: 84.0, chord: 'Bm' },
-      { time: 84.8, chord: 'D' },
-      { time: 85.4, chord: 'G' },
+      // Nakarat (48.0s - 82.0s)
+      { time: 48.0, chord: 'Bm' }, // "Şimdi gidersen"
+      { time: 53.0, chord: 'D' },  // "Arkama baktım sevgilim"
+      { time: 58.0, chord: 'G' },  // "Sözlerine inanmıştım"
+      { time: 62.5, chord: 'Em' }, // "başka gözlerde"
+      { time: 65.5, chord: 'F#' }, // "çok aramıştım seni"
+
+      { time: 68.5, chord: 'Bm' }, // "Ah bir bilsen"
+      { time: 72.0, chord: 'D' },  // "nasıl kapıldım"
+      { time: 75.5, chord: 'G' },  // "Arkama baktım sevgilim"
+      { time: 78.5, chord: 'Em' }, // "nerde kaldın"
+      { time: 80.5, chord: 'F#' }, // "(ara)"
+
+      // Çıkış (82.0s - 86.0s)
+      { time: 82.0, chord: 'Bm' },
+      { time: 83.0, chord: 'D' },
+      { time: 84.0, chord: 'G' },
+      { time: 84.8, chord: 'Em' },
+      { time: 85.4, chord: 'F#' },
       { time: 85.8, chord: 'Bm' },
     ],
     content: `{title: Pus (Kalacak Yüzün Var Mı)}
@@ -60,19 +64,19 @@ export const SAMPLE_SONGS: Song[] = [
 
 {c: Kıta}
 [Bm]Pus, dağılmaz mı yine [D]dağılmaz mı kuşlar
-[G]Gözümü kapattım ve hep biter mi aşklar
-[Em]Diye soramadım, [F#]ah
-
-{c: Nakarat}
+[G]Gözümü kapattım ve [Em]hep biter mi aşklar [F#]diye soramadım, ah
 [Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
 [G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
+
+{c: Nakarat}
+[Bm]Şimdi gidersen diye diye tıkandım
+[D]Arkama baktım sevgilim nerde kaldın
+[G]Sözlerine inanmıştım [Em]başka gözlerde [F#]çok aramıştım seni
 [Bm]Ah bir bilsen [D]nasıl kapıldım
 [G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
-[Bm]Sözlerine inanmıştım [D]başka gözlerde
-[G]Çok aramıştım [Em]seni [F#]
 
 {c: Çıkış / Bitiş}
-[Bm]    [D]    [G]    [Bm]`,
+[Bm]    [D]    [G]    [Em] [F#] [Bm]`,
   },
   {
     id: 'akdeniz-aksamlari',

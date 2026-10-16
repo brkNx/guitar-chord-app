@@ -51,6 +51,7 @@ export const Fretboard = ({
   const [vibratingStrings, setVibratingStrings] = useState<Set<number>>(new Set());
   const [isStrumming, setIsStrumming] = useState(false);
   const [chordPulse, setChordPulse] = useState(false);
+  const [orientation, setOrientation] = useState<'player' | 'tab'>('player');
 
   // Analyze chord degrees & intervals
   const theory = getChordTheoryDetails(chordName, position);
@@ -184,6 +185,15 @@ export const Fretboard = ({
             </div>
           )}
 
+          {/* Perspective View Toggle: Player (6th Low E on top) vs Tab (1st High e on top) */}
+          <button
+            onClick={() => setOrientation(orientation === 'player' ? 'tab' : 'player')}
+            className="px-2.5 py-1 bg-[#090a0f] hover:bg-[#191c26] border border-white/10 hover:border-amber-500/40 rounded-md font-mono text-[10px] text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
+            title="Klavye Yönü: Oyuncu Bakışı (Kalın E üstte) veya Tab (İnce e üstte)"
+          >
+            {orientation === 'player' ? 'Görünüm: Oyuncu (6. Tel Üstte)' : 'Görünüm: Tab (1. Tel Üstte)'}
+          </button>
+
           <button
             onClick={handleStrumClick}
             disabled={isStrumming}
@@ -286,8 +296,10 @@ export const Fretboard = ({
           {/* Barre Bar representation if chord has a barre */}
           {position.barres?.map((barre, bIdx) => {
             const x = 36 + nutWidth + (barre.fret - 0.5) * fretWidth;
-            const fromY = 18 + (barre.fromString - 1) * stringSpacing;
-            const toY = 18 + (barre.toString - 1) * stringSpacing;
+            const fromRow = orientation === 'player' ? 6 - barre.fromString : barre.fromString - 1;
+            const toRow = orientation === 'player' ? 6 - barre.toString : barre.toString - 1;
+            const fromY = 18 + fromRow * stringSpacing;
+            const toY = 18 + toRow * stringSpacing;
             const topY = Math.min(fromY, toY);
             const height = Math.abs(toY - fromY);
 
@@ -307,28 +319,29 @@ export const Fretboard = ({
             );
           })}
 
-          {/* 6 Guitar Strings: strIdx 0=Low E (bottom, row 5) .. 5=High e (top, row 0) */}
+          {/* 6 Guitar Strings: strIdx 0=Low E .. 5=High e */}
           {[0, 1, 2, 3, 4, 5].map((strIdx) => {
-            const row = 5 - strIdx;
+            const row = orientation === 'player' ? strIdx : 5 - strIdx;
             const y = 18 + row * stringSpacing;
             const gauge = stringGauges[strIdx];
             const isVibrating = vibratingStrings.has(strIdx);
             const boardLen = numFrets * fretWidth;
-            const stringLabel = ['E', 'A', 'D', 'G', 'B', 'e'][strIdx];
+            const stringNumber = 6 - strIdx;
+            const noteName = ['E', 'A', 'D', 'G', 'B', 'e'][strIdx];
 
             return (
               <g key={`string-${strIdx}`}>
-                {/* String Tuning Label on Left */}
+                {/* String Tuning Label on Left: e.g. 6:E (Kalın) to 1:e (İnce) */}
                 <text
-                  x="7"
+                  x="18"
                   y={y + 3.5}
                   textAnchor="middle"
-                  fill="#64748b"
-                  fontSize="10"
+                  fill="#94a3b8"
+                  fontSize="9.5"
                   fontFamily="monospace"
                   fontWeight="bold"
                 >
-                  {stringLabel}
+                  {stringNumber}:{noteName}
                 </text>
 
                 {/* Visible Guitar String */}
