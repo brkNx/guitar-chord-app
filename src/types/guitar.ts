@@ -49,6 +49,7 @@ export interface Song {
   youtubeId?: string;
   youtubeUrl?: string;
   thumbnailUrl?: string;
+  timings?: Array<{ time: number; chord: string }>;
 }
 
 export type FretboardDisplayMode = 'fingers' | 'notes' | 'degrees';

@@ -169,9 +169,22 @@ export const SongViewer = ({
             duration > 0 &&
             chordEvents.length > 0
           ) {
-            const progress = Math.min(1, Math.max(0, currentTime / duration));
-            const targetIdx = Math.min(chordEvents.length - 1, Math.floor(progress * chordEvents.length));
-            setPlayheadIdx(targetIdx);
+            let targetIdx = -1;
+            if (song.timings && song.timings.length > 0) {
+              for (let i = song.timings.length - 1; i >= 0; i--) {
+                if (currentTime >= song.timings[i].time) {
+                  targetIdx = i;
+                  break;
+                }
+              }
+              if (targetIdx === -1) targetIdx = 0;
+            } else {
+              const progress = Math.min(1, Math.max(0, currentTime / duration));
+              targetIdx = Math.min(chordEvents.length - 1, Math.floor(progress * chordEvents.length));
+            }
+            if (targetIdx >= 0 && targetIdx < chordEvents.length) {
+              setPlayheadIdx(targetIdx);
+            }
           }
         }
       } catch {

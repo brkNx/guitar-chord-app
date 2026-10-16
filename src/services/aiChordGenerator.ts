@@ -515,6 +515,7 @@ async function resolveCanonicalTrackAndLyrics(
   chordPro?: string;
   key?: string;
   capo?: number;
+  timings?: Array<{ time: number; chord: string }>;
 }> {
   let artist = initialArtist;
   let title = initialTitle;
@@ -542,7 +543,8 @@ async function resolveCanonicalTrackAndLyrics(
           lyrics: null,
           chordPro: data.chordPro.trim(),
           key: data.key,
-          capo: typeof data.capo === 'number' ? data.capo : undefined
+          capo: typeof data.capo === 'number' ? data.capo : undefined,
+          timings: Array.isArray(data.timings) ? data.timings : undefined
         };
       }
       if (typeof data?.lyrics === 'string' && data.lyrics.trim().length > 25) {
@@ -802,6 +804,7 @@ export async function generateSongWithAI(
   let resolvedChordPro: string | undefined;
   let resolvedKey: string | undefined;
   let resolvedCapo: number | undefined;
+  let resolvedTimings: Array<{ time: number; chord: string }> | undefined;
   if (!userLyrics || userLyrics.trim().length <= 10) {
     const effectiveVideoId = ytInfo?.videoId || videoId || undefined;
     const resolved = await resolveCanonicalTrackAndLyrics(artist, title, effectiveVideoId);
@@ -811,6 +814,7 @@ export async function generateSongWithAI(
     resolvedChordPro = resolved.chordPro;
     resolvedKey = resolved.key;
     resolvedCapo = resolved.capo;
+    resolvedTimings = resolved.timings;
   }
 
   const artistLower = artist.toLowerCase();
@@ -896,6 +900,7 @@ export async function generateSongWithAI(
     youtubeId: ytInfo?.videoId || videoId || undefined,
     youtubeUrl: ytInfo?.url || (videoId ? `https://www.youtube.com/watch?v=${videoId}` : undefined),
     thumbnailUrl: ytInfo?.thumbnailUrl,
+    timings: resolvedTimings,
     tags: [
       resolvedChordPro ? 'Gerçek Akor' : 'Yapay Zeka',
       isYouTube ? 'YouTube' : 'Yeni Şarkı',

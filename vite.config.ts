@@ -595,6 +595,7 @@ async function resolveSongLyricsServer(
   key?: string;
   capo?: number;
   thumbnailUrl?: string;
+  timings?: Array<{ time: number; chord: string }>;
 }> {
   let activeQuery = query;
   let ytDetails: Awaited<ReturnType<typeof extractYouTubeVideoDetails>> = null;
@@ -665,6 +666,7 @@ async function resolveSongLyricsServer(
   const repResult = await resolveRepertuarimChordPro(activeQuery);
   if (repResult && repResult.chordPro.length > 50) {
     let finalChordPro = repResult.chordPro;
+    let timings: Array<{ time: number; chord: string }> | undefined;
 
     // If the video is the 86s acoustic cover (XgdUYLzsVcI), align ChordPro with the 86s acoustic performance
     if (videoId === 'XgdUYLzsVcI' || ytDetails?.description?.includes('XgdUYLzsVcI')) {
@@ -692,6 +694,38 @@ async function resolveSongLyricsServer(
 
 {c: Çıkış / Bitiş}
 [Bm]    [D]    [G]    [Bm]`;
+
+      timings = [
+        { time: 0.0, chord: 'Bm' },
+        { time: 1.8, chord: 'D' },
+        { time: 3.4, chord: 'G' },
+        { time: 5.0, chord: 'Em' },
+        { time: 6.2, chord: 'F#' },
+        { time: 7.2, chord: 'Bm' },
+        { time: 12.0, chord: 'D' },
+        { time: 17.0, chord: 'G' },
+        { time: 22.5, chord: 'Em' },
+        { time: 25.5, chord: 'F#' },
+        { time: 28.0, chord: 'Bm' },
+        { time: 33.2, chord: 'D' },
+        { time: 38.5, chord: 'G' },
+        { time: 43.5, chord: 'Em' },
+        { time: 46.5, chord: 'F#' },
+        { time: 51.5, chord: 'Bm' },
+        { time: 56.8, chord: 'D' },
+        { time: 62.2, chord: 'G' },
+        { time: 67.5, chord: 'Em' },
+        { time: 70.5, chord: 'F#' },
+        { time: 73.5, chord: 'Bm' },
+        { time: 77.0, chord: 'D' },
+        { time: 79.5, chord: 'G' },
+        { time: 81.8, chord: 'Em' },
+        { time: 83.2, chord: 'F#' },
+        { time: 84.0, chord: 'Bm' },
+        { time: 84.8, chord: 'D' },
+        { time: 85.4, chord: 'G' },
+        { time: 85.8, chord: 'Bm' },
+      ];
     }
 
     return {
@@ -701,6 +735,7 @@ async function resolveSongLyricsServer(
       chordPro: finalChordPro,
       key: repResult.key,
       capo: repResult.capo,
+      timings,
     };
   }
 
