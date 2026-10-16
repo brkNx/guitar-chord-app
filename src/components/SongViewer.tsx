@@ -44,7 +44,6 @@ export const SongViewer = ({
   const lineRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const onSelectChordRef = useRef(onSelectChord);
   onSelectChordRef.current = onSelectChord;
-  const isYouTubeMasterClock = useRef(false);
 
   const isAutoScrolling = externalAutoScroll !== undefined ? externalAutoScroll : internalAutoScroll;
   const toggleAutoScroll = () => {
@@ -84,10 +83,16 @@ export const SongViewer = ({
     return events;
   }, [parsedLines]);
 
+  const playbackStartTimeRef = useRef<number>(0);
+  const playheadIdxRef = useRef(playheadIdx);
+  playheadIdxRef.current = playheadIdx;
+  const isAutoScrollingRef = useRef(isAutoScrolling);
+  isAutoScrollingRef.current = isAutoScrolling;
+
   // Reset playhead when song changes
   useEffect(() => {
     setPlayheadIdx(0);
-    isYouTubeMasterClock.current = false;
+    playbackStartTimeRef.current = performance.now();
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
@@ -96,9 +101,87 @@ export const SongViewer = ({
   // Active rhythm pattern
   const defaultPattern = STRUM_PATTERNS[0];
 
-  // Automatic Live Chord Player, Sound Strum & Synchronized Scroll when PLAY / OTOMATİK ÇAL is active
+  // Control YouTube player and anchor master clock when auto-play toggles
+  useEffect(() => {
+    if (isAutoScrolling) {
+      // Anchor master clock to current playhead position
+      const currentIdx = playheadIdxRef.current;
+      if (song.timings && song.timings[currentIdx]) {
+        playbackStartTimeRef.current =
+          performance.now() - song.timings[currentIdx].time * 1000;
+      } else {
+        const bpm = song.tempo || 96;
+        const stepMs = Math.max(
+          480,
+          Math.round(((60000 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed))
+        );
+        playbackStartTimeRef.current =
+          performance.now() - currentIdx * stepMs;
+      }
+
+      // Send play command to YouTube iframe if embedded
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
+        '*'
+      );
+    } else {
+      // Send pause command to YouTube iframe if embedded
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: 'command', func: 'pauseVideo', args: [] }),
+        '*'
+      );
+    }
+  }, [isAutoScrolling, song.timings, song.tempo, scrollSpeed]);
+
+  // Continuous Master Clock Ticker: Advances playhead smoothly without freezing
   useEffect(() => {
     if (!isAutoScrolling || chordEvents.length === 0) return;
+
+    const ticker = setInterval(() => {
+      const elapsedSec =
+        (performance.now() - playbackStartTimeRef.current) / 1000;
+
+      let nextIdx = 0;
+      if (song.timings && song.timings.length > 0) {
+        // Find matching chord according to millisecond timings
+        for (let i = song.timings.length - 1; i >= 0; i--) {
+          if (elapsedSec >= song.timings[i].time) {
+            nextIdx = i;
+            break;
+          }
+        }
+
+        // Loop back to start if beyond song duration
+        const lastTime = song.timings[song.timings.length - 1].time;
+        if (elapsedSec > lastTime + 4.5) {
+          playbackStartTimeRef.current = performance.now();
+          nextIdx = 0;
+        }
+      } else {
+        const bpm = song.tempo || 96;
+        const stepSec = Math.max(
+          0.48,
+          ((60 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed)
+        );
+        nextIdx =
+          Math.floor(elapsedSec / stepSec) % Math.max(1, chordEvents.length);
+      }
+
+      if (
+        nextIdx !== playheadIdxRef.current &&
+        nextIdx >= 0 &&
+        nextIdx < chordEvents.length
+      ) {
+        setPlayheadIdx(nextIdx);
+      }
+    }, 60);
+
+    return () => clearInterval(ticker);
+  }, [isAutoScrolling, chordEvents, song.timings, song.tempo, scrollSpeed]);
+
+  // Automatic Chord Trigger, Sound Strum & Synchronized Scroll on playhead update
+  useEffect(() => {
+    if (chordEvents.length === 0) return;
 
     const currentEv = chordEvents[playheadIdx] || chordEvents[0];
     if (currentEv) {
@@ -109,32 +192,18 @@ export const SongViewer = ({
       if (lineEl && scrollContainerRef.current) {
         const container = scrollContainerRef.current;
         const targetTop =
-          lineEl.offsetTop - container.clientHeight * 0.35 + lineEl.clientHeight / 2;
+          lineEl.offsetTop -
+          container.clientHeight * 0.35 +
+          lineEl.clientHeight / 2;
         container.scrollTo({
           top: Math.max(0, targetTop),
           behavior: 'smooth'
         });
       }
     }
+  }, [playheadIdx, chordEvents, soundEnabled]);
 
-    // If YouTube is playing and delivering master clock progress, let YouTube drive playheadIdx
-    if (isYouTubeMasterClock.current) return;
-
-    const bpm = song.tempo || 96;
-    // 2 beats per chord segment at 1x speed (scrollSpeed = 25)
-    const stepMs = Math.max(
-      480,
-      Math.round(((60000 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed))
-    );
-
-    const timer = window.setTimeout(() => {
-      setPlayheadIdx((prev) => (prev + 1) % chordEvents.length);
-    }, stepMs);
-
-    return () => window.clearTimeout(timer);
-  }, [isAutoScrolling, playheadIdx, chordEvents, song.tempo, scrollSpeed, soundEnabled]);
-
-  // Real-time synchronization with YouTube IFrame API messages
+  // Real-time synchronization and polling with YouTube IFrame
   useEffect(() => {
     if (!showYouTube || !song.youtubeId) return;
 
@@ -143,47 +212,29 @@ export const SongViewer = ({
       try {
         const data = JSON.parse(e.data);
         if (data.event === 'infoDelivery' && data.info) {
-          const { currentTime, duration, playerState } = data.info;
+          const { currentTime, playerState } = data.info;
 
           // State synchronization (1 = playing, 2 = paused, 0 = ended)
           if (typeof playerState === 'number') {
-            if (playerState === 1) {
-              isYouTubeMasterClock.current = true;
-              if (!isAutoScrolling) {
-                if (onToggleAutoScroll) onToggleAutoScroll();
-                else setInternalAutoScroll(true);
-              }
-            } else if (playerState === 2 || playerState === 0) {
-              isYouTubeMasterClock.current = false;
-              if (isAutoScrolling) {
-                if (onToggleAutoScroll) onToggleAutoScroll();
-                else setInternalAutoScroll(false);
-              }
+            if (playerState === 1 && !isAutoScrollingRef.current) {
+              if (onToggleAutoScroll) onToggleAutoScroll();
+              else setInternalAutoScroll(true);
+            } else if (
+              (playerState === 2 || playerState === 0) &&
+              isAutoScrollingRef.current
+            ) {
+              if (onToggleAutoScroll) onToggleAutoScroll();
+              else setInternalAutoScroll(false);
             }
           }
 
-          // Exact timeline position sync
-          if (
-            typeof currentTime === 'number' &&
-            typeof duration === 'number' &&
-            duration > 0 &&
-            chordEvents.length > 0
-          ) {
-            let targetIdx = -1;
-            if (song.timings && song.timings.length > 0) {
-              for (let i = song.timings.length - 1; i >= 0; i--) {
-                if (currentTime >= song.timings[i].time) {
-                  targetIdx = i;
-                  break;
-                }
-              }
-              if (targetIdx === -1) targetIdx = 0;
-            } else {
-              const progress = Math.min(1, Math.max(0, currentTime / duration));
-              targetIdx = Math.min(chordEvents.length - 1, Math.floor(progress * chordEvents.length));
-            }
-            if (targetIdx >= 0 && targetIdx < chordEvents.length) {
-              setPlayheadIdx(targetIdx);
+          // Calibrate master clock to exact YouTube timestamp if drift occurs
+          if (typeof currentTime === 'number' && !isNaN(currentTime)) {
+            const localElapsed =
+              (performance.now() - playbackStartTimeRef.current) / 1000;
+            if (Math.abs(localElapsed - currentTime) > 0.35) {
+              playbackStartTimeRef.current =
+                performance.now() - currentTime * 1000;
             }
           }
         }
@@ -194,19 +245,27 @@ export const SongViewer = ({
 
     window.addEventListener('message', handleMessage);
 
-    // Initial handshake to YouTube iframe to request infoDelivery events
-    const handshakeTimer = setTimeout(() => {
+    // Active polling to keep YouTube iframe clock aligned
+    const pollTimer = setInterval(() => {
       iframeRef.current?.contentWindow?.postMessage(
         JSON.stringify({ event: 'listening' }),
         '*'
       );
-    }, 1200);
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({
+          event: 'command',
+          func: 'getCurrentTime',
+          args: []
+        }),
+        '*'
+      );
+    }, 400);
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      clearTimeout(handshakeTimer);
+      clearInterval(pollTimer);
     };
-  }, [showYouTube, song.youtubeId, chordEvents, isAutoScrolling, onToggleAutoScroll]);
+  }, [showYouTube, song.youtubeId, onToggleAutoScroll]);
 
   const handleChordClick = (chord: string, lineIdx?: number, segIdx?: number) => {
     if (lineIdx !== undefined && segIdx !== undefined) {
@@ -215,6 +274,18 @@ export const SongViewer = ({
       );
       if (foundIdx !== -1) {
         setPlayheadIdx(foundIdx);
+        if (song.timings && song.timings[foundIdx]) {
+          const targetTime = song.timings[foundIdx].time;
+          playbackStartTimeRef.current = performance.now() - targetTime * 1000;
+          iframeRef.current?.contentWindow?.postMessage(
+            JSON.stringify({
+              event: 'command',
+              func: 'seekTo',
+              args: [targetTime, true]
+            }),
+            '*'
+          );
+        }
       }
     }
     onSelectChord(chord);
@@ -227,7 +298,7 @@ export const SongViewer = ({
     }
   };
 
-  const activeEvent = isAutoScrolling ? chordEvents[playheadIdx] : null;
+  const activeEvent = chordEvents[playheadIdx] || null;
 
   return (
     <div className="flex flex-col h-full bg-[#11141c] border border-[#1e222d] rounded-lg shadow-md overflow-hidden text-slate-200 select-none">
@@ -451,7 +522,7 @@ export const SongViewer = ({
           }
 
           if (line.type === 'chord-lyric' && line.segments) {
-            const isLinePlaying = activeEvent?.lineIdx === lineIdx;
+            const isLinePlaying = isAutoScrolling && activeEvent?.lineIdx === lineIdx;
             return (
               <div
                 key={lineIdx}
@@ -466,9 +537,15 @@ export const SongViewer = ({
               >
                 {line.segments.map((seg, segIdx) => {
                   const isExactStepPlaying =
-                    activeEvent?.lineIdx === lineIdx && activeEvent?.segIdx === segIdx;
+                    isAutoScrolling &&
+                    activeEvent?.lineIdx === lineIdx &&
+                    activeEvent?.segIdx === segIdx;
                   const isChordActive =
-                    isExactStepPlaying || (!isAutoScrolling && seg.chord && activeChord === seg.chord);
+                    isExactStepPlaying ||
+                    (!isAutoScrolling &&
+                      ((activeEvent?.lineIdx === lineIdx &&
+                        activeEvent?.segIdx === segIdx) ||
+                        (seg.chord && activeChord === seg.chord)));
 
                   return (
                     <div key={segIdx} className="flex flex-col items-start mr-2">
