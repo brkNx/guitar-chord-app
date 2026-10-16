@@ -79,6 +79,23 @@ export const STRUM_PATTERNS: StrumPattern[] = [
     ]
   },
   {
+    id: 'acoustic_fingerpicking_4_4',
+    name: 'Akustik Parmak Stili / Arpej (P - 3 - 2 - 1 - 2 - 3 - 2 - 1)',
+    timeSignature: '4/4',
+    description: 'Sufle - Pus ve balad parçalarının stüdyo kayıtlarındaki orijinal akustik parmak stili arpej ritmi.',
+    defaultBpm: 96,
+    strokes: [
+      { type: 'bass', label: 'P (Bas)', accent: true, pluckStrings: [0] },
+      { type: 'up', label: 'i (3)', pluckStrings: [3] },
+      { type: 'up', label: 'm (2)', pluckStrings: [4] },
+      { type: 'down', label: 'a (1)', accent: true, pluckStrings: [5] },
+      { type: 'up', label: 'm (2)', pluckStrings: [4] },
+      { type: 'up', label: 'i (3)', pluckStrings: [3] },
+      { type: 'up', label: 'm (2)', pluckStrings: [4] },
+      { type: 'down', label: 'a (1)', pluckStrings: [5] }
+    ]
+  },
+  {
     id: 'rumba_flamenco',
     name: 'Rumba / Akdeniz Ritmi (Vur-Sustur)',
     timeSignature: '4/4',

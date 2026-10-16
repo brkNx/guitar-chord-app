@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import type { Song, FretboardDisplayMode } from './types/guitar';
 import { SAMPLE_SONGS } from './data/sampleSongs';
 import { getOrGenerateChord } from './data/chordLibrary';
-import { guitarAudio } from './audio/guitarAudio';
+import { guitarAudio, type VirtualGuitaristMode } from './audio/guitarAudio';
 import { getCapoRecommendation } from './utils/transpose';
 import { extractUniqueChords } from './utils/chordPro';
 import { GUITAR_TUNINGS, getTuningById } from './data/tunings';
@@ -28,7 +28,8 @@ import {
   Search,
   Plus,
   Video,
-  BookOpen
+  BookOpen,
+  Sparkles
 } from 'lucide-react';
 
 const STORAGE_CUSTOM_SONGS = 'guitar_app_custom_songs';
@@ -68,8 +69,10 @@ export function App() {
   const [transposeOffset, setTransposeOffset] = useState<number>(0);
   const [selectedTuningId, setSelectedTuningId] = useState<string>('standard');
   const [selectedScaleId, setSelectedScaleId] = useState<string>('minor_pentatonic');
-  const [selectedPatternId, setSelectedPatternId] = useState<string>('pop_rock_classic');
+  const [selectedPatternId, setSelectedPatternId] = useState<string>('acoustic_fingerpicking_4_4');
   const [isAutoScrolling, setIsAutoScrolling] = useState<boolean>(false);
+  const [isVirtualGuitarist, setIsVirtualGuitarist] = useState<boolean>(false);
+  const [virtualGuitaristMode, setVirtualGuitaristMode] = useState<VirtualGuitaristMode>('arpeggio');
 
   // Left column tab: 'theory' | 'setlist' | 'scales'
   const [leftTab, setLeftTab] = useState<'theory' | 'setlist' | 'scales'>('theory');
@@ -119,18 +122,64 @@ export function App() {
     guitarAudio.setTuningFrequencies(tuning.frequencies);
   }, [selectedTuningId]);
 
+  // Synchronize Virtual Guitarist with active song tempo and pattern
+  useEffect(() => {
+    if (isVirtualGuitarist) {
+      guitarAudio.setVirtualGuitaristBpm(currentSong.tempo || 96);
+      const def = getOrGenerateChord(activeChord);
+      if (def.positions[0]) {
+        guitarAudio.setVirtualGuitaristChord(def.positions[0]);
+      }
+    }
+  }, [currentSong.id, currentSong.tempo]);
+
+  useEffect(() => {
+    guitarAudio.setVirtualGuitaristPattern(selectedPatternId);
+  }, [selectedPatternId]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 4000);
   };
 
+  const handleToggleVirtualGuitarist = async () => {
+    const next = !isVirtualGuitarist;
+    setIsVirtualGuitarist(next);
+    if (next) {
+      await guitarAudio.startVirtualGuitarist({
+        mode: virtualGuitaristMode,
+        bpm: currentSong.tempo || 96,
+        position: currentPosition,
+        patternId: selectedPatternId,
+        timeSignature: (activePattern.timeSignature as any) || '4/4',
+      });
+      showToast(
+        `🎸 SANAL GİTARİST: ${virtualGuitaristMode === 'arpeggio' ? 'Parmak Stili Arpej' : 'Canlı Ritim'} Başlatıldı (${currentSong.tempo || 96} BPM)`
+      );
+    } else {
+      guitarAudio.stopVirtualGuitarist();
+      showToast('Sanal gitarist durduruldu.');
+    }
+  };
+
+  const handleVirtualGuitaristModeChange = (mode: VirtualGuitaristMode) => {
+    setVirtualGuitaristMode(mode);
+    guitarAudio.setVirtualGuitaristMode(mode);
+    if (isVirtualGuitarist) {
+      showToast(`Mod: ${mode === 'arpeggio' ? 'Akustik Parmak Arpeji' : 'Canlı Ritim Strum'}`);
+    }
+  };
+
   const handleSelectChord = (chord: string, silent = false) => {
     setActiveChord(chord);
     setPositionIdx(0);
-    if (!silent) {
-      const def = getOrGenerateChord(chord);
-      if (def.positions[0]) {
-        guitarAudio.strumChord(def.positions[0], 'down', 22);
+    const def = getOrGenerateChord(chord);
+    const pos = def.positions[0];
+    if (pos) {
+      if (isVirtualGuitarist) {
+        guitarAudio.setVirtualGuitaristChord(pos);
+      } else if (!silent) {
+        guitarAudio.strumChord(pos, 'down', 22);
       }
     }
   };
@@ -269,6 +318,25 @@ export function App() {
           >
             {isAutoScrolling ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
             <span className="hidden xs:inline">{isAutoScrolling ? 'PAUSE' : 'PLAY'}</span>
+          </button>
+
+          {/* Virtual Guitarist Live Accompaniment Transport Button */}
+          <button
+            onClick={handleToggleVirtualGuitarist}
+            className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full transition-all cursor-pointer font-bold active:scale-95 shadow-sm text-xs ${
+              isVirtualGuitarist
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                : 'bg-white/[0.04] text-slate-300 hover:text-white border border-white/[0.08] hover:border-emerald-500/40'
+            }`}
+            title="YouTube şarkısının akustik ritim/arpejini sanal gitaristle canlı çal"
+          >
+            <Sparkles className="w-3.5 h-3.5 fill-current text-amber-300" />
+            <span className="hidden sm:inline">
+              {isVirtualGuitarist ? 'SANAL GİTAR: AÇIK' : 'SANAL GİTAR'}
+            </span>
+            <span className="sm:hidden">
+              {isVirtualGuitarist ? 'SANAL' : 'SANAL'}
+            </span>
           </button>
 
           {/* Soundslice Hardware Metronome Module */}
@@ -685,6 +753,10 @@ export function App() {
             onOpenChordDetail={() => handleOpenChordDetail(activeChord)}
             onSelectPattern={setSelectedPatternId}
             onPlayStrumSequence={handlePlayStrumSequence}
+            isVirtualGuitarist={isVirtualGuitarist}
+            virtualGuitaristMode={virtualGuitaristMode}
+            onToggleVirtualGuitarist={handleToggleVirtualGuitarist}
+            onVirtualGuitaristModeChange={handleVirtualGuitaristModeChange}
           />
         </main>
 
@@ -698,6 +770,10 @@ export function App() {
             onTransposeChange={setTransposeOffset}
             isAutoScrolling={isAutoScrolling}
             onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
+            isVirtualGuitarist={isVirtualGuitarist}
+            virtualGuitaristMode={virtualGuitaristMode}
+            onToggleVirtualGuitarist={handleToggleVirtualGuitarist}
+            onVirtualGuitaristModeChange={handleVirtualGuitaristModeChange}
           />
         </aside>
       </div>

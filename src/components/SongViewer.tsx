@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import type { Song } from '../types/guitar';
 import { parseChordPro, extractUniqueChords } from '../utils/chordPro';
 import { STRUM_PATTERNS } from '../data/strumPatterns';
-import { guitarAudio } from '../audio/guitarAudio';
+import { guitarAudio, type VirtualGuitaristMode } from '../audio/guitarAudio';
 import { getOrGenerateChord } from '../data/chordLibrary';
-import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video, Volume2, VolumeX } from 'lucide-react';
+import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video, Volume2, VolumeX, Sparkles } from 'lucide-react';
 
 interface SongViewerProps {
   song: Song;
@@ -15,6 +15,10 @@ interface SongViewerProps {
   onTransposeChange: (offset: number) => void;
   isAutoScrolling?: boolean;
   onToggleAutoScroll?: () => void;
+  isVirtualGuitarist?: boolean;
+  virtualGuitaristMode?: VirtualGuitaristMode;
+  onToggleVirtualGuitarist?: () => void;
+  onVirtualGuitaristModeChange?: (mode: VirtualGuitaristMode) => void;
 }
 
 interface ChordStepEvent {
@@ -31,13 +35,65 @@ export const SongViewer = ({
   transposeOffset,
   onTransposeChange,
   isAutoScrolling: externalAutoScroll,
-  onToggleAutoScroll
+  onToggleAutoScroll,
+  isVirtualGuitarist: externalVirtualGuitarist,
+  virtualGuitaristMode: externalVirtualMode,
+  onToggleVirtualGuitarist,
+  onVirtualGuitaristModeChange
 }: SongViewerProps) => {
   const [internalAutoScroll, setInternalAutoScroll] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(25); // Speed multiplier (10..80, 25 = 1x tempo)
   const [showYouTube, setShowYouTube] = useState<boolean>(() => Boolean(song.youtubeId));
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [playheadIdx, setPlayheadIdx] = useState<number>(0);
+
+  // Virtual Guitarist local fallback states & live step telemetry
+  const [internalVirtualGuitarist, setInternalVirtualGuitarist] = useState(false);
+  const [internalVirtualMode, setInternalVirtualMode] = useState<VirtualGuitaristMode>('arpeggio');
+  const [activeVirtualStep, setActiveVirtualStep] = useState<number>(-1);
+
+  const isVirtualGuitarist =
+    externalVirtualGuitarist !== undefined
+      ? externalVirtualGuitarist
+      : internalVirtualGuitarist;
+  const virtualMode =
+    externalVirtualMode !== undefined ? externalVirtualMode : internalVirtualMode;
+
+  const toggleVirtualGuitarist = () => {
+    if (onToggleVirtualGuitarist) {
+      onToggleVirtualGuitarist();
+    } else {
+      const next = !internalVirtualGuitarist;
+      setInternalVirtualGuitarist(next);
+      if (next) {
+        const def = getOrGenerateChord(activeChord);
+        guitarAudio.startVirtualGuitarist({
+          mode: virtualMode,
+          bpm: song.tempo || 96,
+          position: def.positions[0]
+        });
+      } else {
+        guitarAudio.stopVirtualGuitarist();
+      }
+    }
+  };
+
+  const handleVirtualModeChange = (newMode: VirtualGuitaristMode) => {
+    if (onVirtualGuitaristModeChange) {
+      onVirtualGuitaristModeChange(newMode);
+    } else {
+      setInternalVirtualMode(newMode);
+      guitarAudio.setVirtualGuitaristMode(newMode);
+    }
+  };
+
+  // Subscribe to virtual guitarist step updates for live visual rhythm pulse
+  useEffect(() => {
+    const unsubscribe = guitarAudio.onVirtualStep((step) => {
+      setActiveVirtualStep(step);
+    });
+    return unsubscribe;
+  }, []);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -185,8 +241,16 @@ export const SongViewer = ({
 
     const currentEv = chordEvents[playheadIdx] || chordEvents[0];
     if (currentEv) {
-      // Pass !soundEnabled as silent flag so audio only strums ONCE cleanly via handleSelectChord
-      onSelectChordRef.current(currentEv.chord, !soundEnabled);
+      // If Virtual Guitarist is running, pass silent=true so audio cleanly shifts in the continuous rhythm loop
+      const isSilent = !soundEnabled || isVirtualGuitarist;
+      onSelectChordRef.current(currentEv.chord, isSilent);
+
+      if (isVirtualGuitarist) {
+        const def = getOrGenerateChord(currentEv.chord);
+        if (def.positions[0]) {
+          guitarAudio.setVirtualGuitaristChord(def.positions[0]);
+        }
+      }
 
       const lineEl = lineRefs.current[currentEv.lineIdx];
       if (lineEl && scrollContainerRef.current) {
@@ -201,7 +265,7 @@ export const SongViewer = ({
         });
       }
     }
-  }, [playheadIdx, chordEvents, soundEnabled]);
+  }, [playheadIdx, chordEvents, soundEnabled, isVirtualGuitarist]);
 
   // Real-time synchronization and polling with YouTube IFrame
   useEffect(() => {
@@ -288,10 +352,14 @@ export const SongViewer = ({
         }
       }
     }
-    onSelectChord(chord);
+    onSelectChord(chord, isVirtualGuitarist);
     const def = getOrGenerateChord(chord);
     if (def.positions[0]) {
-      guitarAudio.strumChord(def.positions[0], 'down', 22);
+      if (isVirtualGuitarist) {
+        guitarAudio.setVirtualGuitaristChord(def.positions[0]);
+      } else {
+        guitarAudio.strumChord(def.positions[0], 'down', 22);
+      }
     }
     if (onOpenChordDetail) {
       onOpenChordDetail(chord);
@@ -383,6 +451,48 @@ export const SongViewer = ({
             )}
           </div>
 
+          {/* Virtual Guitarist Live Accompaniment Toggle */}
+          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <button
+              onClick={toggleVirtualGuitarist}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all cursor-pointer font-bold active:scale-95 ${
+                isVirtualGuitarist
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/30'
+                  : 'text-slate-300 hover:text-white'
+              }`}
+              title="YouTube şarkısının canlı akustik ritim/arpejini sanal gitaristle çal"
+            >
+              <Sparkles className="w-3 h-3 fill-current" />
+              <span>{isVirtualGuitarist ? 'SANAL GİTARİST' : 'SANAL GİTARİST'}</span>
+            </button>
+
+            {/* Mode Pills: Arpej vs Ritim */}
+            <div className="flex items-center bg-black/40 rounded-full p-0.5 ml-1">
+              <button
+                onClick={() => handleVirtualModeChange('arpeggio')}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                  virtualMode === 'arpeggio'
+                    ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Akustik parmak stili arpej (Sufle - Pus tarzı)"
+              >
+                ARPEJ
+              </button>
+              <button
+                onClick={() => handleVirtualModeChange('strum')}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                  virtualMode === 'strum'
+                    ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+                title="Akor ritim vuruşları (Strumming)"
+              >
+                RİTİM
+              </button>
+            </div>
+          </div>
+
           {/* Sound Toggle (Gitar Sesi) */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
@@ -471,32 +581,71 @@ export const SongViewer = ({
         </div>
       </div>
 
-      {/* 16-Step Strumming Visualizer Strip */}
+      {/* 16-Step Strumming & Fingerpicking Visualizer Strip */}
       <div className="px-3.5 py-1.5 bg-[#090a0f] border-b border-white/10 flex items-center justify-between text-[10px] font-mono text-slate-400">
-        <div className="flex items-center gap-1.5">
-          <span className="text-slate-500">STRUM:</span>
-          <div className="flex items-center gap-0.5">
-            {defaultPattern.strokes.map((stroke, i) => (
-              <span
-                key={i}
-                className={`px-1.5 py-0.2 rounded border ${
-                  stroke.accent
-                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
-                    : stroke.type === 'rest'
-                    ? 'bg-black/40 border-white/5 text-slate-600'
-                    : 'bg-white/5 border-white/10 text-slate-300'
-                }`}
-              >
-                {stroke.label}
-              </span>
-            ))}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          <span className="text-slate-500 uppercase shrink-0">
+            {isVirtualGuitarist
+              ? virtualMode === 'arpeggio'
+                ? 'ARPEJ:'
+                : 'RİTİM:'
+              : 'STRUM:'}
+          </span>
+          <div className="flex items-center gap-1">
+            {isVirtualGuitarist && virtualMode === 'arpeggio'
+              ? ['P (Bas)', 'i (3)', 'm (2)', 'a (1)', 'm (2)', 'i (3)', 'm (2)', 'a (1)'].map((lbl, i) => {
+                  const isCurrent = activeVirtualStep === i;
+                  return (
+                    <span
+                      key={i}
+                      className={`px-1.5 py-0.2 rounded border transition-all ${
+                        isCurrent
+                          ? 'bg-emerald-400 text-slate-950 border-emerald-300 font-extrabold shadow-[0_0_12px_rgba(52,211,153,0.85)] scale-110'
+                          : i === 0
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold'
+                          : 'bg-white/5 border-white/10 text-slate-300'
+                      }`}
+                    >
+                      {lbl}
+                    </span>
+                  );
+                })
+              : defaultPattern.strokes.map((stroke, i) => {
+                  const isCurrent = isVirtualGuitarist && activeVirtualStep === i;
+                  return (
+                    <span
+                      key={i}
+                      className={`px-1.5 py-0.2 rounded border transition-all ${
+                        isCurrent
+                          ? 'bg-amber-400 text-slate-950 border-amber-300 font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.85)] scale-110'
+                          : stroke.accent
+                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
+                          : stroke.type === 'rest'
+                          ? 'bg-black/40 border-white/5 text-slate-600'
+                          : 'bg-white/5 border-white/10 text-slate-300'
+                      }`}
+                    >
+                      {stroke.label}
+                    </span>
+                  );
+                })}
           </div>
         </div>
-        <span className="text-slate-400 font-bold">
-          {isAutoScrolling
-            ? `CANLI AKIŞ: ${playheadIdx + 1}/${chordEvents.length}`
-            : '4/4 RİTİM'}
-        </span>
+        <div className="flex items-center gap-2 shrink-0 ml-2">
+          {isVirtualGuitarist && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+          )}
+          <span className={`font-bold ${isVirtualGuitarist ? 'text-emerald-400' : 'text-slate-400'}`}>
+            {isVirtualGuitarist
+              ? `CANLI EŞLİK: ${song.tempo || 96} BPM // ${virtualMode === 'arpeggio' ? 'PARMAK ARPEJ' : 'RİTİM'}`
+              : isAutoScrolling
+              ? `CANLI AKIŞ: ${playheadIdx + 1}/${chordEvents.length}`
+              : '4/4 RİTİM'}
+          </span>
+        </div>
       </div>
 
       {/* Scrollable Song Lyrics & Moises ChordPro Content */}

@@ -10,7 +10,8 @@ import { guitarAudio } from '../../audio/guitarAudio';
 import { MODEL_CENTER_Y, NECK_FOCUS_Y } from './guitarCalibration';
 import { GuitarModel, type PluckPulse, type StageMode } from './GuitarModel';
 import { NeckOverlay } from './NeckOverlay';
-import { Layers, Music, Play, Volume2 } from 'lucide-react';
+import { Layers, Music, Play, Volume2, Sparkles } from 'lucide-react';
+import type { VirtualGuitaristMode } from '../../audio/guitarAudio';
 
 interface GuitarStageProps {
   chordName: string;
@@ -28,6 +29,10 @@ interface GuitarStageProps {
   onOpenChordDetail: () => void;
   onSelectPattern: (id: string) => void;
   onPlayStrumSequence: () => void;
+  isVirtualGuitarist?: boolean;
+  virtualGuitaristMode?: VirtualGuitaristMode;
+  onToggleVirtualGuitarist?: () => void;
+  onVirtualGuitaristModeChange?: (mode: VirtualGuitaristMode) => void;
 }
 
 export type CamPreset = 'overview' | 'front' | 'pov' | 'neck';
@@ -161,6 +166,10 @@ export function GuitarStage({
   onOpenChordDetail,
   onSelectPattern,
   onPlayStrumSequence,
+  isVirtualGuitarist = false,
+  virtualGuitaristMode = 'arpeggio',
+  onToggleVirtualGuitarist,
+  onVirtualGuitaristModeChange,
 }: GuitarStageProps) {
   const initialNeck = useMemo(() => {
     if (typeof window === 'undefined') return false;
@@ -172,8 +181,26 @@ export function GuitarStage({
   const [userInteracting, setUserInteracting] = useState(false);
   const [hoverRegion, setHoverRegion] = useState<'none' | 'neck' | 'body'>('none');
   const [pluckPulse, setPluckPulse] = useState<PluckPulse>({ seq: 0, stringIdx: -1 });
+  const [activeVirtualStep, setActiveVirtualStep] = useState<number>(-1);
 
-  // Automatically animate 3D strings & finger press whenever active chord changes (including live song auto-play)
+  // Real-time synchronization: When audio engine plucks/strums strings, visibly vibrate 3D strings
+  useEffect(() => {
+    const unsubNote = guitarAudio.addNoteListener((event) => {
+      setPluckPulse((prev) => ({
+        seq: prev.seq + 1,
+        stringIdx: event.stringIdx,
+      }));
+    });
+    const unsubStep = guitarAudio.onVirtualStep((step) => {
+      setActiveVirtualStep(step);
+    });
+    return () => {
+      unsubNote();
+      unsubStep();
+    };
+  }, []);
+
+  // Automatically animate 3D strings & finger press whenever active chord changes
   useEffect(() => {
     setPluckPulse((prev) => ({ seq: prev.seq + 1, stringIdx: -1 }));
   }, [chordName, position]);
@@ -529,36 +556,88 @@ export function GuitarStage({
 
         {/* Step Grid */}
         <div className="flex items-center gap-1 shrink-0 justify-center">
-          {activePattern.strokes.map((stroke, idx) => (
-            <div
-              key={idx}
-              className={`w-7 py-1 px-0.5 rounded-md border text-center font-mono flex flex-col items-center justify-center shrink-0 ${
-                stroke.accent
-                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold shadow-sm'
-                  : stroke.type === 'rest'
-                  ? 'bg-black/40 border-white/5 text-slate-600'
-                  : 'bg-[#181c26] border-white/10 text-slate-300'
-              }`}
-            >
-              <span className="text-[11px] font-bold leading-none">{stroke.label}</span>
-              <span className="text-[8px] text-slate-500 uppercase leading-none mt-0.5">
-                {stroke.type === 'rest' ? 'ES' : stroke.accent ? 'ACC' : 'BEAT'}
-              </span>
-            </div>
-          ))}
+          {activePattern.strokes.map((stroke, idx) => {
+            const isPulse = isVirtualGuitarist && activeVirtualStep === idx;
+            return (
+              <div
+                key={idx}
+                className={`w-7 py-1 px-0.5 rounded-md border text-center font-mono flex flex-col items-center justify-center shrink-0 transition-all ${
+                  isPulse
+                    ? 'bg-amber-400 text-slate-950 border-amber-300 font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.85)] scale-110'
+                    : stroke.accent
+                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold shadow-sm'
+                    : stroke.type === 'rest'
+                    ? 'bg-black/40 border-white/5 text-slate-600'
+                    : 'bg-[#181c26] border-white/10 text-slate-300'
+                }`}
+              >
+                <span className="text-[11px] font-bold leading-none">{stroke.label}</span>
+                <span className="text-[8px] uppercase leading-none mt-0.5 opacity-80">
+                  {stroke.type === 'rest' ? 'ES' : stroke.accent ? 'ACC' : 'BEAT'}
+                </span>
+              </div>
+            );
+          })}
         </div>
 
-        <button
-          onClick={() => {
-            setPluckPulse((prev) => ({ seq: prev.seq + 1, stringIdx: -1 }));
-            onPlayStrumSequence();
-          }}
-          disabled={isPlayingStrumSeq}
-          className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25 shrink-0 whitespace-nowrap active:scale-95"
-        >
-          <Play className="w-3 h-3 fill-current" />
-          <span>{isPlayingStrumSeq ? 'ÇALINIYOR...' : 'RİTİM TEST'}</span>
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {onToggleVirtualGuitarist && (
+            <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+              <button
+                onClick={onToggleVirtualGuitarist}
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-bold transition-all cursor-pointer active:scale-95 ${
+                  isVirtualGuitarist
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/25'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Sanal gitarist eşliğini aç/kapat"
+              >
+                <Sparkles className="w-3 h-3 fill-current" />
+                <span className="hidden sm:inline">{isVirtualGuitarist ? 'SANAL GİTAR: AÇIK' : 'SANAL GİTARİST'}</span>
+                <span className="sm:hidden">{isVirtualGuitarist ? 'SANAL' : 'SANAL'}</span>
+              </button>
+
+              {onVirtualGuitaristModeChange && (
+                <div className="flex items-center bg-black/40 rounded-full p-0.5 ml-1">
+                  <button
+                    onClick={() => onVirtualGuitaristModeChange('arpeggio')}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      virtualGuitaristMode === 'arpeggio'
+                        ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="Akustik parmak stili arpej"
+                  >
+                    ARPEJ
+                  </button>
+                  <button
+                    onClick={() => onVirtualGuitaristModeChange('strum')}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                      virtualGuitaristMode === 'strum'
+                        ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="Akor ritim vuruşları (Strumming)"
+                  >
+                    RİTİM
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={() => {
+              setPluckPulse((prev) => ({ seq: prev.seq + 1, stringIdx: -1 }));
+              onPlayStrumSequence();
+            }}
+            disabled={isPlayingStrumSeq}
+            className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25 shrink-0 whitespace-nowrap active:scale-95"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            <span>{isPlayingStrumSeq ? 'ÇALINIYOR...' : 'TEK TUR TEST'}</span>
+          </button>
+        </div>
       </div>
     </div>
   );
