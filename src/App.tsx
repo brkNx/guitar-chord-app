@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { Song, FretboardDisplayMode } from './types/guitar';
 import { SAMPLE_SONGS } from './data/sampleSongs';
 import { getOrGenerateChord } from './data/chordLibrary';
@@ -15,8 +15,7 @@ import { SongViewer } from './components/SongViewer';
 import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
 import { Metronome } from './components/Metronome';
-
-const GuitarStage = lazy(() => import('./components/stage/GuitarStage'));
+import { GuitarStage } from './components/stage/GuitarStage';
 
 import {
   Play,
@@ -605,31 +604,23 @@ export function App() {
 
         {/* ORTA SÜTUN (1fr): 3D AKUSTİK GİTAR SAHNESİ + SAP ZOOM & 2B AKOR KLAVYESİ + RİTİM DOCK */}
         <main className="h-full flex flex-col bg-[#0b0d12] overflow-hidden min-w-0">
-          <Suspense
-            fallback={
-              <div className="flex-1 flex items-center justify-center font-mono text-xs text-slate-400">
-                3D STÜDYO SAHNESİ YÜKLENİYOR...
-              </div>
-            }
-          >
-            <GuitarStage
-              chordName={activeChord}
-              position={currentPosition}
-              positionIdx={positionIdx}
-              totalPositions={chordDef.positions.length}
-              displayMode={displayMode}
-              isLeftHanded={isLeftHanded}
-              songChords={songChords}
-              selectedPatternId={selectedPatternId}
-              isPlayingStrumSeq={isPlayingStrumSeq}
-              onSelectChord={handleSelectChord}
-              onPositionChange={setPositionIdx}
-              onDisplayModeChange={setDisplayMode}
-              onOpenChordDetail={() => setLeftTab('theory')}
-              onSelectPattern={setSelectedPatternId}
-              onPlayStrumSequence={handlePlayStrumSequence}
-            />
-          </Suspense>
+          <GuitarStage
+            chordName={activeChord}
+            position={currentPosition}
+            positionIdx={positionIdx}
+            totalPositions={chordDef.positions.length}
+            displayMode={displayMode}
+            isLeftHanded={isLeftHanded}
+            songChords={songChords}
+            selectedPatternId={selectedPatternId}
+            isPlayingStrumSeq={isPlayingStrumSeq}
+            onSelectChord={handleSelectChord}
+            onPositionChange={setPositionIdx}
+            onDisplayModeChange={setDisplayMode}
+            onOpenChordDetail={() => setLeftTab('theory')}
+            onSelectPattern={setSelectedPatternId}
+            onPlayStrumSequence={handlePlayStrumSequence}
+          />
         </main>
 
         {/* SAĞ SÜTUN (430px): CHORDIFY + ULTIMATE GUITAR PRO CANLI AKOR & SÖZ AKIŞI */}

@@ -61,13 +61,13 @@ export function NeckOverlay({
   if (!visible) return null;
 
   return (
-    <div className="absolute inset-0 z-20 flex flex-col justify-between p-4 bg-[#0b0d12]/78 backdrop-blur-[3px] animate-fadeIn pointer-events-auto">
+    <div className="absolute inset-x-3 bottom-3 z-20 flex flex-col gap-2 p-3 bg-[#0b0d12]/90 border border-[#1e222d] rounded-xl backdrop-blur-md shadow-2xl animate-fadeIn pointer-events-auto">
       {/* Top Control Strip: Back to 3D + Song Chord Palette + Strum Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#11141c]/95 border border-[#1e222d] rounded-lg px-3 py-2 shadow-xl">
-        <div className="flex items-center gap-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-[#11141c] border border-[#1e222d] rounded-lg px-2.5 py-1.5">
+        <div className="flex items-center gap-2">
           <button
             onClick={onBack}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#181c26] hover:bg-[#222836] border border-[#1e222d] rounded font-mono text-xs font-bold text-slate-200 hover:text-amber-400 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#181c26] hover:bg-[#222836] border border-[#1e222d] rounded font-mono text-[11px] font-bold text-slate-200 hover:text-amber-400 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-3.5 h-3.5 text-amber-400" />
             <span>3D SAHNEYE DÖN</span>
@@ -80,7 +80,7 @@ export function NeckOverlay({
           {songChords.length > 0 && (
             <div className="flex items-center gap-1 pl-2 border-l border-[#1e222d] overflow-x-auto scrollbar-none">
               <span className="font-mono text-[10px] text-slate-500 uppercase mr-1">
-                AKORLAR:
+                ŞARKI AKORLARI:
               </span>
               {songChords.map((c) => {
                 const isActive = c === chordName;
@@ -88,9 +88,9 @@ export function NeckOverlay({
                   <button
                     key={c}
                     onClick={() => onSelectChord(c)}
-                    className={`px-2 py-1 rounded font-mono text-xs font-bold transition-all cursor-pointer ${
+                    className={`px-2 py-0.5 rounded font-mono text-xs font-bold transition-all cursor-pointer ${
                       isActive
-                        ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/30'
+                        ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/40 scale-105'
                         : 'bg-[#181c26] text-slate-300 border border-[#1e222d] hover:border-amber-500/40 hover:text-white'
                     }`}
                   >
@@ -103,10 +103,10 @@ export function NeckOverlay({
         </div>
 
         {/* Downstroke / Upstroke Hardware Triggers */}
-        <div className="flex items-center gap-1.5 font-mono text-xs">
+        <div className="flex items-center gap-1.5 font-mono text-[11px]">
           <button
             onClick={() => onStrum('down')}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded transition-colors cursor-pointer"
             title="Yukarıdan aşağıya tara (Space)"
           >
             <ArrowDown className="w-3.5 h-3.5" />
@@ -115,7 +115,7 @@ export function NeckOverlay({
           </button>
           <button
             onClick={() => onStrum('up')}
-            className="flex items-center gap-1 px-2.5 py-1.5 bg-[#181c26] hover:bg-[#222836] text-slate-200 border border-[#1e222d] font-bold rounded transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 bg-[#181c26] hover:bg-[#222836] text-slate-200 border border-[#1e222d] font-bold rounded transition-colors cursor-pointer"
             title="Aşağıdan yukarıya tara (Shift+Space)"
           >
             <ArrowUp className="w-3.5 h-3.5 text-emerald-400" />
@@ -124,8 +124,8 @@ export function NeckOverlay({
         </div>
       </div>
 
-      {/* Center Interactive 2D Playable Fretboard */}
-      <div className="my-auto w-full max-w-5xl mx-auto shadow-2xl">
+      {/* Interactive 2D Playable Fretboard */}
+      <div className="w-full">
         <Fretboard
           chordName={chordName}
           position={position}
@@ -139,18 +139,6 @@ export function NeckOverlay({
           onStringPluck={onStringPluck}
           onStrum={onStrum}
         />
-      </div>
-
-      {/* Bottom Keyboard Telemetry Bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[#11141c]/90 border border-[#1e222d] rounded font-mono text-[10px] text-slate-400">
-        <span>
-          ETKİLEŞİM: Herhangi bir tel ve perde hücresine tıklayarak o notayı anında çalabilirsiniz.
-        </span>
-        <div className="flex items-center gap-3 text-slate-500">
-          <span>[SPACE] Aşağı Strum</span>
-          <span>[SHIFT+SPACE] Yukarı Strum</span>
-          <span>[ESC] 3D Gitar Görünümü</span>
-        </div>
       </div>
     </div>
   );

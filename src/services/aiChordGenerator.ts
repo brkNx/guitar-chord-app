@@ -588,6 +588,23 @@ function isGeniusSectionTag(line: string): string | null {
   return inside;
 }
 
+function expandLineRepeats(lines: string[]): string[] {
+  const expanded: string[] = [];
+  for (const rawLine of lines) {
+    const repeatMatch = rawLine.match(/^(.*?)\s*(?:\(\s*[xX×]?\s*([2-4])\s*[xX×]?\s*\)|\[[xX×]?([2-4])[xX×]?\])\s*$/);
+    if (repeatMatch && !isGeniusSectionTag(rawLine)) {
+      const cleanLine = repeatMatch[1].trim();
+      const count = Number(repeatMatch[2] || repeatMatch[3] || 2);
+      for (let i = 0; i < count; i++) {
+        expanded.push(cleanLine);
+      }
+    } else {
+      expanded.push(rawLine);
+    }
+  }
+  return expanded;
+}
+
 function buildChordProFromLyrics(
   title: string,
   artist: string,
@@ -601,12 +618,15 @@ function buildChordProFromLyrics(
 ): string {
   const blocks = rawLyrics
     .replace(/\r\n/g, '\n')
+    .replace(/\n(\s*\[[^\]]+\]\s*(?:\n|$))/g, '\n\n$1')
     .split(/\n\s*\n/)
     .map((b) =>
-      b
-        .split('\n')
-        .map((l) => l.trim())
-        .filter(Boolean)
+      expandLineRepeats(
+        b
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+      )
     )
     .filter((b) => b.length > 0);
 
@@ -622,16 +642,30 @@ function buildChordProFromLyrics(
     ''
   ];
 
+  // Remember the fullest chorus lyric lines so shortened/placeholder repeat choruses are expanded in full
+  let canonicalChorusLines: string[] = [];
+  for (const lines of blocks) {
+    const firstTag = isGeniusSectionTag(lines[0]);
+    if (firstTag && /nakarat|chorus|hook/i.test(firstTag) && !/ön|pre/i.test(firstTag)) {
+      const bodyLines = lines.filter((l) => !isGeniusSectionTag(l) && !l.startsWith('{'));
+      if (bodyLines.length > canonicalChorusLines.length) {
+        canonicalChorusLines = bodyLines;
+      }
+    }
+  }
+
   let verseCount = 0;
-  blocks.slice(0, 9).forEach((lines, blockIdx) => {
+  blocks.forEach((lines, blockIdx) => {
     const firstTag = isGeniusSectionTag(lines[0]);
     const headerLower = (firstTag || '').toLowerCase();
 
+    const isPreChorus = /ön nakarat|pre-chorus/i.test(headerLower);
     const isChorus =
-      /nakarat|chorus|hook/i.test(headerLower) ||
+      (!isPreChorus && /nakarat|chorus|hook/i.test(headerLower)) ||
       (!firstTag && (blockIdx === 1 || blockIdx === 3 || blockIdx === 5));
     const isBridge =
-      /köprü|ön nakarat|pre-chorus|bridge|solo|ara/i.test(headerLower) ||
+      isPreChorus ||
+      /köprü|bridge|solo|ara/i.test(headerLower) ||
       (!firstTag && blockIdx === 4 && blocks.length >= 6);
 
     const prog = isChorus ? cp : isBridge ? bp : vp;
@@ -647,19 +681,31 @@ function buildChordProFromLyrics(
       }
     }
 
-    let chordCursor = 0;
-    for (const line of lines) {
-      const sectionTag = isGeniusSectionTag(line);
-      if (sectionTag) {
-        sectionLines.push(`{c: ${sectionTag}}`);
-      } else if (line.startsWith('{')) {
-        sectionLines.push(line);
-      } else {
-        const c1 = prog[chordCursor % prog.length];
-        const c2 = prog[(chordCursor + 1) % prog.length];
-        chordCursor += 2;
-        sectionLines.push(harmonizeLyricLine(line, c1, c2));
+    // Check if this is a chorus that was abbreviated (fewer lines than the first full chorus or tagged x2)
+    const tagRepeatMatch = (firstTag || '').match(/[xX×]\s*([2-3])|([2-3])\s*[xX×]/);
+    const tagRepeatCount = tagRepeatMatch ? Number(tagRepeatMatch[1] || tagRepeatMatch[2] || 1) : 1;
+
+    let bodyLines = lines.filter((l) => !isGeniusSectionTag(l) && !l.startsWith('{'));
+    if (isChorus && canonicalChorusLines.length > 0 && bodyLines.length < canonicalChorusLines.length) {
+      bodyLines = [...canonicalChorusLines];
+    }
+    if (tagRepeatCount > 1 && bodyLines.length > 0) {
+      const base = [...bodyLines];
+      for (let r = 1; r < tagRepeatCount; r++) {
+        bodyLines.push(...base);
       }
+    }
+
+    if (firstTag) {
+      sectionLines.push(`{c: ${firstTag}}`);
+    }
+
+    let chordCursor = 0;
+    for (const line of bodyLines) {
+      const c1 = prog[chordCursor % prog.length];
+      const c2 = prog[(chordCursor + 1) % prog.length];
+      chordCursor += 2;
+      sectionLines.push(harmonizeLyricLine(line, c1, c2));
     }
     sectionLines.push('');
   });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ChordPosition, FretboardDisplayMode } from '../types/guitar';
 import { getNoteAtFret } from '../data/chordLibrary';
 import { getChordTheoryDetails } from '../utils/chordTheory';
@@ -54,6 +54,7 @@ export const Fretboard = ({
   const [hoverCell, setHoverCell] = useState<{ stringIdx: number; fret: number } | null>(null);
   const [vibratingStrings, setVibratingStrings] = useState<Set<number>>(new Set());
   const [isStrumming, setIsStrumming] = useState(false);
+  const [chordPulse, setChordPulse] = useState(false);
 
   // Analyze chord degrees & intervals
   const theory = getChordTheoryDetails(chordName, position);
@@ -86,6 +87,25 @@ export const Fretboard = ({
       });
     }, durationMs);
   };
+
+  // Animate finger press & string vibration whenever chord or voicing changes
+  useEffect(() => {
+    setChordPulse(true);
+    const timers: number[] = [];
+    position.frets.forEach((f, idx) => {
+      if (f >= 0) {
+        const t = window.setTimeout(() => {
+          triggerStringVibration(idx, 420);
+        }, idx * 20);
+        timers.push(t);
+      }
+    });
+    const pulseTimer = window.setTimeout(() => setChordPulse(false), 450);
+    timers.push(pulseTimer);
+    return () => {
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+  }, [chordName, position]);
 
   const handleStringClick = (stringIdx: number, fret: number) => {
     setActiveNote({ stringIdx, fret });
@@ -425,6 +445,7 @@ export const Fretboard = ({
                     if (displayMode === 'notes') label = note;
                     else if (displayMode === 'degrees') label = degree;
                     const isPlucked = activeNote?.stringIdx === strIdx && activeNote?.fret === fret;
+                    const isHighlighted = isPlucked || chordPulse;
 
                     return (
                       <g
@@ -432,14 +453,24 @@ export const Fretboard = ({
                         className="cursor-pointer"
                         onClick={() => handleStringClick(strIdx, fret)}
                       >
+                        {/* Pulsing Outer Target Ring showing where to press */}
+                        <circle
+                          cx={cx}
+                          cy={y}
+                          r={isHighlighted ? '15' : '12.5'}
+                          fill="none"
+                          stroke={oolimo.fill}
+                          strokeWidth={isHighlighted ? '2' : '1'}
+                          opacity={isHighlighted ? 0.85 : 0.32}
+                        />
                         {/* Oolimo Geometric Fret Dot */}
                         <circle
                           cx={cx}
                           cy={y}
-                          r={isPlucked ? '12' : '10.5'}
+                          r={isHighlighted ? '11.5' : '10.5'}
                           fill={oolimo.fill}
                           stroke={oolimo.stroke}
-                          strokeWidth={isPlucked ? '3' : '1.5'}
+                          strokeWidth={isHighlighted ? '2.5' : '1.5'}
                         />
                         <text
                           x={cx}
@@ -452,6 +483,30 @@ export const Fretboard = ({
                         >
                           {label}
                         </text>
+                        {/* Always-visible mini finger number badge when viewing Degrees/Notes */}
+                        {displayMode !== 'fingers' && finger > 0 && (
+                          <g>
+                            <circle
+                              cx={cx + 9.5}
+                              cy={y - 8.5}
+                              r="5.5"
+                              fill="#0b0d12"
+                              stroke={oolimo.stroke}
+                              strokeWidth="1"
+                            />
+                            <text
+                              x={cx + 9.5}
+                              y={y - 5.5}
+                              textAnchor="middle"
+                              fill="#fbbf24"
+                              fontSize="7.5"
+                              fontFamily="monospace"
+                              fontWeight="bold"
+                            >
+                              {finger}
+                            </text>
+                          </g>
+                        )}
                       </g>
                     );
                   }

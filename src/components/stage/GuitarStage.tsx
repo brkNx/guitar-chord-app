@@ -34,31 +34,34 @@ const OVERVIEW_CAM_POS = new THREE.Vector3(0.24, 0.04, 1.82);
 const OVERVIEW_TARGET = new THREE.Vector3(0, -0.02, 0);
 
 const NECK_WORLD_Y = NECK_FOCUS_Y - MODEL_CENTER_Y;
-const NECK_CAM_POS = new THREE.Vector3(0, NECK_WORLD_Y, 0.55);
-const NECK_TARGET = new THREE.Vector3(0, NECK_WORLD_Y, 0.04);
+const NECK_CAM_POS = new THREE.Vector3(0, NECK_WORLD_Y + 0.02, 0.78);
+const NECK_TARGET = new THREE.Vector3(0, NECK_WORLD_Y + 0.02, 0.04);
 
 interface CameraRigProps {
   stageMode: StageMode;
-  onNeckArrived: () => void;
   onInteractChange: (interacting: boolean) => void;
 }
 
-function CameraRig({ stageMode, onNeckArrived, onInteractChange }: CameraRigProps) {
+function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
   const { camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
-  const arrivedRef = useRef(false);
   const returningToOverviewRef = useRef(false);
   const prevModeRef = useRef<StageMode>(stageMode);
   const idleTimerRef = useRef<number | null>(null);
+  const initedRef = useRef(false);
+
+  useEffect(() => {
+    if (!initedRef.current && controlsRef.current) {
+      initedRef.current = true;
+      const t = stageMode === 'neck' ? NECK_TARGET : OVERVIEW_TARGET;
+      controlsRef.current.target.copy(t);
+      controlsRef.current.update();
+    }
+  }, [stageMode]);
 
   useEffect(() => {
     if (prevModeRef.current !== stageMode) {
-      if (stageMode === 'neck') {
-        arrivedRef.current = false;
-        returningToOverviewRef.current = false;
-      } else {
-        returningToOverviewRef.current = true;
-      }
+      returningToOverviewRef.current = stageMode === 'overview';
       prevModeRef.current = stageMode;
     }
   }, [stageMode]);
@@ -76,14 +79,9 @@ function CameraRig({ stageMode, onNeckArrived, onInteractChange }: CameraRigProp
         ctrl.target.x = THREE.MathUtils.damp(ctrl.target.x, NECK_TARGET.x, 8, dt);
         ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, NECK_TARGET.y, 8, dt);
         ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, NECK_TARGET.z, 8, dt);
-        ctrl.update();
+        camera.lookAt(ctrl.target);
       } else {
         camera.lookAt(NECK_TARGET);
-      }
-
-      if (!arrivedRef.current && camera.position.distanceTo(NECK_CAM_POS) < 0.09) {
-        arrivedRef.current = true;
-        onNeckArrived();
       }
     } else if (returningToOverviewRef.current) {
       camera.position.x = THREE.MathUtils.damp(camera.position.x, OVERVIEW_CAM_POS.x, 6.5, dt);
@@ -121,7 +119,7 @@ function CameraRig({ stageMode, onNeckArrived, onInteractChange }: CameraRigProp
       ref={controlsRef}
       enabled={stageMode === 'overview'}
       enablePan={false}
-      minDistance={0.75}
+      minDistance={0.35}
       maxDistance={2.1}
       minPolarAngle={Math.PI * 0.22}
       maxPolarAngle={Math.PI * 0.78}
@@ -158,10 +156,14 @@ export function GuitarStage({
   }, []);
 
   const [stageMode, setStageMode] = useState<StageMode>(initialNeck ? 'neck' : 'overview');
-  const [overlayVisible, setOverlayVisible] = useState<boolean>(initialNeck);
   const [userInteracting, setUserInteracting] = useState(false);
   const [hoverRegion, setHoverRegion] = useState<'none' | 'neck' | 'body'>('none');
   const [pluckPulse, setPluckPulse] = useState<PluckPulse>({ seq: 0, stringIdx: -1 });
+
+  // Automatically animate 3D strings & finger press whenever active chord changes (including live song auto-play)
+  useEffect(() => {
+    setPluckPulse((prev) => ({ seq: prev.seq + 1, stringIdx: -1 }));
+  }, [chordName, position]);
 
   const theory = useMemo(
     () => getChordTheoryDetails(chordName, position),
@@ -192,7 +194,6 @@ export function GuitarStage({
   }, [position]);
 
   const enterOverviewMode = useCallback(() => {
-    setOverlayVisible(false);
     setStageMode('overview');
   }, []);
 
@@ -348,7 +349,6 @@ export function GuitarStage({
 
             <CameraRig
               stageMode={stageMode}
-              onNeckArrived={() => setOverlayVisible(true)}
               onInteractChange={setUserInteracting}
             />
           </Suspense>
@@ -388,7 +388,7 @@ export function GuitarStage({
 
         {/* 2D PLAYABLE FRETBOARD OVERLAY WHEN NECK IS SELECTED */}
         <NeckOverlay
-          visible={stageMode === 'neck' && overlayVisible}
+          visible={stageMode === 'neck'}
           chordName={chordName}
           position={position}
           positionIdx={positionIdx}

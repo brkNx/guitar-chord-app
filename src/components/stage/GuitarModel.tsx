@@ -169,16 +169,22 @@ export function GuitarModel({
     [chordName, position]
   );
 
-  // Refs for smooth 3D finger dot lerping
+  // Refs for smooth 3D finger dot lerping & press pulse animation
   const dotGroupRefs = useRef<(THREE.Group | null)[]>([null, null, null, null, null, null]);
   const dotCurrentPos = useRef<THREE.Vector3[]>(
     [0, 1, 2, 3, 4, 5].map((i) => new THREE.Vector3(stringX(i, NUT_Y), NUT_Y, FRETBOARD_Z + 0.003))
   );
+  const pressPulseRef = useRef(0);
+
+  // Trigger physical finger press pulse whenever chord, voicing, or pluck changes
+  useEffect(() => {
+    pressPulseRef.current = 1.0;
+  }, [chordName, position, pluckPulse.seq]);
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
 
-    // 1. Turntable rotation: 3D studio stance in overview, smoothly aligns to 0 in neck mode
+    // 1. Turntable rotation: 3D studio stance in overview, horizontal neck in neck mode
     if (turntableRef.current) {
       if (stageMode === 'neck') {
         turntableRef.current.rotation.y = THREE.MathUtils.damp(
@@ -227,8 +233,11 @@ export function GuitarModel({
       dt
     );
 
-    // 3. String vibration decay
+    // 3. String vibration decay & finger press pulse decay
     const elapsed = state.clock.elapsedTime;
+    pressPulseRef.current = THREE.MathUtils.damp(pressPulseRef.current, 0, 4.8, dt);
+    const pulse = pressPulseRef.current;
+
     for (let i = 0; i < stringData.length; i++) {
       const s = stringData[i];
       s.amp = THREE.MathUtils.damp(s.amp, 0, 5.2, dt);
@@ -237,21 +246,24 @@ export function GuitarModel({
       s.material.emissiveIntensity = Math.min(1, s.amp * 28000);
     }
 
-    // 4. Smoothly lerp 3D finger dots to target fret positions
+    // 4. Smoothly lerp 3D finger dots to target fret positions with physical press bounce
     for (let i = 0; i < 6; i++) {
       const fret = position.frets[i];
       const yTarget = fret > 0 ? fingerY(fret) : NUT_Y + 0.012;
       const xTarget = stringX(i, fret > 0 ? yTarget : NUT_Y);
-      const zTarget = (fret > 0 ? stringZ(yTarget) : FRETBOARD_Z) + 0.0022;
+      const baseZ = (fret > 0 ? stringZ(yTarget) : FRETBOARD_Z) + 0.0022;
+      const zTarget = fret > 0 ? baseZ + Math.sin(pulse * Math.PI) * 0.0032 : baseZ;
 
       const cur = dotCurrentPos.current[i];
       cur.x = THREE.MathUtils.damp(cur.x, xTarget, 14, dt);
       cur.y = THREE.MathUtils.damp(cur.y, yTarget, 14, dt);
-      cur.z = THREE.MathUtils.damp(cur.z, zTarget, 14, dt);
+      cur.z = THREE.MathUtils.damp(cur.z, zTarget, 16, dt);
 
       const grp = dotGroupRefs.current[i];
       if (grp) {
         grp.position.copy(cur);
+        const s = fret > 0 ? 1 + pulse * 0.32 : 1 + pulse * 0.12;
+        grp.scale.setScalar(s);
       }
     }
   });
@@ -442,16 +454,28 @@ export function GuitarModel({
                   />
                 </mesh>
               ) : (
-                <mesh castShadow>
-                  <sphereGeometry args={[0.0035, 20, 20]} />
-                  <meshStandardMaterial
-                    color={oolimo.fill}
-                    emissive={oolimo.fill}
-                    emissiveIntensity={0.45}
-                    roughness={0.2}
-                    metalness={0.1}
-                  />
-                </mesh>
+                <group>
+                  <mesh castShadow>
+                    <sphereGeometry args={[0.0038, 20, 20]} />
+                    <meshStandardMaterial
+                      color={oolimo.fill}
+                      emissive={oolimo.fill}
+                      emissiveIntensity={0.6}
+                      roughness={0.18}
+                      metalness={0.1}
+                    />
+                  </mesh>
+                  {/* Glowing target ring on the fretboard showing exact press spot */}
+                  <mesh position={[0, 0, -0.0014]}>
+                    <torusGeometry args={[0.0052, 0.00055, 10, 24]} />
+                    <meshStandardMaterial
+                      color={oolimo.stroke}
+                      emissive={oolimo.fill}
+                      emissiveIntensity={0.85}
+                      roughness={0.2}
+                    />
+                  </mesh>
+                </group>
               )}
             </group>
           );
