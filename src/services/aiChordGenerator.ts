@@ -501,18 +501,40 @@ async function resolveCanonicalTrackAndLyrics(
   let artist = initialArtist;
   let title = initialTitle;
 
-  // Try direct fetch first if artist looks valid
-  const directLyrics = await fetchLyricsFromApis(artist, title);
-  if (directLyrics) {
-    return { artist, title, lyrics: directLyrics };
-  }
-
-  // Canonicalize via iTunes Search API (handles missing Turkish diacritics & YouTube channel names)
   const query =
     artist && artist !== 'Bilinmeyen Sanatçı' && artist !== 'YouTube Sanatçısı'
       ? `${artist} ${title}`
       : title;
 
+  // 1. Try local Vite backend lyrics resolver (/api/lyrics -> Genius + LRCLIB, zero CORS)
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`/api/lyrics?q=${encodeURIComponent(query)}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data?.lyrics === 'string' && data.lyrics.trim().length > 25) {
+        return {
+          artist: data.artist || artist,
+          title: data.title || title,
+          lyrics: data.lyrics.trim()
+        };
+      }
+    }
+  } catch {
+    // Fallback to client-side APIs below
+  }
+
+  // 2. Try direct client-side fetch if artist looks valid
+  const directLyrics = await fetchLyricsFromApis(artist, title);
+  if (directLyrics) {
+    return { artist, title, lyrics: directLyrics };
+  }
+
+  // 3. Canonicalize via iTunes Search API (handles missing Turkish diacritics & YouTube channel names)
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3500);
@@ -555,6 +577,17 @@ function harmonizeLyricLine(line: string, c1: string, c2: string): string {
   return `[${c1}]${firstHalf} [${c2}]${secondHalf}`;
 }
 
+function isGeniusSectionTag(line: string): string | null {
+  const m = line.trim().match(/^\[([^\]]+)\]$/);
+  if (!m) return null;
+  const inside = m[1].trim();
+  // Real single chord is short like Am, F#m7, Cadd9; section headers contain words/spaces/colons
+  if (/^[A-G][#b]?(?:m|maj|min|dim|aug|sus|add|[0-9]|\/[A-G][#b]?)*$/.test(inside)) {
+    return null;
+  }
+  return inside;
+}
+
 function buildChordProFromLyrics(
   title: string,
   artist: string,
@@ -590,23 +623,36 @@ function buildChordProFromLyrics(
   ];
 
   let verseCount = 0;
-  blocks.slice(0, 7).forEach((lines, blockIdx) => {
-    const isChorus = blockIdx === 1 || blockIdx === 3 || blockIdx === 5;
-    const isBridge = blockIdx === 4 && blocks.length >= 6;
+  blocks.slice(0, 9).forEach((lines, blockIdx) => {
+    const firstTag = isGeniusSectionTag(lines[0]);
+    const headerLower = (firstTag || '').toLowerCase();
+
+    const isChorus =
+      /nakarat|chorus|hook/i.test(headerLower) ||
+      (!firstTag && (blockIdx === 1 || blockIdx === 3 || blockIdx === 5));
+    const isBridge =
+      /köprü|ön nakarat|pre-chorus|bridge|solo|ara/i.test(headerLower) ||
+      (!firstTag && blockIdx === 4 && blocks.length >= 6);
+
     const prog = isChorus ? cp : isBridge ? bp : vp;
 
-    if (isChorus) {
-      sectionLines.push('{c: Nakarat}');
-    } else if (isBridge) {
-      sectionLines.push('{c: Köprü / Solo}');
-    } else {
-      verseCount += 1;
-      sectionLines.push(`{c: Kıta ${verseCount}}`);
+    if (!firstTag) {
+      if (isChorus) {
+        sectionLines.push('{c: Nakarat}');
+      } else if (isBridge) {
+        sectionLines.push('{c: Köprü / Solo}');
+      } else {
+        verseCount += 1;
+        sectionLines.push(`{c: Kıta ${verseCount}}`);
+      }
     }
 
     let chordCursor = 0;
     for (const line of lines) {
-      if (line.startsWith('[') || line.startsWith('{')) {
+      const sectionTag = isGeniusSectionTag(line);
+      if (sectionTag) {
+        sectionLines.push(`{c: ${sectionTag}}`);
+      } else if (line.startsWith('{')) {
         sectionLines.push(line);
       } else {
         const c1 = prog[chordCursor % prog.length];

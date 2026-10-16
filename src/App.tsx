@@ -39,7 +39,8 @@ export function App() {
         const cleaned = parsed.filter(
           (s) =>
             !s.content?.includes('Step in the room with the') &&
-            !s.content?.includes('Rüzgar eser yine')
+            !s.content?.includes('Rüzgar eser yine') &&
+            !s.content?.includes('1. Ölçü (')
         );
         if (cleaned.length !== parsed.length) {
           localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(cleaned));
@@ -632,16 +633,43 @@ export function App() {
         </main>
 
         {/* SAĞ SÜTUN (430px): CHORDIFY + ULTIMATE GUITAR PRO CANLI AKOR & SÖZ AKIŞI */}
-        <aside className="w-[430px] h-full flex flex-col bg-[#0b0d12] border-l border-[#1e222d] p-2 overflow-hidden min-w-0">
-          <SongViewer
-            song={currentSong}
-            activeChord={activeChord}
-            onSelectChord={handleSelectChord}
-            transposeOffset={transposeOffset}
-            onTransposeChange={setTransposeOffset}
-            isAutoScrolling={isAutoScrolling}
-            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
-          />
+        <aside className="w-[430px] h-full flex flex-col bg-[#0b0d12] border-l border-[#1e222d] p-2 gap-2 overflow-hidden min-w-0">
+          {/* Quick Song / YouTube Lyrics + Chords Extractor Bar */}
+          <form
+            onSubmit={handleQuickAiSubmit}
+            className="shrink-0 flex items-center gap-1.5 bg-[#11141c] border border-[#1e222d] rounded-lg p-1.5"
+          >
+            <div className="relative flex-1">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-400" />
+              <input
+                type="text"
+                value={quickInput}
+                onChange={(e) => setQuickInput(e.target.value)}
+                placeholder="Şarkı adı veya YouTube linki yazın (Söz + Akor)..."
+                disabled={isAiLoading}
+                className="w-full bg-[#0b0d12] border border-[#1e222d] rounded pl-8 pr-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isAiLoading || !quickInput.trim()}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded transition-colors cursor-pointer whitespace-nowrap"
+            >
+              {isAiLoading ? 'ÇEKİLİYOR...' : 'SÖZ + AKOR BUL'}
+            </button>
+          </form>
+
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <SongViewer
+              song={currentSong}
+              activeChord={activeChord}
+              onSelectChord={handleSelectChord}
+              transposeOffset={transposeOffset}
+              onTransposeChange={setTransposeOffset}
+              isAutoScrolling={isAutoScrolling}
+              onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
+            />
+          </div>
         </aside>
       </div>
 
