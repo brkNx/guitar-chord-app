@@ -226,22 +226,25 @@ export function App() {
 
   return (
     <div className="w-screen h-screen overflow-hidden bg-[#090a0f] text-slate-100 flex flex-col font-sans select-none studio-layout">
-      {/* 1. SOUNDSLICE 52px HARDWARE MASTER TRANSPORT BAR */}
-      <header className="h-[52px] glass-transport px-3 flex items-center justify-between gap-2 z-40 select-none shrink-0 border-b border-white/10">
+      {/* 1. 21st.dev / SOUNDSLICE 52px HARDWARE MASTER TRANSPORT BAR */}
+      <header className="h-[52px] bg-[#08090d]/85 backdrop-blur-xl px-4 flex items-center justify-between gap-2 z-40 select-none shrink-0 border-b border-white/[0.08]">
         {/* Left: Studio Branding & WebAudio Status */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-black tracking-wider text-white flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
+        <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />
+            <span className="font-mono text-xs font-bold tracking-tight text-white">
               MOISES // SOUNDSLICE
             </span>
-            <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              PRO STUDIO
+            <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              PRO
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pl-2.5 border-l border-white/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full bg-white/[0.02] border border-white/[0.06]">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
             <span>48kHz DSP</span>
           </div>
         </div>
@@ -251,10 +254,10 @@ export function App() {
           {/* Global Play / Autoscroll Button */}
           <button
             onClick={() => setIsAutoScrolling(!isAutoScrolling)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer font-bold ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer font-bold active:scale-95 shadow-sm ${
               isAutoScrolling
                 ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                : 'bg-[#191c26] text-slate-200 hover:text-white border border-white/10 hover:border-amber-500/40'
+                : 'bg-white/[0.04] text-slate-200 hover:text-white border border-white/[0.08] hover:border-amber-500/40'
             }`}
             title="Auto-scroll ve canlı ritim oynat"
           >
@@ -266,7 +269,7 @@ export function App() {
           <Metronome initialBpm={currentSong.tempo || 100} />
 
           {/* Transpose Steppers */}
-          <div className="hidden md:flex items-center bg-[#141722] border border-white/10 rounded-md px-1.5 py-1">
+          <div className="hidden md:flex items-center bg-[#0e1017] border border-white/[0.08] rounded-full px-2 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-[10px] text-slate-500 mr-1">TRP:</span>
             <button
               onClick={() => setTransposeOffset(transposeOffset - 1)}
@@ -288,7 +291,7 @@ export function App() {
           </div>
 
           {/* Master Tuning Selector */}
-          <div className="hidden lg:flex items-center gap-1 bg-[#141722] border border-white/10 px-2 py-1 rounded-md">
+          <div className="hidden lg:flex items-center gap-1 bg-[#0e1017] border border-white/[0.08] px-2.5 py-1 rounded-full shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-[10px] text-slate-500">TUNING:</span>
             <select
               value={selectedTuningId}
@@ -304,13 +307,13 @@ export function App() {
           </div>
 
           {/* Capo Indicator */}
-          <div className="hidden xl:flex items-center gap-1 bg-[#141722] border border-white/10 px-2 py-1 rounded-md text-[11px]">
+          <div className="hidden xl:flex items-center gap-1 bg-[#0e1017] border border-white/[0.08] px-2.5 py-1 rounded-full text-[11px] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-[10px] text-slate-500">CAPO:</span>
             <span className="font-bold text-amber-400">
               {currentSong.capo > 0 ? `${currentSong.capo}` : '0'}
             </span>
             {capoAdvice.recommendedCapo > 0 && currentSong.capo === 0 && (
-              <span className="text-[9px] text-amber-400/90 bg-amber-500/10 px-1 rounded" title={capoAdvice.reason}>
+              <span className="text-[9px] text-amber-400/90 bg-amber-500/10 px-1 rounded-full" title={capoAdvice.reason}>
                 (Öneri: {capoAdvice.recommendedCapo})
               </span>
             )}
@@ -319,10 +322,10 @@ export function App() {
           {/* Left-Handed Toggle */}
           <button
             onClick={() => setIsLeftHanded(!isLeftHanded)}
-            className={`px-2 py-1 rounded-md border text-[10px] font-mono transition-colors cursor-pointer ${
+            className={`px-2.5 py-1 rounded-full border text-[10px] font-mono transition-all active:scale-95 cursor-pointer ${
               isLeftHanded
                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
-                : 'bg-[#141722] text-slate-400 border-white/10 hover:text-white'
+                : 'bg-[#0e1017] text-slate-400 border-white/[0.08] hover:text-white'
             }`}
             title="Solak gitarist klavye modu"
           >
@@ -334,7 +337,7 @@ export function App() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsDictionaryOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono text-xs text-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
             title="Akor Kütüphanesi & Sözlük"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-400" />
@@ -343,19 +346,19 @@ export function App() {
 
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono text-xs text-slate-200 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
             title="Şarkı Ara (Cmd+K)"
           >
             <Search className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">ŞARKI ARA</span>
-            <kbd className="hidden sm:inline px-1 py-0.2 bg-[#090a0f] border border-white/10 rounded text-[9px] text-slate-500">
+            <kbd className="hidden sm:inline px-1.5 py-0.2 bg-black/40 border border-white/[0.08] rounded text-[9px] text-slate-400">
               ⌘K
             </kbd>
           </button>
 
           <button
             onClick={() => setIsCustomOpen(true)}
-            className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-md transition-colors cursor-pointer shadow-md shadow-amber-500/20"
+            className="flex items-center gap-1 h-8 px-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
             title="Yeni Şarkı Ekle"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -366,23 +369,25 @@ export function App() {
 
       {/* 2. MOISES 3-COLUMN STUDIO GRID WORKSPACE */}
       <div className="flex-1 studio-grid h-[calc(100vh-52px)] overflow-hidden">
-        {/* SOL SÜTUN (280px): KÜTÜPHANE & TEORİ PANELİ */}
-        <aside className="w-full h-full flex flex-col bg-[#11131a] border-r border-white/10 overflow-hidden select-none">
+        {/* SOL SÜTUN (260px): KÜTÜPHANE & TEORİ PANELİ */}
+        <aside className="w-full h-full flex flex-col bg-[#0b0d13] border-r border-white/[0.08] overflow-hidden select-none">
           {/* Navigation Tabs */}
-          <div className="p-2 border-b border-white/10 bg-[#0e1017] grid grid-cols-3 gap-1 font-mono text-[10px]">
-            {(['theory', 'setlist', 'scales'] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setLeftTab(tab)}
-                className={`py-1.5 rounded-md border text-center transition-all uppercase cursor-pointer ${
-                  leftTab === tab
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 font-bold shadow-sm'
-                    : 'bg-[#191c26] border-transparent text-slate-400 hover:text-white'
-                }`}
-              >
-                {tab === 'theory' ? 'TEORİ' : tab === 'setlist' ? 'LİSTE' : 'GAMLAR'}
-              </button>
-            ))}
+          <div className="p-2 border-b border-white/[0.08] bg-[#08090d]">
+            <div className="p-1 bg-[#10121a] border border-white/[0.06] rounded-xl grid grid-cols-3 gap-1 font-mono text-[10px]">
+              {(['theory', 'setlist', 'scales'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setLeftTab(tab)}
+                  className={`py-1.5 rounded-lg border text-center transition-all uppercase cursor-pointer ${
+                    leftTab === tab
+                      ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 font-bold shadow-sm'
+                      : 'bg-transparent border-transparent text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  }`}
+                >
+                  {tab === 'theory' ? 'TEORİ' : tab === 'setlist' ? 'LİSTE' : 'GAMLAR'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* TAB 1: MOISES / OOLIMO CHORD THEORY & 6-STRING MATRIX */}

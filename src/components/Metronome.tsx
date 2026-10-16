@@ -62,14 +62,14 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
   };
 
   return (
-    <div className="flex items-center gap-1.5 bg-[#141722] border border-white/10 rounded-md px-2 py-0.5 text-xs select-none shadow-inner">
+    <div className="flex items-center gap-1.5 bg-[#0e1017] border border-white/[0.08] rounded-full px-2 py-1 text-xs select-none shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
       {/* Play/Pause Button */}
       <button
         onClick={() => setIsPlaying(!isPlaying)}
-        className={`w-6 h-6 rounded flex items-center justify-center transition-all cursor-pointer ${
+        className={`w-6 h-6 rounded-full flex items-center justify-center transition-all cursor-pointer active:scale-90 ${
           isPlaying
             ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/30'
-            : 'bg-[#191c26] text-slate-300 hover:text-white border border-white/5'
+            : 'bg-[#181c28] text-slate-300 hover:text-white border border-white/[0.08] hover:border-amber-500/40'
         }`}
         title={isPlaying ? 'Metronomu Durdur' : 'Metronomu Başlat'}
       >
@@ -87,7 +87,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
           return (
             <span
               key={b}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-75 ${
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-100 ${
                 isActive
                   ? b === 1
                     ? 'bg-amber-400 scale-125 shadow-[0_0_8px_#f59e0b]'
@@ -100,7 +100,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       </div>
 
       {/* Digital BPM Readout with +/- Steppers */}
-      <div className="flex items-center gap-1 bg-[#090a0f] border border-white/10 rounded px-1.5 py-0.5">
+      <div className="flex items-center gap-1 bg-black/40 border border-white/[0.06] rounded-full px-2 py-0.5">
         <button
           onClick={() => updateBpm(bpm - 1)}
           className="text-slate-400 hover:text-white px-0.5 transition-colors cursor-pointer"
@@ -127,7 +127,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       {/* Tap Tempo Button */}
       <button
         onClick={handleTapTempo}
-        className="px-1.5 py-0.5 bg-[#191c26] hover:bg-[#222634] border border-white/5 hover:border-amber-500/40 rounded text-[10px] font-mono text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
+        className="px-2 py-0.5 bg-[#181c28] hover:bg-[#202536] border border-white/[0.08] hover:border-amber-500/40 rounded-full text-[10px] font-mono text-slate-300 hover:text-amber-400 transition-all cursor-pointer active:scale-95"
         title="Ritmik tıklayarak BPM yakala"
       >
         TAP

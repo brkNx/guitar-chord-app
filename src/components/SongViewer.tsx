@@ -301,14 +301,14 @@ export const SongViewer = ({
   const activeEvent = chordEvents[playheadIdx] || null;
 
   return (
-    <div className="flex flex-col h-full bg-[#11131a] border border-white/10 rounded-xl shadow-2xl overflow-hidden text-slate-200 select-none">
+    <div className="flex flex-col h-full bg-[#0c0e14] border border-white/[0.08] rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] overflow-hidden text-slate-200 select-none">
       {/* Song Header & Controls Bar */}
-      <div className="p-3.5 border-b border-white/10 bg-[#0e1017] flex flex-wrap items-center justify-between gap-2.5">
+      <div className="p-3.5 border-b border-white/[0.08] bg-[#090b10] flex flex-wrap items-center justify-between gap-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <h2 className="text-base font-bold text-white tracking-tight truncate">{song.title}</h2>
             {song.isAiGenerated && (
-              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shrink-0">
+              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shrink-0">
                 AI RIG
               </span>
             )}
@@ -323,11 +323,11 @@ export const SongViewer = ({
         {/* Toolbar: Transpose + Auto-Play/Scroll + YouTube */}
         <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
           {/* Transpose Controls */}
-          <div className="flex items-center bg-[#191c26] border border-white/10 rounded-md px-1.5 py-0.5">
+          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full px-2 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-slate-500 mr-1 text-[10px]">TRP:</span>
             <button
               onClick={() => onTransposeChange(transposeOffset - 1)}
-              className="p-1 hover:text-white text-slate-400 transition-colors cursor-pointer"
+              className="p-0.5 hover:text-white text-slate-400 transition-colors cursor-pointer"
               title="-1 Yarı Ses"
             >
               <ChevronDown className="w-3 h-3" />
@@ -337,7 +337,7 @@ export const SongViewer = ({
             </span>
             <button
               onClick={() => onTransposeChange(transposeOffset + 1)}
-              className="p-1 hover:text-white text-slate-400 transition-colors cursor-pointer"
+              className="p-0.5 hover:text-white text-slate-400 transition-colors cursor-pointer"
               title="+1 Yarı Ses"
             >
               <ChevronUp className="w-3 h-3" />
@@ -354,10 +354,10 @@ export const SongViewer = ({
           </div>
 
           {/* Auto-Play & Chord Animation Toggle */}
-          <div className="flex items-center bg-[#191c26] border border-white/10 rounded-md p-0.5">
+          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <button
               onClick={toggleAutoScroll}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded transition-all cursor-pointer font-bold ${
+              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full transition-all cursor-pointer font-bold active:scale-95 ${
                 isAutoScrolling
                   ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
                   : 'text-slate-300 hover:text-white'
@@ -369,7 +369,7 @@ export const SongViewer = ({
             </button>
 
             {isAutoScrolling && (
-              <div className="flex items-center gap-1 px-2 border-l border-white/10 ml-1">
+              <div className="flex items-center gap-1 px-2 border-l border-white/[0.08] ml-1">
                 <input
                   type="range"
                   min="10"
@@ -386,10 +386,10 @@ export const SongViewer = ({
           {/* Sound Toggle (Gitar Sesi) */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
               soundEnabled
                 ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
-                : 'bg-[#191c26] text-slate-500 border-white/10 hover:text-slate-300'
+                : 'bg-[#131620] text-slate-500 border-white/[0.08] hover:text-slate-300'
             }`}
             title={soundEnabled ? 'Gitar Akor Sesi: Açık' : 'Gitar Akor Sesi: Sessiz'}
           >
@@ -405,10 +405,10 @@ export const SongViewer = ({
           {song.youtubeId && (
             <button
               onClick={() => setShowYouTube(!showYouTube)}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md border transition-colors cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
                 showYouTube
                   ? 'bg-red-500/20 text-red-300 border-red-500/40 shadow-sm'
-                  : 'bg-[#191c26] text-slate-400 border-white/10 hover:text-white'
+                  : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
               }`}
             >
               <Video className="w-3 h-3" />
