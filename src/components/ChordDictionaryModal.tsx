@@ -40,23 +40,26 @@ export const ChordDictionaryModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="w-full max-w-xl bg-[#11131A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div className="px-5 py-4 border-b border-white/[0.07] flex items-center justify-between bg-[#090A0F]">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-amber-500" />
-            <h3 className="text-base font-bold text-white">Akor Kütüphanesi</h3>
+            <BookOpen className="w-4 h-4 text-amber-500" />
+            <h3 className="text-sm font-bold text-white tracking-tight">Akor Kütüphanesi</h3>
           </div>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded-lg">
-            <X className="w-5 h-5" />
+          <button
+            onClick={onClose}
+            className="p-1.5 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-lg transition-colors"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         <div className="p-5 space-y-4">
           {/* Root Note Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+            <label className="block text-xs font-mono font-semibold text-slate-400 mb-2 uppercase tracking-wider">
               Kök Nota (Root)
             </label>
             <div className="grid grid-cols-6 sm:grid-cols-12 gap-1.5">
@@ -64,10 +67,10 @@ export const ChordDictionaryModal = ({
                 <button
                   key={root}
                   onClick={() => setSelectedRoot(root)}
-                  className={`py-2 rounded-lg text-xs font-bold transition-all ${
+                  className={`py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
                     selectedRoot === root
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                      ? 'bg-amber-500 text-slate-950 font-black'
+                      : 'bg-[#191C26] text-slate-300 hover:bg-[#202433] border border-white/[0.07]'
                   }`}
                 >
                   {root}
@@ -78,7 +81,7 @@ export const ChordDictionaryModal = ({
 
           {/* Quality / Suffix Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+            <label className="block text-xs font-mono font-semibold text-slate-400 mb-2 uppercase tracking-wider">
               Akor Tipi (Quality)
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -86,13 +89,13 @@ export const ChordDictionaryModal = ({
                 <button
                   key={q.suffix}
                   onClick={() => setSelectedSuffix(q.suffix)}
-                  className={`p-2.5 rounded-xl text-xs font-bold transition-all text-left ${
+                  className={`p-2.5 rounded-lg text-xs font-semibold transition-all text-left border ${
                     selectedSuffix === q.suffix
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                      : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
+                      ? 'bg-amber-500 text-slate-950 font-bold border-amber-500'
+                      : 'bg-[#191C26] text-slate-300 hover:bg-[#202433] border-white/[0.07]'
                   }`}
                 >
-                  {selectedRoot}
+                  <span className="font-mono">{selectedRoot}</span>
                   {q.suffix || ' (Majör)'}
                 </button>
               ))}
@@ -100,18 +103,18 @@ export const ChordDictionaryModal = ({
           </div>
 
           {/* Preview Card */}
-          <div className="p-4 bg-slate-950/70 border border-slate-800 rounded-xl flex items-center justify-between">
+          <div className="p-4 bg-[#090A0F] border border-white/[0.07] rounded-xl flex items-center justify-between">
             <div>
-              <span className="text-xs text-slate-500">Seçili Akor:</span>
-              <h2 className="text-2xl font-black text-amber-400">{currentChordName}</h2>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {chordDef.positions.length} farklı çalım pozisyonu mevcut
+              <span className="text-[11px] font-mono text-slate-500 uppercase">Seçili Akor</span>
+              <h2 className="text-2xl font-black font-mono text-amber-400">{currentChordName}</h2>
+              <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                {chordDef.positions.length} farklı çalım pozisyonu
               </p>
             </div>
 
             <button
               onClick={() => guitarAudio.strumChord(chordDef.positions[0], 'down', 28)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition-colors"
+              className="flex items-center gap-2 px-3.5 py-2 bg-[#191C26] hover:bg-[#202433] text-slate-200 border border-white/10 rounded-lg text-xs font-semibold transition-colors"
             >
               <Volume2 className="w-4 h-4 text-amber-500" />
               <span>Dinle</span>
@@ -120,16 +123,16 @@ export const ChordDictionaryModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/80 flex justify-end gap-2">
+        <div className="px-5 py-3.5 border-t border-white/[0.07] bg-[#090A0F] flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-400 hover:text-white hover:bg-white/[0.06] transition-colors"
           >
             Kapat
           </button>
           <button
             onClick={handleApply}
-            className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl text-xs font-bold shadow-md shadow-amber-500/20 transition-all"
+            className="px-4 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg text-xs font-bold transition-all"
           >
             Gitara Yerleştir
           </button>

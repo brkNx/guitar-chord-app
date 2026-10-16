@@ -1,28 +1,35 @@
-/* Studio Cockpit Layout Utilities */
+/* Moises Studio + Soundslice Desktop Grid Layout */
 .studio-layout {
   display: grid;
-  grid-template-rows: 48px 1fr;
+  grid-template-rows: 52px 1fr;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #0b0d12;
+  background-color: #090a0f;
 }
 
 .studio-grid {
   display: grid;
-  grid-template-columns: 300px 1fr 480px;
-  height: calc(100vh - 48px);
+  grid-template-columns: 280px 1fr 450px;
+  height: calc(100vh - 52px);
   width: 100vw;
   overflow: hidden;
+  background-color: #090a0f;
 }
 
-@media (max-width: 1280px) {
+@media (max-width: 1400px) {
   .studio-grid {
-    grid-template-columns: 280px 1fr 420px;
+    grid-template-columns: 260px 1fr 420px;
   }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 1100px) {
+  .studio-grid {
+    grid-template-columns: 240px 1fr 380px;
+  }
+}
+
+@media (max-width: 860px) {
   .studio-grid {
     grid-template-columns: 1fr;
     overflow-y: auto;

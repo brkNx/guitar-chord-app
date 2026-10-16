@@ -16,6 +16,7 @@ import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
 import { Metronome } from './components/Metronome';
 import { GuitarStage } from './components/stage/GuitarStage';
+import './App.css';
 
 import {
   Play,
@@ -158,7 +159,7 @@ export function App() {
     } catch (e) {
       console.error(e);
     }
-    showToast(`"${newSong.title}" setliste eklendi.`);
+    showToast(`"${newSong.title}" kütüphaneye eklendi.`);
   };
 
   const handleQuickAiSubmit = async (e: React.FormEvent) => {
@@ -169,7 +170,7 @@ export function App() {
       const newSong = await generateSongWithAI(quickInput.trim());
       handleSaveCustomSong(newSong);
       setQuickInput('');
-      showToast(`AI RIG: "${newSong.title}" başarıyla çıkarıldı.`);
+      showToast(`AI RIG: "${newSong.title}" hazırlandı.`);
     } catch (err) {
       console.error(err);
       showToast('Akor çıkarma başarısız oldu.');
@@ -210,67 +211,70 @@ export function App() {
   }, [isSearchOpen, isCustomOpen]);
 
   return (
-    <div className="w-screen h-screen overflow-hidden bg-[#0b0d12] text-slate-100 flex flex-col font-sans select-none">
-      {/* 1. SONGSTERR & ABLETON MASTER TRANSPORT BAR (48px) */}
-      <header className="h-[48px] bg-[#0e1017] border-b border-[#1e222d] px-3 flex items-center justify-between gap-2 z-40 select-none shrink-0">
-        {/* Left: Branding & Status Indicator */}
+    <div className="w-screen h-screen overflow-hidden bg-[#090a0f] text-slate-100 flex flex-col font-sans select-none studio-layout">
+      {/* 1. SOUNDSLICE 52px HARDWARE MASTER TRANSPORT BAR */}
+      <header className="h-[52px] glass-transport px-3 flex items-center justify-between gap-2 z-40 select-none shrink-0 border-b border-white/10">
+        {/* Left: Studio Branding & WebAudio Status */}
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-mono text-xs font-black tracking-wider text-white">
-              SONGSTERR // NERV-DSP
+            <span className="font-mono text-xs font-black tracking-wider text-white flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]" />
+              MOISES // SOUNDSLICE
             </span>
             <span className="font-mono text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              STUDIO v3.4
+              PRO STUDIO
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pl-2 border-l border-[#1e222d]">
+          <div className="hidden sm:flex items-center gap-1.5 text-[9px] font-mono text-slate-400 pl-2.5 border-l border-white/10">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>48kHz WEBAUDIO</span>
+            <span>48kHz DSP</span>
           </div>
         </div>
 
-        {/* Center: Ableton Transport Center (Play, Metronome, Transpose, Capo, Tuning) */}
+        {/* Center: Hardware Controls (Play, Metronome, Transpose, Capo, Tuning, Handedness) */}
         <div className="flex items-center gap-2 font-mono text-xs">
-          {/* Global Play / Autoscroll */}
+          {/* Global Play / Autoscroll Button */}
           <button
             onClick={() => setIsAutoScrolling(!isAutoScrolling)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors cursor-pointer font-bold ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md transition-all cursor-pointer font-bold ${
               isAutoScrolling
-                ? 'bg-amber-500 text-slate-950 shadow-sm shadow-amber-500/25'
-                : 'bg-[#181c26] text-slate-300 hover:text-white border border-[#1e222d]'
+                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+                : 'bg-[#191c26] text-slate-200 hover:text-white border border-white/10 hover:border-amber-500/40'
             }`}
-            title="Auto-scroll ve ritim oynat"
+            title="Auto-scroll ve canlı ritim oynat"
           >
-            {isAutoScrolling ? <Pause className="w-3 h-3 fill-current" /> : <Play className="w-3 h-3 fill-current" />}
+            {isAutoScrolling ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
             <span>{isAutoScrolling ? 'PAUSE' : 'PLAY'}</span>
           </button>
 
-          {/* Songsterr Hardware Metronome */}
+          {/* Soundslice Hardware Metronome Module */}
           <Metronome initialBpm={currentSong.tempo || 100} />
 
-          {/* Transpose Controls */}
-          <div className="hidden md:flex items-center bg-[#11141c] border border-[#1e222d] rounded px-1.5 py-0.5">
+          {/* Transpose Steppers */}
+          <div className="hidden md:flex items-center bg-[#141722] border border-white/10 rounded-md px-1.5 py-1">
             <span className="text-[10px] text-slate-500 mr-1">TRP:</span>
             <button
               onClick={() => setTransposeOffset(transposeOffset - 1)}
-              className="p-1 hover:text-white text-slate-400 transition-colors"
+              className="p-0.5 hover:text-white text-slate-400 transition-colors cursor-pointer"
+              title="-1 Yarı Ses"
             >
               <ChevronDown className="w-3 h-3" />
             </button>
-            <span className={`px-1 font-bold ${transposeOffset !== 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+            <span className={`px-1.5 font-bold ${transposeOffset !== 0 ? 'text-amber-400' : 'text-slate-300'}`}>
               {transposeOffset > 0 ? `+${transposeOffset}` : transposeOffset}
             </span>
             <button
               onClick={() => setTransposeOffset(transposeOffset + 1)}
-              className="p-1 hover:text-white text-slate-400 transition-colors"
+              className="p-0.5 hover:text-white text-slate-400 transition-colors cursor-pointer"
+              title="+1 Yarı Ses"
             >
               <ChevronUp className="w-3 h-3" />
             </button>
           </div>
 
           {/* Master Tuning Selector */}
-          <div className="hidden lg:flex items-center gap-1 bg-[#11141c] border border-[#1e222d] px-2 py-0.5 rounded">
+          <div className="hidden lg:flex items-center gap-1 bg-[#141722] border border-white/10 px-2 py-1 rounded-md">
             <span className="text-[10px] text-slate-500">TUNING:</span>
             <select
               value={selectedTuningId}
@@ -278,21 +282,21 @@ export function App() {
               className="bg-transparent text-[11px] font-bold text-amber-400 focus:outline-none cursor-pointer"
             >
               {GUITAR_TUNINGS.map((t) => (
-                <option key={t.id} value={t.id} className="bg-[#11141c] text-white">
+                <option key={t.id} value={t.id} className="bg-[#11131a] text-white">
                   {t.shortName}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Capo Indicator & Advice */}
-          <div className="hidden xl:flex items-center gap-1 bg-[#11141c] border border-[#1e222d] px-2 py-0.5 rounded text-[11px]">
+          {/* Capo Indicator */}
+          <div className="hidden xl:flex items-center gap-1 bg-[#141722] border border-white/10 px-2 py-1 rounded-md text-[11px]">
             <span className="text-[10px] text-slate-500">CAPO:</span>
             <span className="font-bold text-amber-400">
               {currentSong.capo > 0 ? `${currentSong.capo}` : '0'}
             </span>
             {capoAdvice.recommendedCapo > 0 && currentSong.capo === 0 && (
-              <span className="text-[9px] text-amber-400/80 bg-amber-500/10 px-1 rounded" title={capoAdvice.reason}>
+              <span className="text-[9px] text-amber-400/90 bg-amber-500/10 px-1 rounded" title={capoAdvice.reason}>
                 (Öneri: {capoAdvice.recommendedCapo})
               </span>
             )}
@@ -301,10 +305,10 @@ export function App() {
           {/* Left-Handed Toggle */}
           <button
             onClick={() => setIsLeftHanded(!isLeftHanded)}
-            className={`px-1.5 py-0.5 rounded border text-[10px] font-mono transition-colors cursor-pointer ${
+            className={`px-2 py-1 rounded-md border text-[10px] font-mono transition-colors cursor-pointer ${
               isLeftHanded
                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
-                : 'bg-[#11141c] text-slate-400 border-[#1e222d] hover:text-white'
+                : 'bg-[#141722] text-slate-400 border-white/10 hover:text-white'
             }`}
             title="Solak gitarist klavye modu"
           >
@@ -312,45 +316,45 @@ export function App() {
           </button>
         </div>
 
-        {/* Right: Cmd+K Search & Quick Track Importer */}
+        {/* Right: Cmd+K Quick Search & Add Song */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#181c26] hover:bg-[#202534] border border-[#1e222d] rounded font-mono text-xs text-slate-300 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono text-xs text-slate-200 transition-colors cursor-pointer"
             title="Şarkı Ara (Cmd+K)"
           >
-            <Search className="w-3 h-3 text-amber-400" />
+            <Search className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">ŞARKI ARA</span>
-            <kbd className="hidden sm:inline px-1 py-0.2 bg-[#0b0d12] border border-[#1e222d] rounded text-[9px] text-slate-500">
+            <kbd className="hidden sm:inline px-1 py-0.2 bg-[#090a0f] border border-white/10 rounded text-[9px] text-slate-500">
               ⌘K
             </kbd>
           </button>
 
           <button
             onClick={() => setIsCustomOpen(true)}
-            className="flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-mono text-xs font-bold rounded-md transition-colors cursor-pointer shadow-md shadow-amber-500/20"
             title="Yeni Şarkı Ekle"
           >
-            <Plus className="w-3 h-3" />
+            <Plus className="w-3.5 h-3.5" />
             <span className="hidden md:inline">EKLE</span>
           </button>
         </div>
       </header>
 
-      {/* 2. THREE-COLUMN FIXED STUDIO SPLIT PANE */}
-      <div className="flex-1 grid grid-cols-[300px_1fr_430px] h-[calc(100vh-48px)] overflow-hidden">
-        {/* SOL SÜTUN (300px): OOLIMO CHORD ANALYZER & THEORY PANEL */}
-        <aside className="w-[300px] h-full flex flex-col bg-[#11141c] border-r border-[#1e222d] overflow-hidden select-none">
-          {/* Header Tabs */}
-          <div className="p-1.5 border-b border-[#1e222d] bg-[#0e1017] grid grid-cols-3 gap-1 font-mono text-[10px]">
+      {/* 2. MOISES 3-COLUMN STUDIO GRID WORKSPACE */}
+      <div className="flex-1 studio-grid h-[calc(100vh-52px)] overflow-hidden">
+        {/* SOL SÜTUN (280px): KÜTÜPHANE & TEORİ PANELİ */}
+        <aside className="w-full h-full flex flex-col bg-[#11131a] border-r border-white/10 overflow-hidden select-none">
+          {/* Navigation Tabs */}
+          <div className="p-2 border-b border-white/10 bg-[#0e1017] grid grid-cols-3 gap-1 font-mono text-[10px]">
             {(['theory', 'setlist', 'scales'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => setLeftTab(tab)}
-                className={`py-1 rounded border text-center transition-colors uppercase cursor-pointer ${
+                className={`py-1.5 rounded-md border text-center transition-all uppercase cursor-pointer ${
                   leftTab === tab
-                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
-                    : 'bg-[#181c26] border-transparent text-slate-400 hover:text-white'
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 font-bold shadow-sm'
+                    : 'bg-[#191c26] border-transparent text-slate-400 hover:text-white'
                 }`}
               >
                 {tab === 'theory' ? 'TEORİ' : tab === 'setlist' ? 'LİSTE' : 'GAMLAR'}
@@ -358,14 +362,14 @@ export function App() {
             ))}
           </div>
 
-          {/* TAB 1: OOLIMO CHORD THEORY & 6-STRING MATRIX */}
+          {/* TAB 1: MOISES / OOLIMO CHORD THEORY & 6-STRING MATRIX */}
           {leftTab === 'theory' && (
-            <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs scrollbar-thin">
-              {/* Active Chord Banner */}
-              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1">
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
+              {/* Active Chord Summary Card */}
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-xl font-bold text-amber-400">{activeChord}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
+                  <span className="text-2xl font-bold text-amber-400">{activeChord}</span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 border border-white/10 text-slate-300">
                     {theory.typeCategory}
                   </span>
                 </div>
@@ -374,13 +378,13 @@ export function App() {
                 </p>
               </div>
 
-              {/* Oolimo Intervals Breakdown */}
-              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+              {/* Intervals Breakdown */}
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
                 <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-between">
                   <span>FORMÜL ARALIKLARI</span>
                   <span className="text-amber-400 font-bold">{theory.formula}</span>
                 </div>
-                <div className="flex flex-wrap gap-1 pt-1">
+                <div className="flex flex-wrap gap-1.5 pt-1">
                   {theory.tones.map((t: ChordTone, idx: number) => {
                     const isRoot = t.isRoot || t.degree === '1';
                     return (
@@ -404,15 +408,15 @@ export function App() {
                 </div>
               </div>
 
-              {/* 6-String Voicing Matrix Table */}
-              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+              {/* 6-String Voicing Matrix */}
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
                 <div className="text-[10px] text-slate-500 uppercase tracking-wider flex items-center justify-between">
                   <span>6-STRING MATRİS</span>
                   <span className="text-slate-400">STR 6-1</span>
                 </div>
-                <div className="border border-[#1e222d] rounded overflow-hidden">
+                <div className="border border-white/10 rounded-md overflow-hidden">
                   <table className="w-full text-left text-[11px]">
-                    <thead className="bg-[#0b0d12] text-slate-500 text-[9px] border-b border-[#1e222d]">
+                    <thead className="bg-[#090a0f] text-slate-500 text-[9px] border-b border-white/10">
                       <tr>
                         <th className="py-1 px-1.5">TEL</th>
                         <th className="py-1 px-1">PRD</th>
@@ -421,7 +425,7 @@ export function App() {
                         <th className="py-1 px-1 text-right">PARMAK</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-[#1e222d]">
+                    <tbody className="divide-y divide-white/5">
                       {theory.stringsAnalysis.map((str) => {
                         const isMuted = str.status === 'muted';
                         const isOpen = str.status === 'open';
@@ -431,7 +435,7 @@ export function App() {
                             onClick={() => {
                               if (str.fret >= 0) guitarAudio.pluckNote(str.stringIdx, str.fret, 0.9);
                             }}
-                            className="hover:bg-white/[0.03] cursor-pointer transition-colors"
+                            className="hover:bg-white/[0.04] cursor-pointer transition-colors"
                           >
                             <td className="py-1 px-1.5 font-bold text-slate-400">{str.stringNumber}</td>
                             <td className="py-1 px-1">
@@ -458,11 +462,11 @@ export function App() {
 
               {/* Voicing Positions Quick Switcher */}
               {chordDef.positions.length > 1 && (
-                <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+                <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
                     ALTERNATİF POZİSYONLAR
                   </span>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {chordDef.positions.map((_, idx) => (
                       <button
                         key={idx}
@@ -470,10 +474,10 @@ export function App() {
                           setPositionIdx(idx);
                           guitarAudio.strumChord(chordDef.positions[idx], 'down', 22);
                         }}
-                        className={`flex-1 py-1 rounded text-xs font-bold transition-colors cursor-pointer ${
+                        className={`flex-1 py-1 rounded-md text-xs font-bold transition-all cursor-pointer ${
                           positionIdx === idx
                             ? 'bg-amber-500 text-slate-950 shadow-sm'
-                            : 'bg-[#11141c] text-slate-400 border border-[#1e222d] hover:text-white'
+                            : 'bg-[#11131a] text-slate-400 border border-white/10 hover:text-white'
                         }`}
                       >
                         #{idx + 1}
@@ -485,44 +489,43 @@ export function App() {
             </div>
           )}
 
-          {/* TAB 2: SETLIST ARCHIVE & YOUTUBE EXTRACTOR */}
+          {/* TAB 2: SETLIST ARCHIVE & QUICK YOUTUBE EXTRACTOR */}
           {leftTab === 'setlist' && (
             <div className="flex-1 flex flex-col overflow-hidden">
-              {/* Quick AI Extractor Strip */}
-              <form onSubmit={handleQuickAiSubmit} className="p-2 border-b border-[#1e222d] bg-[#0e1017]">
+              <form onSubmit={handleQuickAiSubmit} className="p-2.5 border-b border-white/10 bg-[#0e1017]">
                 <div className="flex items-center gap-1.5">
                   <div className="relative flex-1">
-                    <Video className="w-3 h-3 absolute left-2 top-1/2 -translate-y-1/2 text-red-400" />
+                    <Video className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-red-400" />
                     <input
                       type="text"
                       value={quickInput}
                       onChange={(e) => setQuickInput(e.target.value)}
                       placeholder="YouTube veya Şarkı..."
                       disabled={isAiLoading}
-                      className="w-full bg-[#181c26] border border-[#1e222d] rounded pl-7 pr-2 py-1 text-[11px] font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
+                      className="w-full bg-[#191c26] border border-white/10 rounded-md pl-8 pr-2 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/50"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isAiLoading || !quickInput.trim()}
-                    className="px-2 py-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[10px] font-bold rounded cursor-pointer"
+                    className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[10px] font-bold rounded-md transition-colors cursor-pointer"
                   >
-                    {isAiLoading ? '...' : 'ÇIKAR'}
+                    {isAiLoading ? '...' : 'ÇEK'}
                   </button>
                 </div>
               </form>
 
               {/* Song List */}
-              <div className="flex-1 overflow-y-auto divide-y divide-[#1e222d] p-1">
+              <div className="flex-1 overflow-y-auto p-2 space-y-1">
                 {songs.map((song) => {
                   const isSelected = song.id === currentSong.id;
                   return (
                     <button
                       key={song.id}
                       onClick={() => handleSelectSong(song)}
-                      className={`w-full text-left p-2 rounded transition-all flex flex-col gap-0.5 border cursor-pointer ${
+                      className={`w-full text-left p-2.5 rounded-lg transition-all flex flex-col gap-0.5 border cursor-pointer ${
                         isSelected
-                          ? 'bg-amber-500/15 border-amber-500/40 text-white'
+                          ? 'bg-amber-500/15 border-amber-500/40 text-white shadow-sm'
                           : 'bg-transparent border-transparent hover:bg-white/[0.03] text-slate-300'
                       }`}
                     >
@@ -550,29 +553,29 @@ export function App() {
           {/* TAB 3: SCALES & IMPROVISATION */}
           {leftTab === 'scales' && (
             <div className="flex-1 overflow-y-auto p-3 space-y-3 font-mono text-xs">
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 <label className="text-[10px] text-slate-500 uppercase tracking-wider block">
                   GAM SEÇİNİZ
                 </label>
                 <select
                   value={selectedScaleId}
                   onChange={(e) => setSelectedScaleId(e.target.value)}
-                  className="w-full bg-[#181c26] border border-[#1e222d] rounded p-1.5 text-xs text-slate-200 font-mono focus:outline-none"
+                  className="w-full bg-[#191c26] border border-white/10 rounded-md p-2 text-xs text-slate-200 font-mono focus:outline-none"
                 >
                   {GUITAR_SCALES.map((s) => (
-                    <option key={s.id} value={s.id} className="bg-[#181c26]">
+                    <option key={s.id} value={s.id} className="bg-[#191c26]">
                       {s.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-amber-400">
                     {rootNote} {activeScale.name}
                   </span>
-                  <span className="text-[9px] px-1 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 uppercase">
                     {activeScale.category}
                   </span>
                 </div>
@@ -582,21 +585,21 @@ export function App() {
               </div>
 
               {/* Scale Notes Chips */}
-              <div className="p-2.5 rounded bg-[#181c26] border border-[#1e222d] space-y-1.5">
+              <div className="p-3 rounded-lg bg-[#191c26] border border-white/10 space-y-1.5">
                 <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
                   GAMDAKİ NOTALAR ({rootNote} TONU)
                 </span>
-                <div className="grid grid-cols-4 gap-1">
+                <div className="grid grid-cols-4 gap-1.5">
                   {scaleNotes.map((note, idx) => {
                     const degree = activeScale.degreeNames[idx] || `${idx + 1}`;
                     const isRoot = degree === 'R' || degree === '1';
                     return (
                       <div
                         key={idx}
-                        className={`p-1.5 rounded border text-center font-mono ${
+                        className={`p-2 rounded-md border text-center font-mono ${
                           isRoot
                             ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
-                            : 'bg-[#11141c] border-[#1e222d] text-slate-300'
+                            : 'bg-[#11131a] border-white/10 text-slate-300'
                         }`}
                       >
                         <div className="text-xs font-bold">{note}</div>
@@ -610,8 +613,21 @@ export function App() {
           )}
         </aside>
 
-        {/* ORTA SÜTUN (1fr): 3D AKUSTİK GİTAR SAHNESİ + SAP ZOOM & 2B AKOR KLAVYESİ + RİTİM DOCK */}
-        <main className="h-full flex flex-col bg-[#0b0d12] overflow-hidden min-w-0">
+        {/* ORTA SÜTUN (1fr): MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
+        <main className="h-full flex flex-col bg-[#090a0f] overflow-hidden min-w-0 p-2.5">
+          <SongViewer
+            song={currentSong}
+            activeChord={activeChord}
+            onSelectChord={handleSelectChord}
+            transposeOffset={transposeOffset}
+            onTransposeChange={setTransposeOffset}
+            isAutoScrolling={isAutoScrolling}
+            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
+          />
+        </main>
+
+        {/* SAĞ SÜTUN (450px): LIVE INSTRUMENT DOCK (3D/2D GUITAR & RHYTHM SEQUENCER) */}
+        <aside className="w-full h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0">
           <GuitarStage
             chordName={activeChord}
             position={currentPosition}
@@ -629,46 +645,6 @@ export function App() {
             onSelectPattern={setSelectedPatternId}
             onPlayStrumSequence={handlePlayStrumSequence}
           />
-        </main>
-
-        {/* SAĞ SÜTUN (430px): CHORDIFY + ULTIMATE GUITAR PRO CANLI AKOR & SÖZ AKIŞI */}
-        <aside className="w-[430px] h-full flex flex-col bg-[#0b0d12] border-l border-[#1e222d] p-2 gap-2 overflow-hidden min-w-0">
-          {/* Quick Song / YouTube Lyrics + Chords Extractor Bar */}
-          <form
-            onSubmit={handleQuickAiSubmit}
-            className="shrink-0 flex items-center gap-1.5 bg-[#11141c] border border-[#1e222d] rounded-lg p-1.5"
-          >
-            <div className="relative flex-1">
-              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-400" />
-              <input
-                type="text"
-                value={quickInput}
-                onChange={(e) => setQuickInput(e.target.value)}
-                placeholder="Şarkı adı veya YouTube linki yazın (Söz + Akor)..."
-                disabled={isAiLoading}
-                className="w-full bg-[#0b0d12] border border-[#1e222d] rounded pl-8 pr-2.5 py-1.5 text-xs font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:border-amber-500/60"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isAiLoading || !quickInput.trim()}
-              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded transition-colors cursor-pointer whitespace-nowrap"
-            >
-              {isAiLoading ? 'ÇEKİLİYOR...' : 'SÖZ + AKOR BUL'}
-            </button>
-          </form>
-
-          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <SongViewer
-              song={currentSong}
-              activeChord={activeChord}
-              onSelectChord={handleSelectChord}
-              transposeOffset={transposeOffset}
-              onTransposeChange={setTransposeOffset}
-              isAutoScrolling={isAutoScrolling}
-              onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
-            />
-          </div>
         </aside>
       </div>
 
@@ -687,11 +663,11 @@ export function App() {
         onSaveSong={handleSaveCustomSong}
       />
 
-      {/* TOAST TELEMETRY */}
+      {/* TOAST NOTIFICATION */}
       {toastMessage && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2.5 px-3 py-1.5 bg-[#181c26] border border-amber-500/50 rounded shadow-2xl font-mono text-xs text-amber-300">
+        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2.5 px-3 py-2 bg-[#191c26] border border-amber-500/50 rounded-lg shadow-2xl font-mono text-xs text-amber-300">
           <span>{toastMessage}</span>
-          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-500 hover:text-white">
+          <button onClick={() => setToastMessage(null)} className="ml-2 text-slate-500 hover:text-white cursor-pointer">
             [X]
           </button>
         </div>

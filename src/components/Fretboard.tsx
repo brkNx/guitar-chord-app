@@ -19,22 +19,18 @@ interface FretboardProps {
   onStrum?: (direction: 'down' | 'up') => void;
 }
 
-// Oolimo Color Coding for Chord Degrees
+// FretMap & Chorducate High-Contrast Color Coding for Chord Degrees
 export function getOolimoStyle(degree: string, isRoot: boolean): { fill: string; text: string; stroke: string } {
   if (isRoot || degree === '1' || degree === 'R') {
-    // Root: Deep Amber / Orange (#F59E0B)
+    // Root Note: High-Contrast Amber (#F59E0B)
     return { fill: '#f59e0b', text: '#090a0f', stroke: '#fbbf24' };
   }
-  if (degree === '3' || degree === 'b3' || degree === '2' || degree === '4') {
-    // 3rds & Mediant: Blue (#3B82F6)
-    return { fill: '#3b82f6', text: '#ffffff', stroke: '#60a5fa' };
+  if (degree === '3' || degree === 'b3' || degree === '2' || degree === '4' || degree === '5' || degree === 'b5' || degree === '#5') {
+    // Chord Tones (3rds & 5ths): High-Contrast Sky Blue (#38BDF8)
+    return { fill: '#38bdf8', text: '#090a0f', stroke: '#7dd3fc' };
   }
-  if (degree === '5' || degree === 'b5' || degree === '#5') {
-    // 5ths: Dark Anthracite / Slate (#374151)
-    return { fill: '#374151', text: '#f3f4f6', stroke: '#6b7280' };
-  }
-  // 7ths and Extensions (7, b7, 9, 11, 13): Emerald Green (#10B981)
-  return { fill: '#10b981', text: '#ffffff', stroke: '#34d399' };
+  // 7ths, Extensions & Scale Tones: Signal Emerald Green (#10B981)
+  return { fill: '#10b981', text: '#090a0f', stroke: '#34d399' };
 }
 
 export const Fretboard = ({
@@ -126,27 +122,27 @@ export const Fretboard = ({
   };
 
   return (
-    <div className="w-full bg-[#11141c] border border-[#1e222d] rounded-lg p-3 text-slate-200 select-none shadow-md">
-      {/* Oolimo Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-[#1e222d] text-xs">
+    <div className="w-full bg-[#11131a] border border-white/10 rounded-xl p-3 text-slate-200 select-none shadow-xl">
+      {/* FretMap Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2.5 border-b border-white/10 text-xs">
         {/* Left: Chord Info & Position Stepper */}
         <div className="flex items-center gap-2.5">
           <button
             onClick={() => onOpenChordDetail && onOpenChordDetail(chordName)}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#181c26] hover:bg-[#202534] border border-[#1e222d] rounded font-mono font-bold text-amber-400 text-sm transition-colors cursor-pointer"
-            title="Akor detayını incele"
+            className="flex items-center gap-1.5 px-3 py-1 bg-[#191c26] hover:bg-[#222634] border border-white/10 rounded-md font-mono font-bold text-amber-400 text-sm transition-all cursor-pointer shadow-sm"
+            title="Akor teorisini incele"
           >
             <span>{chordName}</span>
-            <Info className="w-3 h-3 text-slate-400" />
+            <Info className="w-3.5 h-3.5 text-slate-400" />
           </button>
 
           <span className="font-mono text-[11px] text-slate-400">
             {theory.typeCategory} • {position.baseFret > 1 ? `${position.baseFret}. Perde` : 'Açık'}
           </span>
 
-          {/* Oolimo Position Stepper < Pozisyon 1 / 4 > */}
+          {/* Position Stepper < Pozisyon 1 / 4 > */}
           {totalPositions > 1 && onPositionChange && (
-            <div className="flex items-center gap-1 bg-[#0b0d12] border border-[#1e222d] rounded px-1.5 py-0.5 font-mono text-[11px]">
+            <div className="flex items-center gap-1 bg-[#090a0f] border border-white/10 rounded-md px-1.5 py-0.5 font-mono text-[11px]">
               <button
                 onClick={() => onPositionChange((positionIdx - 1 + totalPositions) % totalPositions)}
                 className="text-slate-400 hover:text-amber-400 px-0.5 transition-colors cursor-pointer"
@@ -171,14 +167,14 @@ export const Fretboard = ({
         {/* Right: Display Mode Toggle (Fingers / Notes / Degrees) & Strum Button */}
         <div className="flex items-center gap-2">
           {onDisplayModeChange && (
-            <div className="flex items-center bg-[#0b0d12] border border-[#1e222d] rounded p-0.5 font-mono text-[10px]">
+            <div className="flex items-center bg-[#090a0f] border border-white/10 rounded-md p-0.5 font-mono text-[10px]">
               {(['degrees', 'notes', 'fingers'] as const).map((mode) => (
                 <button
                   key={mode}
                   onClick={() => onDisplayModeChange(mode)}
-                  className={`px-2 py-0.5 rounded transition-colors uppercase cursor-pointer ${
+                  className={`px-2 py-0.5 rounded transition-all uppercase cursor-pointer ${
                     displayMode === mode
-                      ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40'
+                      ? 'bg-amber-500/20 text-amber-400 font-bold border border-amber-500/40 shadow-sm'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
@@ -191,7 +187,7 @@ export const Fretboard = ({
           <button
             onClick={handleStrumClick}
             disabled={isStrumming}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-xs font-bold rounded transition-colors cursor-pointer shadow-sm shadow-amber-500/20"
+            className="flex items-center gap-1.5 px-3 py-1 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-xs font-bold rounded-md transition-all cursor-pointer shadow-md shadow-amber-500/25"
           >
             <Volume2 className="w-3.5 h-3.5 fill-current" />
             <span>{isStrumming ? 'ÇALINIYOR...' : 'TINLAT'}</span>
@@ -199,21 +195,21 @@ export const Fretboard = ({
         </div>
       </div>
 
-      {/* SVG Fretboard with Horizontal Scroll */}
+      {/* SVG Fretboard with Smooth Horizontal Scroll */}
       <div className="w-full overflow-x-auto scrollbar-thin pb-1">
         <svg
           viewBox={`0 0 ${boardWidth} ${boardHeight + 24}`}
           className="w-full min-w-[760px] h-auto block select-none"
           style={{ transform: isLeftHanded ? 'scaleX(-1)' : 'none' }}
         >
-          {/* Fretboard Wood Background */}
+          {/* Fretboard Flat Technical Wood Background */}
           <rect
             x={36 + nutWidth}
             y={18}
             width={numFrets * fretWidth}
             height={5 * stringSpacing}
-            fill="#181410"
-            stroke="#261e16"
+            fill="#12151e"
+            stroke="#1e2433"
             strokeWidth="1"
           />
 
@@ -223,7 +219,7 @@ export const Fretboard = ({
             y={17}
             width={nutWidth}
             height={5 * stringSpacing + 2}
-            fill="#e2e8f0"
+            fill="#f1f5f9"
             rx="2"
           />
 
@@ -238,7 +234,7 @@ export const Fretboard = ({
                 cy={cy}
                 r="4.5"
                 fill="#64748b"
-                opacity="0.4"
+                opacity="0.35"
               />
             );
           })}
@@ -249,14 +245,14 @@ export const Fretboard = ({
             cy={18 + 1.5 * stringSpacing}
             r="4"
             fill="#64748b"
-            opacity="0.4"
+            opacity="0.35"
           />
           <circle
             cx={36 + nutWidth + (doubleDotFret - 0.5) * fretWidth}
             cy={18 + 3.5 * stringSpacing}
             r="4"
             fill="#64748b"
-            opacity="0.4"
+            opacity="0.35"
           />
 
           {/* Nickel Frets & Fret Numbers */}
@@ -269,7 +265,7 @@ export const Fretboard = ({
                   y1={18}
                   x2={fretX}
                   y2={18 + 5 * stringSpacing}
-                  stroke="#475569"
+                  stroke="#334155"
                   strokeWidth="1.8"
                 />
                 <text
@@ -433,7 +429,7 @@ export const Fretboard = ({
                           cx="23"
                           cy={y}
                           r="5.5"
-                          fill="#11141c"
+                          fill="#11131a"
                           stroke={oolimo.fill}
                           strokeWidth="2"
                         />
@@ -468,7 +464,7 @@ export const Fretboard = ({
                         className="cursor-pointer"
                         onClick={() => handleStringClick(strIdx, fret)}
                       >
-                        {/* Pulsing Outer Target Ring showing where to press */}
+                        {/* Outer Glow Ring showing active target */}
                         <circle
                           cx={cx}
                           cy={y}
@@ -476,9 +472,9 @@ export const Fretboard = ({
                           fill="none"
                           stroke={oolimo.fill}
                           strokeWidth={isHighlighted ? '2' : '1'}
-                          opacity={isHighlighted ? 0.85 : 0.32}
+                          opacity={isHighlighted ? 0.9 : 0.35}
                         />
-                        {/* Oolimo Geometric Fret Dot */}
+                        {/* High-Contrast Fret Dot */}
                         <circle
                           cx={cx}
                           cy={y}
@@ -498,14 +494,14 @@ export const Fretboard = ({
                         >
                           {label}
                         </text>
-                        {/* Always-visible mini finger number badge when viewing Degrees/Notes */}
+                        {/* Mini finger badge when viewing Degrees/Notes */}
                         {displayMode !== 'fingers' && finger > 0 && (
                           <g>
                             <circle
                               cx={cx + 9.5}
                               cy={y - 8.5}
                               r="5.5"
-                              fill="#0b0d12"
+                              fill="#090a0f"
                               stroke={oolimo.stroke}
                               strokeWidth="1"
                             />
@@ -533,29 +529,25 @@ export const Fretboard = ({
         </svg>
       </div>
 
-      {/* Oolimo Legend */}
-      <div className="flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-400 mt-1 pt-1.5 border-t border-[#1e222d] px-1">
+      {/* FretMap Legend */}
+      <div className="flex flex-wrap items-center justify-between text-[10px] font-mono text-slate-400 mt-1 pt-2 border-t border-white/10 px-1">
         <div className="flex items-center gap-3">
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] border border-[#fbbf24] inline-block" />
-            <span className="text-slate-300">Kök (1)</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b] border border-[#fbbf24] inline-block shadow-sm" />
+            <span className="text-slate-300 font-semibold">Kök (1)</span>
           </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#3b82f6] border border-[#60a5fa] inline-block" />
-            <span className="text-slate-300">3'lü (3 / b3)</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#38bdf8] border border-[#7dd3fc] inline-block shadow-sm" />
+            <span className="text-slate-300 font-semibold">Akor Sesleri (3 / 5)</span>
           </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#374151] border border-[#6b7280] inline-block" />
-            <span className="text-slate-300">5'li (5)</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] border border-[#34d399] inline-block" />
-            <span className="text-slate-300">7'li / Uzantı</span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] border border-[#34d399] inline-block shadow-sm" />
+            <span className="text-slate-300 font-semibold">Uzantı / Gam</span>
           </span>
         </div>
 
         <span className="text-slate-500">
-          Standart: E-A-D-G-B-e • Tıklayarak tınlat
+          Standart E-A-D-G-B-e • Tıklayarak tınlat
         </span>
       </div>
     </div>

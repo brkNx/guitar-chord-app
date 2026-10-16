@@ -62,33 +62,37 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
   };
 
   return (
-    <div className="flex items-center gap-2 bg-[#11141c] border border-[#1e222d] rounded px-2.5 py-1 text-xs select-none">
+    <div className="flex items-center gap-1.5 bg-[#141722] border border-white/10 rounded-md px-2 py-0.5 text-xs select-none shadow-inner">
       {/* Play/Pause Button */}
       <button
         onClick={() => setIsPlaying(!isPlaying)}
-        className={`w-6 h-6 rounded flex items-center justify-center transition-colors cursor-pointer ${
+        className={`w-6 h-6 rounded flex items-center justify-center transition-all cursor-pointer ${
           isPlaying
-            ? 'bg-amber-500 text-slate-950 font-bold shadow-sm shadow-amber-500/30'
-            : 'bg-[#181c26] text-slate-300 hover:text-white border border-[#1e222d]'
+            ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/30'
+            : 'bg-[#191c26] text-slate-300 hover:text-white border border-white/5'
         }`}
-        title={isPlaying ? 'Durdur' : 'Metronomu Başlat'}
+        title={isPlaying ? 'Metronomu Durdur' : 'Metronomu Başlat'}
       >
-        {isPlaying ? <Square className="w-2.5 h-2.5 fill-current" /> : <Play className="w-2.5 h-2.5 fill-current ml-0.5" />}
+        {isPlaying ? (
+          <Square className="w-2.5 h-2.5 fill-current" />
+        ) : (
+          <Play className="w-2.5 h-2.5 fill-current ml-0.5" />
+        )}
       </button>
 
-      {/* 4 LED Beat Indicators */}
+      {/* 4 Precision LED Beat Indicators */}
       <div className="flex items-center gap-1 px-1">
         {[1, 2, 3, 4].map((b) => {
           const isActive = beat === b;
           return (
             <span
               key={b}
-              className={`w-2 h-2 rounded-full transition-all duration-75 ${
+              className={`w-1.5 h-1.5 rounded-full transition-all duration-75 ${
                 isActive
                   ? b === 1
                     ? 'bg-amber-400 scale-125 shadow-[0_0_8px_#f59e0b]'
                     : 'bg-emerald-400 scale-110 shadow-[0_0_6px_#10b981]'
-                  : 'bg-[#1e222d]'
+                  : 'bg-white/10'
               }`}
             />
           );
@@ -96,10 +100,10 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       </div>
 
       {/* Digital BPM Readout with +/- Steppers */}
-      <div className="flex items-center gap-1 bg-[#0b0d12] border border-[#1e222d] rounded px-1.5 py-0.5">
+      <div className="flex items-center gap-1 bg-[#090a0f] border border-white/10 rounded px-1.5 py-0.5">
         <button
           onClick={() => updateBpm(bpm - 1)}
-          className="text-slate-500 hover:text-white px-0.5 transition-colors"
+          className="text-slate-400 hover:text-white px-0.5 transition-colors cursor-pointer"
           title="-1 BPM"
         >
           <Minus className="w-2.5 h-2.5" />
@@ -113,7 +117,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
 
         <button
           onClick={() => updateBpm(bpm + 1)}
-          className="text-slate-500 hover:text-white px-0.5 transition-colors"
+          className="text-slate-400 hover:text-white px-0.5 transition-colors cursor-pointer"
           title="+1 BPM"
         >
           <Plus className="w-2.5 h-2.5" />
@@ -123,8 +127,8 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       {/* Tap Tempo Button */}
       <button
         onClick={handleTapTempo}
-        className="px-1.5 py-0.5 bg-[#181c26] hover:bg-[#202534] border border-[#1e222d] rounded text-[10px] font-mono text-slate-400 hover:text-amber-400 transition-colors"
-        title="Ritmik olarak tıklayarak BPM yakala"
+        className="px-1.5 py-0.5 bg-[#191c26] hover:bg-[#222634] border border-white/5 hover:border-amber-500/40 rounded text-[10px] font-mono text-slate-400 hover:text-amber-400 transition-colors cursor-pointer"
+        title="Ritmik tıklayarak BPM yakala"
       >
         TAP
       </button>

@@ -10,7 +10,7 @@ import { guitarAudio } from '../../audio/guitarAudio';
 import { MODEL_CENTER_Y, NECK_FOCUS_Y } from './guitarCalibration';
 import { GuitarModel, type PluckPulse, type StageMode } from './GuitarModel';
 import { NeckOverlay } from './NeckOverlay';
-import { Box, Layers, Music, Play, Volume2 } from 'lucide-react';
+import { Layers, Music, Play, Volume2 } from 'lucide-react';
 
 interface GuitarStageProps {
   chordName: string;
@@ -30,8 +30,16 @@ interface GuitarStageProps {
   onPlayStrumSequence: () => void;
 }
 
+export type CamPreset = 'overview' | 'front' | 'pov' | 'neck';
+
 const OVERVIEW_CAM_POS = new THREE.Vector3(0.24, 0.04, 1.82);
 const OVERVIEW_TARGET = new THREE.Vector3(0, -0.02, 0);
+
+const FRONT_CAM_POS = new THREE.Vector3(0.02, 0.04, 1.72);
+const FRONT_TARGET = new THREE.Vector3(0, 0, 0);
+
+const POV_CAM_POS = new THREE.Vector3(-0.48, 0.78, 1.05);
+const POV_TARGET = new THREE.Vector3(-0.15, -0.05, 0.05);
 
 const NECK_WORLD_Y = NECK_FOCUS_Y - MODEL_CENTER_Y;
 const NECK_CAM_POS = new THREE.Vector3(-NECK_WORLD_Y - 0.035, -0.09, 0.64);
@@ -39,16 +47,20 @@ const NECK_TARGET = new THREE.Vector3(-NECK_WORLD_Y - 0.035, -0.09, 0.05);
 
 interface CameraRigProps {
   stageMode: StageMode;
+  camPreset: CamPreset;
   onInteractChange: (interacting: boolean) => void;
 }
 
-function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
+function CameraRig({ stageMode, camPreset, onInteractChange }: CameraRigProps) {
   const { camera } = useThree();
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
-  const returningToOverviewRef = useRef(false);
-  const prevModeRef = useRef<StageMode>(stageMode);
+  const userMovedRef = useRef(false);
   const idleTimerRef = useRef<number | null>(null);
   const initedRef = useRef(false);
+
+  useEffect(() => {
+    userMovedRef.current = false;
+  }, [camPreset, stageMode]);
 
   useEffect(() => {
     if (!initedRef.current && controlsRef.current) {
@@ -56,13 +68,6 @@ function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
       const t = stageMode === 'neck' ? NECK_TARGET : OVERVIEW_TARGET;
       controlsRef.current.target.copy(t);
       controlsRef.current.update();
-    }
-  }, [stageMode]);
-
-  useEffect(() => {
-    if (prevModeRef.current !== stageMode) {
-      returningToOverviewRef.current = stageMode === 'overview';
-      prevModeRef.current = stageMode;
     }
   }, [stageMode]);
 
@@ -80,29 +85,34 @@ function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
         ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, NECK_TARGET.y, 10, dt);
         ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, NECK_TARGET.z, 10, dt);
         camera.lookAt(ctrl.target);
-      } else {
-        camera.lookAt(NECK_TARGET);
       }
-    } else if (returningToOverviewRef.current) {
-      camera.position.x = THREE.MathUtils.damp(camera.position.x, OVERVIEW_CAM_POS.x, 6.5, dt);
-      camera.position.y = THREE.MathUtils.damp(camera.position.y, OVERVIEW_CAM_POS.y, 6.5, dt);
-      camera.position.z = THREE.MathUtils.damp(camera.position.z, OVERVIEW_CAM_POS.z, 6.5, dt);
+    } else if (!userMovedRef.current) {
+      let targetPos = OVERVIEW_CAM_POS;
+      let targetLook = OVERVIEW_TARGET;
+
+      if (camPreset === 'front') {
+        targetPos = FRONT_CAM_POS;
+        targetLook = FRONT_TARGET;
+      } else if (camPreset === 'pov') {
+        targetPos = POV_CAM_POS;
+        targetLook = POV_TARGET;
+      }
+
+      camera.position.x = THREE.MathUtils.damp(camera.position.x, targetPos.x, 7, dt);
+      camera.position.y = THREE.MathUtils.damp(camera.position.y, targetPos.y, 7, dt);
+      camera.position.z = THREE.MathUtils.damp(camera.position.z, targetPos.z, 7, dt);
 
       if (ctrl) {
-        ctrl.target.x = THREE.MathUtils.damp(ctrl.target.x, OVERVIEW_TARGET.x, 7, dt);
-        ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, OVERVIEW_TARGET.y, 7, dt);
-        ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, OVERVIEW_TARGET.z, 7, dt);
+        ctrl.target.x = THREE.MathUtils.damp(ctrl.target.x, targetLook.x, 7, dt);
+        ctrl.target.y = THREE.MathUtils.damp(ctrl.target.y, targetLook.y, 7, dt);
+        ctrl.target.z = THREE.MathUtils.damp(ctrl.target.z, targetLook.z, 7, dt);
         ctrl.update();
-      }
-
-      if (camera.position.distanceTo(OVERVIEW_CAM_POS) < 0.04) {
-        returningToOverviewRef.current = false;
       }
     }
   });
 
   const handleStart = () => {
-    returningToOverviewRef.current = false;
+    userMovedRef.current = true;
     if (idleTimerRef.current) window.clearTimeout(idleTimerRef.current);
     onInteractChange(true);
   };
@@ -120,11 +130,11 @@ function CameraRig({ stageMode, onInteractChange }: CameraRigProps) {
       enabled={stageMode === 'overview'}
       enablePan={false}
       minDistance={0.35}
-      maxDistance={2.1}
-      minPolarAngle={Math.PI * 0.22}
-      maxPolarAngle={Math.PI * 0.78}
-      minAzimuthAngle={-Math.PI * 0.55}
-      maxAzimuthAngle={Math.PI * 0.55}
+      maxDistance={2.2}
+      minPolarAngle={Math.PI * 0.15}
+      maxPolarAngle={Math.PI * 0.85}
+      minAzimuthAngle={-Math.PI * 0.65}
+      maxAzimuthAngle={Math.PI * 0.65}
       dampingFactor={0.08}
       enableDamping
       onStart={handleStart}
@@ -156,6 +166,7 @@ export function GuitarStage({
   }, []);
 
   const [stageMode, setStageMode] = useState<StageMode>(initialNeck ? 'neck' : 'overview');
+  const [camPreset, setCamPreset] = useState<CamPreset>('overview');
   const [userInteracting, setUserInteracting] = useState(false);
   const [hoverRegion, setHoverRegion] = useState<'none' | 'neck' | 'body'>('none');
   const [pluckPulse, setPluckPulse] = useState<PluckPulse>({ seq: 0, stringIdx: -1 });
@@ -189,30 +200,32 @@ export function GuitarStage({
 
   const enterNeckMode = useCallback(() => {
     setStageMode('neck');
+    setCamPreset('neck');
     guitarAudio.strumChord(position, 'down', 22);
     setPluckPulse((prev) => ({ seq: prev.seq + 1, stringIdx: -1 }));
   }, [position]);
 
   const enterOverviewMode = useCallback(() => {
     setStageMode('overview');
+    setCamPreset('overview');
   }, []);
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#0b0d12] overflow-hidden select-none">
-      {/* 3D HERO VIEWPORT */}
+    <div className="relative w-full h-full flex flex-col bg-[#11131a] overflow-hidden select-none">
+      {/* 3D HERO VIEWPORT WITH SEAMLESS STUDIO BACKDROP */}
       <div
         className="relative flex-1 min-h-0 w-full overflow-hidden"
         style={{
           background:
-            'radial-gradient(ellipse 68% 58% at 50% 52%, #171b26 0%, #0b0d12 74%)',
+            'radial-gradient(ellipse 70% 60% at 50% 50%, #161924 0%, #11131a 80%)',
         }}
       >
-        {/* TOP-LEFT HUD: ACTIVE CHORD TELEMETRY */}
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-[#11141c]/90 border border-[#1e222d] rounded-lg px-3 py-1.5 backdrop-blur-sm shadow-lg">
+        {/* TOP-LEFT HUD: ACTIVE CHORD TELEMETRY BADGE */}
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-2 bg-[#191c26]/90 border border-white/10 rounded-xl px-3 py-1.5 backdrop-blur-md shadow-xl">
           <button
             onClick={onOpenChordDetail}
-            className="px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono text-base font-extrabold rounded cursor-pointer hover:bg-amber-400 transition-colors"
-            title="Sol panelde akor teorisini göster"
+            className="px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono text-base font-extrabold rounded-md cursor-pointer hover:bg-amber-400 transition-colors shadow-sm shadow-amber-500/25"
+            title="Akor teorisini incele"
           >
             {chordName}
           </button>
@@ -221,44 +234,75 @@ export function GuitarStage({
               {theory.typeCategory}
             </span>
             <span className="text-[10px] text-slate-400 leading-tight">
-              {position.baseFret > 1 ? `${position.baseFret}. Perde Pozisyonu` : 'Açık Pozisyon'} •{' '}
-              Pozisyon {positionIdx + 1}/{totalPositions}
+              {position.baseFret > 1 ? `${position.baseFret}. Perde` : 'Açık Pozisyon'} • #{positionIdx + 1}/{totalPositions}
             </span>
           </div>
           <button
             onClick={() => triggerStrum('down')}
-            className="ml-1 flex items-center gap-1.5 px-2.5 py-1 bg-[#181c26] hover:bg-[#222836] border border-amber-500/40 text-amber-400 font-mono text-xs font-bold rounded transition-colors cursor-pointer"
+            className="ml-1 flex items-center gap-1.5 px-2.5 py-1 bg-[#11131a] hover:bg-[#202534] border border-amber-500/40 text-amber-400 font-mono text-xs font-bold rounded-md transition-colors cursor-pointer"
           >
             <Volume2 className="w-3.5 h-3.5" />
             <span>TINLAT</span>
           </button>
         </div>
 
-        {/* TOP-RIGHT HUD: VIEW MODE SWITCHER (GENEL 3D / SAP KLAVYESİ) */}
-        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[#11141c]/90 border border-[#1e222d] rounded-lg p-1 backdrop-blur-sm shadow-lg font-mono text-xs">
+        {/* TOP-RIGHT HUD: POLYGONIUM 3D CAMERA FLOATING PILLS */}
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-[#191c26]/90 border border-white/10 rounded-full p-1 backdrop-blur-md shadow-2xl font-mono text-[10px]">
           <button
-            onClick={enterOverviewMode}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-bold transition-colors cursor-pointer ${
-              stageMode === 'overview'
-                ? 'bg-amber-500 text-slate-950'
-                : 'text-slate-400 hover:text-white'
+            onClick={() => {
+              setStageMode('overview');
+              setCamPreset('pov');
+            }}
+            className={`px-2.5 py-1 rounded-full font-bold transition-all cursor-pointer ${
+              stageMode === 'overview' && camPreset === 'pov'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
+            title="Oyuncu Bakış Açısı (POV)"
           >
-            <Box className="w-3.5 h-3.5" />
-            <span>GENEL 3D</span>
+            POV
+          </button>
+          <button
+            onClick={() => {
+              setStageMode('overview');
+              setCamPreset('front');
+            }}
+            className={`px-2.5 py-1 rounded-full font-bold transition-all cursor-pointer ${
+              stageMode === 'overview' && camPreset === 'front'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white'
+            }`}
+            title="Önden Bakış Açısı"
+          >
+            KARŞIDAN
+          </button>
+          <button
+            onClick={() => {
+              setStageMode('overview');
+              setCamPreset('overview');
+            }}
+            className={`px-2.5 py-1 rounded-full font-bold transition-all cursor-pointer ${
+              stageMode === 'overview' && camPreset === 'overview'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white'
+            }`}
+            title="Tam Gitar Görünümü"
+          >
+            TAM GİTAR
           </button>
           <button
             onClick={() => {
               enterNeckMode();
             }}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded font-bold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 px-2.5 py-1 rounded-full font-bold transition-all cursor-pointer ${
               stageMode === 'neck'
-                ? 'bg-amber-500 text-slate-950'
-                : 'text-slate-400 hover:text-white'
+                ? 'bg-amber-500 text-slate-950 shadow-sm'
+                : 'text-slate-300 hover:text-white'
             }`}
+            title="Sap ve 2D Akor Klavyesi"
           >
-            <Layers className="w-3.5 h-3.5" />
-            <span>SAP / AKOR KLAVYESİ</span>
+            <Layers className="w-3 h-3" />
+            <span>KLAVYE</span>
           </button>
         </div>
 
@@ -349,6 +393,7 @@ export function GuitarStage({
 
             <CameraRig
               stageMode={stageMode}
+              camPreset={camPreset}
               onInteractChange={setUserInteracting}
             />
           </Suspense>
@@ -359,8 +404,8 @@ export function GuitarStage({
           <div className="
             absolute bottom-3 left-1/2 -translate-x-1/2 z-10
             flex items-center gap-3 px-4 py-1.5 rounded-full whitespace-nowrap
-            bg-[#11141c]/90 border border-[#1e222d] backdrop-blur-sm
-            font-mono text-[11px] text-slate-300 shadow-lg pointer-events-none
+            bg-[#191c26]/90 border border-white/10 backdrop-blur-md
+            font-mono text-[11px] text-slate-300 shadow-xl pointer-events-none
           ">
             <span
               className={
@@ -407,19 +452,19 @@ export function GuitarStage({
       </div>
 
       {/* BOTTOM DOCK: COMPACT 16-STEP STRUMMING SEQUENCER */}
-      <div className="shrink-0 bg-[#11141c] border-t border-[#1e222d] px-3 py-2 font-mono text-xs flex flex-wrap items-center justify-between gap-2">
+      <div className="shrink-0 bg-[#0e1017] border-t border-white/10 px-3 py-2.5 font-mono text-xs flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="font-bold text-slate-300 flex items-center gap-1.5 text-[11px]">
             <Music className="w-3.5 h-3.5 text-amber-400" />
-            <span>RİTİM SEQUENCER</span>
+            <span>RİTİM DOCK</span>
           </span>
           <select
             value={selectedPatternId}
             onChange={(e) => onSelectPattern(e.target.value)}
-            className="bg-[#0b0d12] border border-[#1e222d] rounded px-2 py-1 text-[11px] text-slate-200 font-mono focus:outline-none"
+            className="bg-[#191c26] border border-white/10 rounded-md px-2 py-1 text-[11px] text-slate-200 font-mono focus:outline-none"
           >
             {STRUM_PATTERNS.map((p) => (
-              <option key={p.id} value={p.id} className="bg-[#0b0d12]">
+              <option key={p.id} value={p.id} className="bg-[#11131a]">
                 {p.name} ({p.timeSignature})
               </option>
             ))}
@@ -433,10 +478,10 @@ export function GuitarStage({
               key={idx}
               className={`flex-1 min-w-[28px] py-1 px-1 rounded border text-center font-mono flex flex-col items-center justify-center ${
                 stroke.accent
-                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold shadow-sm'
                   : stroke.type === 'rest'
-                  ? 'bg-black/30 border-white/5 text-slate-600'
-                  : 'bg-[#181c26] border-[#1e222d] text-slate-300'
+                  ? 'bg-black/40 border-white/5 text-slate-600'
+                  : 'bg-[#191c26] border-white/10 text-slate-300'
               }`}
             >
               <span className="text-[11px] font-bold leading-none">{stroke.label}</span>
@@ -453,7 +498,7 @@ export function GuitarStage({
             onPlayStrumSequence();
           }}
           disabled={isPlayingStrumSeq}
-          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-md flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25"
         >
           <Play className="w-3 h-3 fill-current" />
           <span>{isPlayingStrumSeq ? 'ÇALINIYOR...' : 'RİTİM TEST'}</span>

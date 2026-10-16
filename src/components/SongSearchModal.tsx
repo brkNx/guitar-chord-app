@@ -123,11 +123,11 @@ export const SongSearchModal = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-700/80 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_0_35px_rgba(245,158,11,0.12)] overflow-hidden flex flex-col max-h-[85vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="w-full max-w-2xl bg-[#11131A] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Search Input Bar */}
-        <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950/80 relative">
-          <Search className="w-5 h-5 text-amber-500 shrink-0" />
+        <div className="px-4 py-3.5 border-b border-white/[0.07] flex items-center gap-3 bg-[#090A0F]">
+          <Search className="w-4 h-4 text-amber-500 shrink-0" />
           <input
             type="text"
             placeholder="Şarkı adı, sanatçı veya YouTube linki yapıştır..."
@@ -135,19 +135,19 @@ export const SongSearchModal = ({
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAiGenerate()}
             autoFocus
-            className="flex-1 bg-transparent text-white placeholder-slate-500 text-sm md:text-base outline-none font-medium"
+            className="flex-1 bg-transparent text-white placeholder-slate-500 text-sm outline-none font-medium"
           />
 
           {parsedInput.isYouTube && (
-            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold">
-              <span>▶ YouTube Linki</span>
+            <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 text-xs font-mono">
+              YouTube
             </span>
           )}
 
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="p-1 text-slate-400 hover:text-white rounded-lg transition-colors"
+              className="p-1 text-slate-400 hover:text-white rounded transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -155,7 +155,7 @@ export const SongSearchModal = ({
 
           <button
             onClick={onClose}
-            className="p-1.5 px-3 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl text-xs font-semibold transition-colors"
+            className="px-2.5 py-1 text-slate-400 hover:text-white hover:bg-white/[0.06] rounded-lg text-xs font-semibold transition-colors"
           >
             Kapat
           </button>
@@ -165,32 +165,29 @@ export const SongSearchModal = ({
         <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 scrollbar-thin">
           {/* YouTube Detected Spotlight Card */}
           {parsedInput.isYouTube && (
-            <div className="p-5 rounded-3xl bg-gradient-to-br from-red-950/70 via-slate-900 to-amber-950/40 border-2 border-red-500/50 shadow-2xl shadow-red-950/40 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-red-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="flex flex-col sm:flex-row items-start gap-4 relative z-10">
+            <div className="p-4 rounded-xl bg-[#191C26] border border-white/[0.08] relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 {/* Video Thumbnail */}
-                <div className="relative w-full sm:w-44 aspect-video rounded-2xl overflow-hidden bg-slate-950 border border-red-500/30 shrink-0 shadow-lg group">
+                <div className="relative w-full sm:w-40 aspect-video rounded-lg overflow-hidden bg-black border border-white/10 shrink-0 group">
                   {isYtLoading ? (
-                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-900 text-slate-400">
-                      <Loader2 className="w-6 h-6 text-red-500 animate-spin" />
-                      <span className="text-[11px] font-medium">Video yükleniyor...</span>
+                    <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-[#11131A] text-slate-400">
+                      <Loader2 className="w-5 h-5 text-red-500 animate-spin" />
+                      <span className="text-[10px] font-mono">Yükleniyor...</span>
                     </div>
                   ) : (
                     <>
                       <img
                         src={ytInfo?.thumbnailUrl || `https://i.ytimg.com/vi/${parsedInput.videoId}/hqdefault.jpg`}
                         alt={ytInfo?.title || 'YouTube Video'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-center justify-center">
-                        <div className="w-10 h-10 rounded-full bg-red-600/90 text-white flex items-center justify-center shadow-lg shadow-red-600/50">
-                          <Play className="w-5 h-5 ml-0.5 fill-white" />
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center">
+                          <Play className="w-4 h-4 ml-0.5 fill-white" />
                         </div>
                       </div>
-                      <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/80 text-[10px] font-bold text-white tracking-wider">
-                        YOUTUBE
+                      <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/80 text-[9px] font-mono font-bold text-white uppercase">
+                        YT
                       </span>
                     </>
                   )}
@@ -199,54 +196,44 @@ export const SongSearchModal = ({
                 {/* Video Info and Action */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 uppercase tracking-wider flex items-center gap-1">
-                      <span>▶ YouTube Entegrasyonu</span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20 uppercase tracking-wider">
+                      YouTube Kaynağı
                     </span>
-                    <span className="text-xs text-amber-400 font-bold flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5" /> Yapay Zeka Hazır
+                    <span className="text-xs text-amber-400 font-mono font-medium flex items-center gap-1">
+                      <Sparkles className="w-3 h-3" /> AI Hazır
                     </span>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-black text-white mt-1.5 line-clamp-2 leading-snug">
+                  <h3 className="text-sm sm:text-base font-bold text-white mt-1.5 line-clamp-2 leading-snug">
                     {isYtLoading
-                      ? 'YouTube Video Bilgileri Alınıyor...'
+                      ? 'Video Bilgileri Alınıyor...'
                       : ytInfo?.title || `YouTube Video (${parsedInput.videoId})`}
                   </h3>
 
-                  <p className="text-xs text-slate-300 mt-1 font-semibold flex items-center gap-2">
-                    <span className="text-amber-300">
-                      {ytInfo?.artist || 'YouTube Sanatçısı'}
+                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                    <span className="text-amber-400">
+                      {ytInfo?.artist || 'YouTube'}
                     </span>
                     {ytInfo?.authorName && ytInfo.authorName !== ytInfo.artist && (
-                      <span className="text-slate-400 font-normal">
-                        • {ytInfo.authorName}
-                      </span>
+                      <span className="text-slate-500"> • {ytInfo.authorName}</span>
                     )}
-                  </p>
-
-                  <p className="text-xs text-slate-400 mt-1.5 line-clamp-2">
-                    Parçanın ritmi ve armonisi analiz edilerek gerçek zamanlı 3D gitar klavyesine akor basışları aktarılacaktır.
                   </p>
 
                   <button
                     onClick={() => handleAiGenerate()}
                     disabled={isGenerating || isYtLoading}
-                    className="mt-3.5 w-full sm:w-auto flex items-center justify-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-600 via-amber-500 to-amber-400 hover:from-red-500 hover:to-amber-300 text-slate-950 font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-red-600/30 active:scale-95 transition-all disabled:opacity-50 cursor-pointer"
+                    className="mt-3.5 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs active:scale-95 transition-all disabled:opacity-50"
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span>{generationStep || 'Akorlar Çıkarılıyor...'}</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4 fill-slate-950" />
-                        <span>
-                          {ytInfo?.title
-                            ? `"${ytInfo.title.slice(0, 22)}..." Akorlarını Çıkar & Yükle`
-                            : 'AI ile Akorları Çıkar & Gitara Yükle'}
-                        </span>
-                        <ArrowRight className="w-4 h-4 ml-1" />
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Akorları Çıkar & Gitara Yükle</span>
+                        <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                       </>
                     )}
                   </button>
@@ -255,47 +242,44 @@ export const SongSearchModal = ({
             </div>
           )}
 
-          {/* Unlisted Song: Glowing Spotlight AI Card (Non-YouTube query) */}
+          {/* Unlisted Song: Sleek Studio Card */}
           {!parsedInput.isYouTube && query.trim().length > 0 && filteredSongs.length === 0 && (
-            <div className="p-5 rounded-2xl bg-gradient-to-br from-indigo-950/80 via-slate-900 to-amber-950/30 border-2 border-indigo-500/50 shadow-xl shadow-indigo-950/50 relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-              <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-
-              <div className="flex items-start gap-4 relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-500/30">
-                  <Sparkles className="w-6 h-6 animate-pulse" />
+            <div className="p-4 rounded-xl bg-[#191C26] border border-white/[0.08]">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-extrabold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider">
-                      Listede Bulunamadı
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/10 uppercase">
+                      Kütüphanede Yok
                     </span>
-                    <span className="text-xs text-amber-400 font-bold">
-                      Yapay Zeka Hazır
+                    <span className="text-xs text-amber-400 font-mono">
+                      AI Sentezleyici Aktif
                     </span>
                   </div>
-                  <h3 className="text-base font-black text-white mt-1">
-                    "{query}" Parçası Kütüphanede Yok
+                  <h3 className="text-sm font-bold text-white mt-1">
+                    "{query}" Parçasını Otomatik Çıkar
                   </h3>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                    Yapay zeka bu şarkının tonunu, ritim dizilimini ve akorlarını anında çıkarıp parmak pozisyonlarıyla birlikte doğrudan gitara döksün.
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Yapay zeka bu şarkının tonunu, ritim dizilimini ve akorlarını anında analiz edip gitara aktarır.
                   </p>
 
                   <button
                     onClick={() => handleAiGenerate()}
                     disabled={isGenerating}
-                    className="mt-4 w-full sm:w-auto flex items-center justify-center gap-2.5 px-5 py-3 rounded-xl bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs sm:text-sm tracking-wide shadow-lg shadow-amber-500/25 active:scale-95 transition-all disabled:opacity-50"
+                    className="mt-3.5 flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs active:scale-95 transition-all disabled:opacity-50"
                   >
                     {isGenerating ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
                         <span>{generationStep || 'Akorlar Çıkarılıyor...'}</span>
                       </>
                     ) : (
                       <>
-                        <Sparkles className="w-4 h-4" />
-                        <span>AI ile Anında Akorları Çıkar & Gitara Yükle</span>
-                        <ArrowRight className="w-4 h-4 ml-1" />
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Akorları Çıkar & Yükle</span>
+                        <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
                       </>
                     )}
                   </button>
@@ -308,16 +292,16 @@ export const SongSearchModal = ({
           {filteredSongs.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center justify-between px-1">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  Kütüphanedeki Şarkılar ({filteredSongs.length})
+                <p className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider">
+                  Kütüphane Sonuçları ({filteredSongs.length})
                 </p>
                 {query && (
                   <button
                     onClick={() => handleAiGenerate()}
-                    className="text-xs text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
+                    className="text-xs font-mono text-amber-400 hover:text-amber-300 flex items-center gap-1"
                   >
                     <Sparkles className="w-3 h-3" />
-                    <span>AI ile Yeni Versiyon Üret</span>
+                    <span>AI ile Yeni Üret</span>
                   </button>
                 )}
               </div>
@@ -330,24 +314,24 @@ export const SongSearchModal = ({
                       onSelectSong(s);
                       onClose();
                     }}
-                    className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-800/40 hover:bg-slate-800 border border-slate-700/40 hover:border-amber-500/50 cursor-pointer transition-all group"
+                    className="flex items-center justify-between p-3 rounded-xl bg-[#191C26] hover:bg-[#202433] border border-white/[0.07] hover:border-amber-500/40 cursor-pointer transition-all group"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:bg-amber-500 group-hover:text-slate-950 transition-colors">
-                        <Music className="w-5 h-5" />
+                      <div className="w-9 h-9 rounded-lg bg-[#11131A] text-slate-400 flex items-center justify-center group-hover:text-amber-400 border border-white/5 transition-colors">
+                        <Music className="w-4 h-4" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                        <h4 className="text-xs sm:text-sm font-semibold text-white group-hover:text-amber-400 transition-colors">
                           {s.title}
                         </h4>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-slate-400 font-mono">
                           {s.artist} • Ton: <span className="text-amber-400 font-bold">{s.key}</span>
                           {s.capo > 0 && ` • Kapo ${s.capo}`}
                           {s.tempo && ` • ${s.tempo} BPM`}
                         </p>
                       </div>
                     </div>
-                    <span className="text-xs px-2.5 py-1 rounded-lg bg-slate-700/60 text-slate-300 font-medium">
+                    <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-white/[0.06] text-slate-300 border border-white/5">
                       {s.difficulty || 'Kolay'}
                     </span>
                   </div>
@@ -359,11 +343,10 @@ export const SongSearchModal = ({
           {/* Quick AI Extraction for Empty Query */}
           {!query && (
             <div className="space-y-4 pt-1">
-              {/* Popular Song Suggestions */}
               <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                <p className="text-xs font-mono font-semibold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5 text-amber-500" />
-                  Tek Tıkla Akor Çıkar (Popüler Şarkılar)
+                  Hızlı Başlat (Popüler Şarkılar)
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {POPULAR_SUGGESTIONS.map((preset) => (
@@ -371,25 +354,25 @@ export const SongSearchModal = ({
                       key={preset}
                       onClick={() => handleAiGenerate(preset)}
                       disabled={isGenerating}
-                      className="px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 hover:border-amber-500/40 text-slate-300 hover:text-white text-xs font-semibold transition-all group flex items-center gap-1.5"
+                      className="px-2.5 py-1.5 rounded-lg bg-[#191C26] hover:bg-[#202433] border border-white/[0.07] hover:border-amber-500/40 text-slate-300 hover:text-white text-xs font-medium transition-all flex items-center gap-1.5"
                     >
-                      <Sparkles className="w-3 h-3 text-amber-400 opacity-60 group-hover:opacity-100" />
+                      <Sparkles className="w-3 h-3 text-amber-400 opacity-60" />
                       <span>{preset}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* YouTube Link Paste Card */}
-              <div className="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex items-center justify-between gap-3">
+              {/* YouTube Link Paste helper */}
+              <div className="p-3.5 rounded-xl bg-[#090A0F] border border-white/[0.07] flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center font-bold text-xs">
-                    ▶
+                  <div className="w-8 h-8 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center font-bold text-xs font-mono">
+                    YT
                   </div>
                   <div>
-                    <h5 className="text-xs font-bold text-white">YouTube Linki ile Akor Çıkar</h5>
+                    <h5 className="text-xs font-semibold text-white">YouTube ile Şarkı Çıkar</h5>
                     <p className="text-[11px] text-slate-400">
-                      YouTube video linkini üstteki arama kutusuna yapıştırarak anında gitara aktarabilirsin.
+                      Herhangi bir YouTube linkini üstteki arama çubuğuna yapıştırarak anında gitara aktar.
                     </p>
                   </div>
                 </div>
@@ -399,14 +382,14 @@ export const SongSearchModal = ({
         </div>
 
         {/* Modal Footer: Custom Song Editor Action */}
-        <div className="p-3.5 bg-slate-950/90 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 px-5">
-          <span>İnternetten kopyaladığın akorları direkt yapıştırmak için:</span>
+        <div className="px-4 py-3 bg-[#090A0F] border-t border-white/[0.07] flex items-center justify-between text-xs text-slate-400">
+          <span>Özel akor metni girmek için:</span>
           <button
             onClick={() => {
               onClose();
               onOpenCustomEditor();
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#191C26] hover:bg-[#202433] text-slate-200 border border-white/10 font-medium transition-colors"
           >
             <Plus className="w-3.5 h-3.5 text-amber-500" />
             <span>Kendi Akor Metnini Yapıştır</span>
