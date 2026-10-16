@@ -496,7 +496,8 @@ async function fetchLyricsFromApis(artist: string, title: string): Promise<strin
 
 async function resolveCanonicalTrackAndLyrics(
   initialArtist: string,
-  initialTitle: string
+  initialTitle: string,
+  videoId?: string
 ): Promise<{
   artist: string;
   title: string;
@@ -513,11 +514,12 @@ async function resolveCanonicalTrackAndLyrics(
       ? `${artist} ${title}`
       : title;
 
-  // 1. Try local Vite backend lyrics & chords resolver (/api/lyrics -> Ultimate Guitar + Genius + LRCLIB)
+  // 1. Try local backend lyrics & chords resolver (/api/lyrics -> Repertuarim + Ultimate Guitar + Genius + LRCLIB)
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 7500);
-    const res = await fetch(`/api/lyrics?q=${encodeURIComponent(query)}`, {
+    const apiPath = `/api/lyrics?q=${encodeURIComponent(query)}${videoId ? `&videoId=${encodeURIComponent(videoId)}` : ''}`;
+    const res = await fetch(apiPath, {
       signal: controller.signal
     });
     clearTimeout(timer);
@@ -551,7 +553,7 @@ async function resolveCanonicalTrackAndLyrics(
     return { artist, title, lyrics: directLyrics };
   }
 
-  // 3. Canonicalize via iTunes Search API (handles missing Turkish diacritics & YouTube channel names)
+  // 3. Canonicalize via iTunes Search API (WITH QUERY OVERLAP GUARD)
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3500);
@@ -565,11 +567,19 @@ async function resolveCanonicalTrackAndLyrics(
       const data = await res.json();
       const hit = data?.results?.[0];
       if (hit?.artistName && hit?.trackName) {
-        artist = hit.artistName;
-        title = hit.trackName.replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '').trim() || hit.trackName;
-        const resolvedLyrics = await fetchLyricsFromApis(artist, title);
-        if (resolvedLyrics) {
-          return { artist, title, lyrics: resolvedLyrics };
+        const hitArtist = hit.artistName;
+        const hitTitle = hit.trackName.replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '').trim() || hit.trackName;
+
+        // GUARD: Only accept iTunes hit if significant words from query are in the result
+        const queryWords = query.toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+        const hitCombined = `${hitArtist} ${hitTitle}`.toLowerCase();
+        const hasMatch = queryWords.length > 0 && queryWords.some((w) => hitCombined.includes(w));
+
+        if (hasMatch) {
+          const resolvedLyrics = await fetchLyricsFromApis(hitArtist, hitTitle);
+          if (resolvedLyrics) {
+            return { artist: hitArtist, title: hitTitle, lyrics: resolvedLyrics };
+          }
         }
       }
     }
@@ -622,6 +632,12 @@ function expandLineRepeats(lines: string[]): string[] {
   return expanded;
 }
 
+function isCreditOrNoiseLine(line: string): boolean {
+  return /söz[\s-]müzik|söz\s*:|müzik\s*:|ses\s+(?:miksaj|asistanı)|içerik\s+editörü|konuk\s+koordinatörü|kamera\s+operatörü|ışık\s*[\-:]|post\s+prodüksiyon|grafik\s+tasarım|prodüksiyon\s+asistanı|sosyal\s+medya|katkılarıyla|sponsor|yapımcı|yönetmen|copyright|all\s+rights|directed\s+by|produced\s+by|mixed\s+by|mastered\s+by/i.test(
+    line
+  );
+}
+
 function buildChordProFromLyrics(
   title: string,
   artist: string,
@@ -642,7 +658,7 @@ function buildChordProFromLyrics(
         b
           .split('\n')
           .map((l) => l.trim())
-          .filter(Boolean)
+          .filter((l) => Boolean(l) && !isCreditOrNoiseLine(l))
       )
     )
     .filter((b) => b.length > 0);
@@ -777,7 +793,8 @@ export async function generateSongWithAI(
   let resolvedKey: string | undefined;
   let resolvedCapo: number | undefined;
   if (!userLyrics || userLyrics.trim().length <= 10) {
-    const resolved = await resolveCanonicalTrackAndLyrics(artist, title);
+    const effectiveVideoId = ytInfo?.videoId || videoId || undefined;
+    const resolved = await resolveCanonicalTrackAndLyrics(artist, title, effectiveVideoId);
     artist = resolved.artist;
     title = resolved.title;
     fetchedLyrics = resolved.lyrics;

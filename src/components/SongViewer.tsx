@@ -4,7 +4,7 @@ import { parseChordPro, extractUniqueChords } from '../utils/chordPro';
 import { STRUM_PATTERNS } from '../data/strumPatterns';
 import { guitarAudio } from '../audio/guitarAudio';
 import { getOrGenerateChord } from '../data/chordLibrary';
-import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video } from 'lucide-react';
+import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video, Volume2, VolumeX } from 'lucide-react';
 
 interface SongViewerProps {
   song: Song;
@@ -35,10 +35,12 @@ export const SongViewer = ({
 }: SongViewerProps) => {
   const [internalAutoScroll, setInternalAutoScroll] = useState(false);
   const [scrollSpeed, setScrollSpeed] = useState(25); // Speed multiplier (10..80, 25 = 1x tempo)
-  const [showYouTube, setShowYouTube] = useState(false);
+  const [showYouTube, setShowYouTube] = useState<boolean>(() => Boolean(song.youtubeId));
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [playheadIdx, setPlayheadIdx] = useState<number>(0);
 
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   const lineRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const onSelectChordRef = useRef(onSelectChord);
   onSelectChordRef.current = onSelectChord;
@@ -51,6 +53,11 @@ export const SongViewer = ({
       setInternalAutoScroll(!internalAutoScroll);
     }
   };
+
+  // Keep YouTube player visible if song has a youtubeId
+  useEffect(() => {
+    setShowYouTube(Boolean(song.youtubeId));
+  }, [song.id, song.youtubeId]);
 
   const parsedLines = useMemo(
     () => parseChordPro(song.content, transposeOffset),
@@ -87,13 +94,22 @@ export const SongViewer = ({
   // Active rhythm pattern
   const defaultPattern = STRUM_PATTERNS[0];
 
-  // Automatic Live Chord Player & Synchronized Scroll when PLAY / KAYDIR is active
+  // Automatic Live Chord Player, Sound Strum & Synchronized Scroll when PLAY / OTOMATİK ÇAL is active
   useEffect(() => {
     if (!isAutoScrolling || chordEvents.length === 0) return;
 
     const currentEv = chordEvents[playheadIdx] || chordEvents[0];
     if (currentEv) {
       onSelectChordRef.current(currentEv.chord);
+
+      // Play audio strum with guitar synth if sound enabled
+      if (soundEnabled) {
+        const def = getOrGenerateChord(currentEv.chord);
+        if (def?.positions?.[0]) {
+          guitarAudio.strumChord(def.positions[0], 'down', 22);
+        }
+      }
+
       const lineEl = lineRefs.current[currentEv.lineIdx];
       if (lineEl && scrollContainerRef.current) {
         const container = scrollContainerRef.current;
@@ -118,7 +134,62 @@ export const SongViewer = ({
     }, stepMs);
 
     return () => window.clearTimeout(timer);
-  }, [isAutoScrolling, playheadIdx, chordEvents, song.tempo, scrollSpeed]);
+  }, [isAutoScrolling, playheadIdx, chordEvents, song.tempo, scrollSpeed, soundEnabled]);
+
+  // Real-time synchronization with YouTube IFrame API messages
+  useEffect(() => {
+    if (!showYouTube || !song.youtubeId) return;
+
+    const handleMessage = (e: MessageEvent) => {
+      if (typeof e.data !== 'string') return;
+      try {
+        const data = JSON.parse(e.data);
+        if (data.event === 'infoDelivery' && data.info) {
+          const { currentTime, duration, playerState } = data.info;
+
+          // State synchronization (1 = playing, 2 = paused, 0 = ended)
+          if (typeof playerState === 'number') {
+            if (playerState === 1 && !isAutoScrolling) {
+              if (onToggleAutoScroll) onToggleAutoScroll();
+              else setInternalAutoScroll(true);
+            } else if ((playerState === 2 || playerState === 0) && isAutoScrolling) {
+              if (onToggleAutoScroll) onToggleAutoScroll();
+              else setInternalAutoScroll(false);
+            }
+          }
+
+          // Exact timeline position sync
+          if (
+            typeof currentTime === 'number' &&
+            typeof duration === 'number' &&
+            duration > 0 &&
+            chordEvents.length > 0
+          ) {
+            const progress = Math.min(1, Math.max(0, currentTime / duration));
+            const targetIdx = Math.min(chordEvents.length - 1, Math.floor(progress * chordEvents.length));
+            setPlayheadIdx(targetIdx);
+          }
+        }
+      } catch {
+        // Ignore non-json postMessages
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Initial handshake to YouTube iframe to request infoDelivery events
+    const handshakeTimer = setTimeout(() => {
+      iframeRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: 'listening' }),
+        '*'
+      );
+    }, 1200);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      clearTimeout(handshakeTimer);
+    };
+  }, [showYouTube, song.youtubeId, chordEvents, isAutoScrolling, onToggleAutoScroll]);
 
   const handleChordClick = (chord: string, lineIdx?: number, segIdx?: number) => {
     if (lineIdx !== undefined && segIdx !== undefined) {
@@ -224,6 +295,24 @@ export const SongViewer = ({
             )}
           </div>
 
+          {/* Sound Toggle (Gitar Sesi) */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className={`flex items-center gap-1.5 px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+              soundEnabled
+                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/35'
+                : 'bg-[#181c26] text-slate-500 border-[#1e222d] hover:text-slate-300'
+            }`}
+            title={soundEnabled ? 'Gitar Akor Sesi: Açık' : 'Gitar Akor Sesi: Sessiz'}
+          >
+            {soundEnabled ? (
+              <Volume2 className="w-3 h-3 text-emerald-400" />
+            ) : (
+              <VolumeX className="w-3 h-3 text-slate-500" />
+            )}
+            <span>{soundEnabled ? 'GİTAR SESİ' : 'SESSİZ'}</span>
+          </button>
+
           {/* YouTube Video Toggle */}
           {song.youtubeId && (
             <button
@@ -253,6 +342,7 @@ export const SongViewer = ({
           </button>
           <div className="w-full max-w-lg aspect-video rounded overflow-hidden border border-[#1e222d] bg-black">
             <iframe
+              ref={iframeRef}
               src={`https://www.youtube.com/embed/${song.youtubeId}?autoplay=1&enablejsapi=1`}
               title={song.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

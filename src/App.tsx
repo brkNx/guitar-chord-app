@@ -139,10 +139,15 @@ export function App() {
   };
 
   const handleSaveCustomSong = (newSong: Song) => {
-    const updated = [newSong, ...songs];
+    const updated = [newSong, ...songs.filter((s) => s.id !== newSong.id)];
     setSongs(updated);
     setCurrentSong(newSong);
     setTransposeOffset(0);
+
+    const firstChordMatch = newSong.content.match(/\[([A-G][^\]]*)\]/);
+    if (firstChordMatch && firstChordMatch[1]) {
+      handleSelectChord(firstChordMatch[1]);
+    }
 
     try {
       const customOnly = updated.filter((s) => s.isCustom);
