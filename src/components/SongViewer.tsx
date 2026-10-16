@@ -346,6 +346,7 @@ export const SongViewer = ({
               src={`https://www.youtube.com/embed/${song.youtubeId}?autoplay=1&enablejsapi=1`}
               title={song.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
               className="w-full h-full border-0"
             />

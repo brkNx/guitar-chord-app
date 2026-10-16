@@ -2,6 +2,56 @@ import type { Song } from '../types/guitar';
 
 export const SAMPLE_SONGS: Song[] = [
   {
+    id: 'sufle-pus',
+    title: 'Pus (Kalacak Yüzün Var Mı)',
+    artist: 'Sufle',
+    key: 'Bm',
+    capo: 0,
+    tempo: 105,
+    difficulty: 'Orta',
+    youtubeId: '9dQAWxxWTVI',
+    tags: ['Akustik', 'Sufle', 'Pop Rock', 'YouTube'],
+    content: `{title: Pus}
+{artist: Sufle}
+{key: Bm}
+{capo: 0}
+{tempo: 105}
+
+{c: Giriş / Intro}
+[Bm]    [D]    [G]    [Em] [F#]
+
+{c: Kıta 1}
+[Bm]Pus, dağılmaz mı yine [D]dağılmaz mı kuşlar
+[G]Gözümü kapattım [Em] [F#]
+[Bm]Ben gözümü kapattım ve [D]hep biter mi aşklar
+[G]Diye soramadım, ah [Em] [F#]
+
+{c: Nakarat}
+[Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
+[G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
+[Bm]Şimdi gidersen [D]diye diye tıkandım
+[G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
+[Bm]Sözlerine inanmıştım [D]başka gözlerde
+[G]Çok aramıştım seni [Em] [F#]
+
+{c: Kıta 2}
+[Bm]Pus her yanımda yine [D]kalbinin içinde
+[G]Olmayı bıraktım [Em] [F#]
+[Bm]Ben gözümü kapattım ve [D]korkma söyle sevgilim
+[G]Ben neye bulaştım [Em] [F#]
+
+{c: Nakarat}
+[Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
+[G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
+[Bm]Şimdi gidersen [D]diye diye tıkandım
+[G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
+[Bm]Sözlerine inanmıştım [D]başka gözlerde
+[G]Çok aramıştım seni [Em] [F#]
+
+{c: Çıkış / Outro}
+[Bm]    [D]    [G]    [Em] [F#]    [Bm]`,
+  },
+  {
     id: 'akdeniz-aksamlari',
     title: 'Akdeniz Akşamları',
     artist: 'Haluk Levent',

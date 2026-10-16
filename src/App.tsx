@@ -39,11 +39,12 @@ export function App() {
           (s) =>
             !s.content?.includes('Step in the room with the') &&
             !s.content?.includes('Rüzgar eser yine') &&
-            !s.content?.includes('1. Ölçü (')
+            !s.content?.includes('1. Ölçü (') &&
+            !s.artist?.toLowerCase().includes('sagopa') &&
+            !s.content?.toLowerCase().includes('keklik') &&
+            s.youtubeId !== 'kNFw6pvfv7E'
         );
-        if (cleaned.length !== parsed.length) {
-          localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(cleaned));
-        }
+        localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(cleaned));
         return [...cleaned, ...SAMPLE_SONGS];
       }
     } catch (e) {
@@ -53,7 +54,7 @@ export function App() {
   });
 
   const [currentSong, setCurrentSong] = useState<Song>(SAMPLE_SONGS[0]);
-  const [activeChord, setActiveChord] = useState<string>('Am');
+  const [activeChord, setActiveChord] = useState<string>(SAMPLE_SONGS[0].key || 'Bm');
   const [positionIdx, setPositionIdx] = useState<number>(0);
   const [displayMode, setDisplayMode] = useState<FretboardDisplayMode>('degrees');
   const [isLeftHanded, setIsLeftHanded] = useState<boolean>(false);
