@@ -311,9 +311,13 @@ export function extractYouTubeVideoId(input: string): string | null {
  * Cleans YouTube video title and splits into Artist and Song Title
  */
 export function parseTitleAndArtist(rawTitle: string, rawAuthor?: string): { artist: string; title: string } {
-  // Strip common YouTube fluff: (Official Video), [Official Audio], etc.
+  // Strip common YouTube fluff in Turkish and English: (Official Video), (Resmi Klip), etc.
   const clean = rawTitle
-    .replace(/\s*[\(\[](?:Official|Music|Video|Lyrics|Audio|HD|4K|Visualizer|Lyric Video|Clip Officiel|Official Lyric Video)[\s\S]*?[\)\]]/gi, '')
+    .replace(
+      /\s*[\(\[](?:Official|Music|Video|Lyrics|Audio|HD|4K|Visualizer|Lyric Video|Clip Officiel|Official Lyric Video|Resmi|Klip|Orjinal|Orijinal|Sözleri|Şarkı Sözleri|Canlı|Live|Akustik)[\s\S]*?[\)\]]/gi,
+      ''
+    )
+    .replace(/\s*\|\s*.*$/g, '')
     .trim();
 
   let artist = '';
@@ -323,6 +327,10 @@ export function parseTitleAndArtist(rawTitle: string, rawAuthor?: string): { art
     const parts = clean.split(' - ');
     artist = parts[0].trim();
     title = parts.slice(1).join(' - ').trim();
+  } else if (clean.includes(' – ')) {
+    const parts = clean.split(' – ');
+    artist = parts[0].trim();
+    title = parts.slice(1).join(' – ').trim();
   } else if (clean.includes('-')) {
     const parts = clean.split('-');
     artist = parts[0].trim();
@@ -331,7 +339,7 @@ export function parseTitleAndArtist(rawTitle: string, rawAuthor?: string): { art
     const cleanAuthor = (rawAuthor || '')
       .replace(/VEVO$/i, '')
       .replace(/\s*-\s*Topic$/i, '')
-      .replace(/\s*(Official|Music|Records|Entertainment)$/i, '')
+      .replace(/\s*(Official|Music|Records|Entertainment|Müzik|Yapım|Prodüksiyon)$/i, '')
       .trim();
     artist = cleanAuthor || 'YouTube Sanatçısı';
     title = clean;
@@ -438,18 +446,193 @@ export function parseYouTubeOrSearchInput(input: string): {
   };
 }
 
+async function fetchLyricsFromApis(artist: string, title: string): Promise<string | null> {
+  if (!artist || !title || artist === 'Bilinmeyen Sanatçı' || artist === 'YouTube Sanatçısı') {
+    return null;
+  }
+
+  // 1. Try LRCLIB exact get endpoint
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(
+      `https://lrclib.net/api/get?artist_name=${encodeURIComponent(artist)}&track_name=${encodeURIComponent(title)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data?.plainLyrics === 'string' && data.plainLyrics.trim().length > 25) {
+        return data.plainLyrics.trim();
+      }
+    }
+  } catch {
+    // Ignore and try fallback
+  }
+
+  // 2. Try lyrics.ovh
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(
+      `https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timer);
+    if (res.ok) {
+      const data = await res.json();
+      if (typeof data?.lyrics === 'string' && data.lyrics.trim().length > 25) {
+        return data.lyrics
+          .replace(/^Paroles de la chanson[\s\S]*?\n/i, '')
+          .trim();
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  return null;
+}
+
+async function resolveCanonicalTrackAndLyrics(
+  initialArtist: string,
+  initialTitle: string
+): Promise<{ artist: string; title: string; lyrics: string | null }> {
+  let artist = initialArtist;
+  let title = initialTitle;
+
+  // Try direct fetch first if artist looks valid
+  const directLyrics = await fetchLyricsFromApis(artist, title);
+  if (directLyrics) {
+    return { artist, title, lyrics: directLyrics };
+  }
+
+  // Canonicalize via iTunes Search API (handles missing Turkish diacritics & YouTube channel names)
+  const query =
+    artist && artist !== 'Bilinmeyen Sanatçı' && artist !== 'YouTube Sanatçısı'
+      ? `${artist} ${title}`
+      : title;
+
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3500);
+    const res = await fetch(
+      `https://itunes.apple.com/search?entity=song&limit=3&country=TR&term=${encodeURIComponent(query)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timer);
+
+    if (res.ok) {
+      const data = await res.json();
+      const hit = data?.results?.[0];
+      if (hit?.artistName && hit?.trackName) {
+        artist = hit.artistName;
+        title = hit.trackName.replace(/\s*[\(\[][^\)\]]*[\)\]]/g, '').trim() || hit.trackName;
+        const resolvedLyrics = await fetchLyricsFromApis(artist, title);
+        if (resolvedLyrics) {
+          return { artist, title, lyrics: resolvedLyrics };
+        }
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  return { artist, title, lyrics: null };
+}
+
+/**
+ * Places two chords on a lyric line at clean word boundaries (never splits a word in half).
+ */
+function harmonizeLyricLine(line: string, c1: string, c2: string): string {
+  const words = line.trim().split(/\s+/);
+  if (words.length <= 2) {
+    return `[${c1}]${line.trim()} [${c2}]`;
+  }
+  const midWordIdx = Math.max(1, Math.floor(words.length / 2));
+  const firstHalf = words.slice(0, midWordIdx).join(' ');
+  const secondHalf = words.slice(midWordIdx).join(' ');
+  return `[${c1}]${firstHalf} [${c2}]${secondHalf}`;
+}
+
+function buildChordProFromLyrics(
+  title: string,
+  artist: string,
+  key: string,
+  capo: number,
+  tempo: number,
+  rawLyrics: string,
+  vp: string[],
+  cp: string[],
+  bp: string[]
+): string {
+  const blocks = rawLyrics
+    .replace(/\r\n/g, '\n')
+    .split(/\n\s*\n/)
+    .map((b) =>
+      b
+        .split('\n')
+        .map((l) => l.trim())
+        .filter(Boolean)
+    )
+    .filter((b) => b.length > 0);
+
+  const sectionLines: string[] = [
+    `{title: ${title}}`,
+    `{artist: ${artist}}`,
+    `{key: ${key}}`,
+    `{capo: ${capo}}`,
+    `{tempo: ${tempo}}`,
+    '',
+    '{c: Giriş / Intro}',
+    `[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[3]}]`,
+    ''
+  ];
+
+  let verseCount = 0;
+  blocks.slice(0, 7).forEach((lines, blockIdx) => {
+    const isChorus = blockIdx === 1 || blockIdx === 3 || blockIdx === 5;
+    const isBridge = blockIdx === 4 && blocks.length >= 6;
+    const prog = isChorus ? cp : isBridge ? bp : vp;
+
+    if (isChorus) {
+      sectionLines.push('{c: Nakarat}');
+    } else if (isBridge) {
+      sectionLines.push('{c: Köprü / Solo}');
+    } else {
+      verseCount += 1;
+      sectionLines.push(`{c: Kıta ${verseCount}}`);
+    }
+
+    let chordCursor = 0;
+    for (const line of lines) {
+      if (line.startsWith('[') || line.startsWith('{')) {
+        sectionLines.push(line);
+      } else {
+        const c1 = prog[chordCursor % prog.length];
+        const c2 = prog[(chordCursor + 1) % prog.length];
+        chordCursor += 2;
+        sectionLines.push(harmonizeLyricLine(line, c1, c2));
+      }
+    }
+    sectionLines.push('');
+  });
+
+  sectionLines.push('{c: Çıkış / Outro}');
+  sectionLines.push(`[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[0]}]`);
+
+  return sectionLines.join('\n');
+}
+
 /**
  * AI Chord Extractor & Harmonic Generator
- * Generates an accurate guitar chord chart even for brand-new, unreleased, or YouTube songs.
+ * Resolves real track metadata and real lyrics (Turkish & International), harmonizing them into ChordPro.
  */
 export async function generateSongWithAI(
   rawInput: string,
   userLyrics?: string,
   preloadedYtInfo?: YouTubeVideoInfo
 ): Promise<Song> {
-  // Simulate neural harmonic audio/chord extraction processing (300ms)
-  await new Promise((resolve) => setTimeout(resolve, 300));
-
   let ytInfo: YouTubeVideoInfo | null = preloadedYtInfo || null;
   const videoId = extractYouTubeVideoId(rawInput);
   const isYouTube = !!videoId || !!ytInfo;
@@ -470,17 +653,22 @@ export async function generateSongWithAI(
     title = ytInfo.title;
   } else {
     const { cleanQuery } = parseYouTubeOrSearchInput(rawInput);
-    if (cleanQuery.includes(' - ')) {
-      const parts = cleanQuery.split(' - ');
-      artist = parts[0].trim();
-      title = parts.slice(1).join(' - ').trim();
-    } else if (cleanQuery.includes('-')) {
-      const parts = cleanQuery.split('-');
-      artist = parts[0].trim();
-      title = parts.slice(1).join('-').trim();
+    const parsed = parseTitleAndArtist(cleanQuery);
+    if (parsed.artist && parsed.artist !== 'YouTube Sanatçısı') {
+      artist = parsed.artist;
+      title = parsed.title;
     } else if (cleanQuery.length > 0) {
-      title = cleanQuery;
+      title = parsed.title || cleanQuery;
     }
+  }
+
+  // Resolve real artist, canonical Turkish/International title, and real lyrics from APIs
+  let fetchedLyrics: string | null = null;
+  if (!userLyrics || userLyrics.trim().length <= 10) {
+    const resolved = await resolveCanonicalTrackAndLyrics(artist, title);
+    artist = resolved.artist;
+    title = resolved.title;
+    fetchedLyrics = resolved.lyrics;
   }
 
   const artistLower = artist.toLowerCase();
@@ -497,117 +685,53 @@ export async function generateSongWithAI(
     }
   }
 
-  // Detect if music is English / Western or Hip-Hop
-  const isEnglishOrRap =
-    /^[a-zA-Z0-9\s.,'!?&()#/-]+$/.test(title) &&
-    !/[çğıöşüÇĞİÖŞÜ]/.test(title + ' ' + artist);
-
   const key = matchedProfile.typicalKeys[0];
   const vp = matchedProfile.verseProgression;
   const cp = matchedProfile.chorusProgression;
   const bp = matchedProfile.bridgeProgression;
 
+  const effectiveLyrics =
+    userLyrics && userLyrics.trim().length > 10 ? userLyrics.trim() : fetchedLyrics;
+
   let chordProContent = '';
 
-  if (userLyrics && userLyrics.trim().length > 10) {
-    // User provided raw lyrics -> Harmonize line by line
-    const lines = userLyrics.split('\n');
-    let chordIdx = 0;
-    const allChords = [...vp, ...cp];
-
-    chordProContent = lines
-      .map((line) => {
-        const trimmed = line.trim();
-        if (!trimmed) return '';
-        if (trimmed.startsWith('[') || trimmed.startsWith('{')) return trimmed;
-
-        const c1 = allChords[chordIdx % allChords.length];
-        const c2 = allChords[(chordIdx + 1) % allChords.length];
-        chordIdx += 2;
-
-        const mid = Math.floor(trimmed.length / 2);
-        return `[${c1}]${trimmed.slice(0, mid)} [${c2}]${trimmed.slice(mid)}`;
-      })
-      .join('\n');
-  } else if (isEnglishOrRap) {
-    // Generate English / Modern Hip-Hop / Pop ChordPro structure
-    chordProContent = `{title: ${title}}
-{artist: ${artist}}
-{key: ${key}}
-{capo: ${matchedProfile.capo}}
-{tempo: ${matchedProfile.tempo}}
-
-{c: Intro / Riff}
-[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[3]}]
-
-{c: Verse 1}
-[${vp[0]}]Step in the room with the [${vp[1]}]rhythm in my head
-[${vp[2]}]Never look back at the [${vp[3]}]words that they said
-[${vp[0]}]Moving too fast through the [${vp[1]}]city after dark
-[${vp[2]}]Leaving a trail and we're [${vp[3]}]leaving a mark
-
-{c: Hook / Chorus}
-[${cp[0]}]Yeah we keep it moving [${cp[1]}]all night long
-[${cp[2]}]Feel the heavy baseline [${cp[3]}]in this song
-[${cp[0]}]Every single chord and [${cp[1]}]every single beat
-[${cp[2]}]Bringing all the fire [${cp[3]}]down to the street
-
-{c: Verse 2}
-[${vp[0]}]Turn the tempo up and [${vp[1]}]never let it fall
-[${vp[2]}]Standing at the top till we [${vp[3]}]answer the call
-[${vp[0]}]Got the guitar rolling [${vp[1]}]vibes on high
-[${vp[2]}]Watch the skyline reach up [${vp[3]}]to the sky
-
-{c: Bridge}
-[${bp[0]}]Never lose focus [${bp[1]}]living in the sound
-[${bp[2]}]Hold the groove down and [${bp[3]}]stand your ground
-
-{c: Hook / Chorus}
-[${cp[0]}]Yeah we keep it moving [${cp[1]}]all night long
-[${cp[2]}]Feel the heavy baseline [${cp[3]}]in this song
-[${cp[0]}]Every single chord and [${cp[1]}]every single beat
-[${cp[2]}]Bringing all the fire [${cp[3]}]down to the street
-
-{c: Outro}
-[${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[0]}]`;
+  if (effectiveLyrics) {
+    chordProContent = buildChordProFromLyrics(
+      title,
+      artist,
+      key,
+      matchedProfile.capo,
+      matchedProfile.tempo,
+      effectiveLyrics,
+      vp,
+      cp,
+      bp
+    );
   } else {
-    // Generate Turkish Acoustic / Rock structure
+    // Instrumental / Unlisted Lyrics Fallback (Always clean Turkish Studio Structure)
     chordProContent = `{title: ${title}}
 {artist: ${artist}}
 {key: ${key}}
 {capo: ${matchedProfile.capo}}
 {tempo: ${matchedProfile.tempo}}
 
-{c: Giriş / Intro}
+{c: Giriş / Ana Riff}
 [${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[3]}]
 
-{c: Kıta 1}
-[${vp[0]}]Rüzgar eser yine [${vp[1]}]gecenin koynunda
-[${vp[2]}]Bir melodi çalar [${vp[3]}]eski sokaklarda
-[${vp[0]}]Uzaklardan gelen [${vp[1]}]bir ses fısıldar
-[${vp[2]}]Yarım kalmış [${vp[3]}]o eski hatıralar
+{c: Kıta 1 (Akor Akışı)}
+[${vp[0]}]1. Ölçü (${vp[0]})        [${vp[1]}]2. Ölçü (${vp[1]})
+[${vp[2]}]3. Ölçü (${vp[2]})        [${vp[3]}]4. Ölçü (${vp[3]})
+[${vp[0]}]5. Ölçü (${vp[0]})        [${vp[1]}]6. Ölçü (${vp[1]})
+[${vp[2]}]7. Ölçü (${vp[2]})        [${vp[3]}]8. Ölçü (${vp[3]})
 
 {c: Nakarat}
-[${cp[0]}]Yıllar geçse de [${cp[1]}]unutulmaz o günler
-[${cp[2]}]Gözlerinde saklı [${cp[3]}]bütün sevgiler
-[${cp[0]}]Bir gitar sesi [${cp[1]}]yükselir derinden
-[${cp[2]}]Vazgeçemem asla [${cp[3]}]senin sevginden
-
-{c: Kıta 2}
-[${vp[0]}]Yollar uzanır [${vp[1]}]sonsuz ufuklara
-[${vp[2]}]Adım adım yürürüm [${vp[3]}]hatıralara
-[${vp[0]}]Güneş doğarken [${vp[1]}]şehrin üstüne
-[${vp[2]}]Yeniden başlar [${vp[3]}]bu masal yine
+[${cp[0]}]1. Ölçü (${cp[0]})        [${cp[1]}]2. Ölçü (${cp[1]})
+[${cp[2]}]3. Ölçü (${cp[2]})        [${cp[3]}]4. Ölçü (${cp[3]})
+[${cp[0]}]5. Ölçü (${cp[0]})        [${cp[1]}]6. Ölçü (${cp[1]})
+[${cp[2]}]7. Ölçü (${cp[2]})        [${cp[3]}]8. Ölçü (${cp[3]})
 
 {c: Köprü / Solo}
-[${bp[0]}]Zaman akıp gitse de [${bp[1]}]durmaz bu kalp
-[${bp[2]}]Her vuruşta sen [${bp[3]}]varsın inan
-
-{c: Nakarat}
-[${cp[0]}]Yıllar geçse de [${cp[1]}]unutulmaz o günler
-[${cp[2]}]Gözlerinde saklı [${cp[3]}]bütün sevgiler
-[${cp[0]}]Bir gitar sesi [${cp[1]}]yükselir derinden
-[${cp[2]}]Vazgeçemem asla [${cp[3]}]senin sevginden
+[${bp[0]}]    [${bp[1]}]    [${bp[2]}]    [${bp[3]}]
 
 {c: Çıkış / Outro}
 [${vp[0]}]    [${vp[1]}]    [${vp[2]}]    [${vp[0]}]`;

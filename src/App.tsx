@@ -35,8 +35,16 @@ export function App() {
     try {
       const saved = localStorage.getItem(STORAGE_CUSTOM_SONGS);
       if (saved) {
-        const parsed = JSON.parse(saved);
-        return [...parsed, ...SAMPLE_SONGS];
+        const parsed: Song[] = JSON.parse(saved);
+        const cleaned = parsed.filter(
+          (s) =>
+            !s.content?.includes('Step in the room with the') &&
+            !s.content?.includes('Rüzgar eser yine')
+        );
+        if (cleaned.length !== parsed.length) {
+          localStorage.setItem(STORAGE_CUSTOM_SONGS, JSON.stringify(cleaned));
+        }
+        return [...cleaned, ...SAMPLE_SONGS];
       }
     } catch (e) {
       console.error(e);
