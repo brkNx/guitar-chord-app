@@ -174,46 +174,45 @@ Senden daha [Am]güzeeel  [B]
     id: 'haberin-yok-oluyorum',
     title: 'Haberin Yok Ölüyorum',
     artist: 'Duman',
-    key: 'Em',
-    capo: 2,
-    tempo: 108,
-    difficulty: 'Kolay',
-    tags: ['Türkçe Rock', 'Duman', 'Akustik'],
+    key: 'C#m',
+    capo: 0,
+    tempo: 115,
+    difficulty: 'Orta',
+    youtubeId: 'fgBihaM6va4',
+    tags: ['Türkçe Rock', 'Duman', 'Klasik'],
     content: `{title: Haberin Yok Ölüyorum}
 {artist: Duman}
-{key: Em}
-{capo: 2}
+{key: C#m}
+{tempo: 115}
 
 {c: Giriş}
-[Em]    [C]    [Am]    [B7]
-[Em]    [C]    [Am]    [B7]
+[C#m]    [B]    [C#m]    [B]
 
 {c: Kıta 1}
-[Em]Yürüyorum [C]dikenlerin üstünde
-[Am]Yaralıyam [B7]korların içinde
-[Em]Susuyorum [C]söylenecek çok şey var
-[Am]Sensiz geçen [B7]gecelerin içinde
-
-{c: Nakarat}
-[Em]Haberin yok [C]ben ölüyorum
-[Am]Yavaş yavaş [B7]eriyorum
-[Em]Haberin yok [C]ben ölüyorum
-[Am]Bile bile [B7]gidiyorum
+[C#m]Bakma bana öyle derin işim olmaz senle benim
+[C#m]Hiç bu kadar sevilmedin gözlerinden okuyorum
+[E]Haberin yok [G#m]ölüyorum [C#m]vay
 
 {c: Kıta 2}
-[Em]Bakıyorum [C]resmine her gece
-[Am]Ağlıyorum [B7]kendi halime
-[Em]Soruyorum [C]nerdesin şimdi sen
-[Am]Yanıyorum [B7]kendi derdime
+[C#m]Sorma bana nerelisin ne içersin ne giyersin
+[C#m]Derdim sana derman olsun ben gönülden okuyorum
+[E]Haberin yok [G#m]ölüyorum [C#m]vay
+
+{c: Kıta 3}
+[C#m]Azdı yine deli gönül üzerine geliyorum
+[C#m]Geçti yine boş bir ömür gözlerinden öpüyorum
+[E]Haberin yok [G#m]ölüyorum [C#m]vay
+[E]Haberin yok [G#m]ölüyorum [C#m]vay
 
 {c: Nakarat}
-[Em]Haberin yok [C]ben ölüyorum
-[Am]Yavaş yavaş [B7]eriyorum
-[Em]Haberin yok [C]ben ölüyorum
-[Am]Bile bile [B7]gidiyorum
+[F#m]Haberin yok [A]ben ölüyorum [C#m]sen gelirken
+[E]Ben [G#m]gidiyorum
+[F#m]Dermanım yok [A]ben ölüyorum [C#m]ayrılırken
+[E]Ben [G#m]içiyorum
+[F#m]Haberin yok [A]ben ölüyorum [C#m]...
 
 {c: Çıkış}
-[Em]    [C]    [Am]    [B7]    [Em]`
+[C#m]    [B]    [E]    [G#m]    [C#m]`
   },
   {
     id: 'gulpembe',
@@ -259,56 +258,60 @@ Senden daha [Am]güzeeel  [B]
     id: 'paramparca',
     title: 'Paramparça',
     artist: 'Teoman',
-    key: 'Am',
+    key: 'Bm',
     capo: 0,
-    tempo: 112,
+    tempo: 108,
     difficulty: 'Kolay',
-    tags: ['Rock', 'Teoman'],
+    youtubeId: '_nE8f6q8ZYA',
+    tags: ['Rock', 'Teoman', 'Klasik'],
     content: `{title: Paramparça}
 {artist: Teoman}
-{key: Am}
+{key: Bm}
+{tempo: 108}
 
 {c: Giriş}
-[Am]    [Dm]    [G]    [C]    [F]    [Dm]    [E]
+[Bm]    [Em]    [Bm]    [F#]    [Bm]
 
 {c: Kıta 1}
-[Am]Suç kimin [Dm]kime ne
-[G]Sözlerin [C]yalan mıydı yine
-[F]Cehennem [Dm]buz tutuncaya [E]dek
-[Am]Aşkımız [Dm]sürecek
-[G]Demiştin [C]bana bir gece
-[F]Şimdi [Dm]neredesin [E]söyle
-
-{c: Nakarat}
-[Am]Bugün benim [Dm]doğum günüm
-[G]Hem sarhoşum [C]hem yastayım
-[F]Bir bar taburesi [Dm]üstünde
-[E]Babamın öldüğü [Am]yaştayım
-[Am]Bugün benim [Dm]doğum günüm
-[G]Kelimeler [C]büyüyor ağzımda
-[F]Bildiğim tüm [Dm]hayatlar
-[E]Paramparça [Am]paramparça
+[Bm]Saatim yok tam olarak bilemem
+[Em]Biraz bira biraz şarap önceydi
+[Bm]Nasıl oluyor vakit bir türlü geçmezken
+[F#]Yıllar hayatlar [Bm]geçiyor
 
 {c: Kıta 2}
-[Am]Takvimlerden [Dm]habersiz
-[G]Saatler [C]durmuş sanki birden
-[F]Yalnızlık [Dm]eski bir dost [E]gibi
-[Am]Çalar [Dm]kapımı
-[G]Soğuk bir [C]kış gecesinde
-[F]Sensiz [Dm]kaldım [E]yine
+[Bm]Kayıp bir bavul gibiyim hava alanında
+[Em]Ya da boş bir yüzme havuzu son baharda
+[Bm]Çok mu ayıp hala mutluluk istemek
+[F#]Neyse zaten hiç [Bm]halim yok
 
 {c: Nakarat}
-[Am]Bugün benim [Dm]doğum günüm
-[G]Hem sarhoşum [C]hem yastayım
-[F]Bir bar taburesi [Dm]üstünde
-[E]Babamın öldüğü [Am]yaştayım
-[Am]Bugün benim [Dm]doğum günüm
-[G]Kelimeler [C]büyüyor ağzımda
-[F]Bildiğim tüm [Dm]hayatlar
-[E]Paramparça [Am]paramparça
+[Em]Bugün benim doğum günüm
+[Bm]Hem sarhoşum hem yastayım
+[F#]Bir bar taburesi üstünde
+[Bm]Babamın öldüğü yaştayım
+[Em]Bugün benim doğum günüm
+[Bm]Kelimeler büyüyor ağzımda
+[F#]Bildiğim tüm hayatlar
+[Bm]Paramparça [F#]aaa paramparça [Bm]
+
+{c: Kıta 3}
+[Bm]Takatım yok yine de telefona sarıldım
+[Em]Son bir özür için tüm sevdiğim kadınlardan
+[Bm]Aradım mesajlar çıktı kapattım
+[F#]Telesekretere konuşamayan[Bm]lardanım
+
+{c: Nakarat}
+[Em]Bugün benim doğum günüm
+[Bm]Hem sarhoşum hem yastayım
+[F#]Bir bar taburesi üstünde
+[Bm]Babamın öldüğü yaştayım
+[Em]Bugün benim doğum günüm
+[Bm]Kelimeler büyüyor ağzımda
+[F#]Bildiğim tüm hayatlar
+[Bm]Paramparça [F#]aaa paramparça [Bm]
 
 {c: Çıkış}
-[Am]    [Dm]    [G]    [C]    [F]    [Dm]    [E]    [Am]`
+[Bm]    [Em]    [Bm]    [F#]    [Bm]`
   },
   {
     id: 'knockin-on-heavens-door',
