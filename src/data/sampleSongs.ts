@@ -7,24 +7,23 @@ export const SAMPLE_SONGS: Song[] = [
     artist: 'Sufle',
     key: 'Bm',
     capo: 0,
-    tempo: 105,
+    tempo: 96,
     difficulty: 'Orta',
-    youtubeId: '9dQAWxxWTVI',
+    youtubeId: 'XgdUYLzsVcI',
     tags: ['Akustik', 'Sufle', 'Pop Rock', 'YouTube'],
-    content: `{title: Pus}
+    content: `{title: Pus (Kalacak Yüzün Var Mı)}
 {artist: Sufle}
 {key: Bm}
 {capo: 0}
-{tempo: 105}
+{tempo: 96}
 
-{c: Giriş / Intro}
+{c: Giriş / Akustik İntro}
 [Bm]    [D]    [G]    [Em] [F#]
 
-{c: Kıta 1}
+{c: Kıta}
 [Bm]Pus, dağılmaz mı yine [D]dağılmaz mı kuşlar
-[G]Gözümü kapattım [Em] [F#]
-[Bm]Ben gözümü kapattım ve [D]hep biter mi aşklar
-[G]Diye soramadım, ah [Em] [F#]
+[G]Gözümü kapattım ve hep biter mi aşklar
+[Em]Diye soramadım, [F#]ah
 
 {c: Nakarat}
 [Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
@@ -32,24 +31,10 @@ export const SAMPLE_SONGS: Song[] = [
 [Bm]Şimdi gidersen [D]diye diye tıkandım
 [G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
 [Bm]Sözlerine inanmıştım [D]başka gözlerde
-[G]Çok aramıştım seni [Em] [F#]
+[G]Çok aramıştım [Em]seni [F#]
 
-{c: Kıta 2}
-[Bm]Pus her yanımda yine [D]kalbinin içinde
-[G]Olmayı bıraktım [Em] [F#]
-[Bm]Ben gözümü kapattım ve [D]korkma söyle sevgilim
-[G]Ben neye bulaştım [Em] [F#]
-
-{c: Nakarat}
-[Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
-[G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
-[Bm]Şimdi gidersen [D]diye diye tıkandım
-[G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
-[Bm]Sözlerine inanmıştım [D]başka gözlerde
-[G]Çok aramıştım seni [Em] [F#]
-
-{c: Çıkış / Outro}
-[Bm]    [D]    [G]    [Em] [F#]    [Bm]`,
+{c: Çıkış / Bitiş}
+[Bm]    [D]    [G]    [Bm]`,
   },
   {
     id: 'akdeniz-aksamlari',

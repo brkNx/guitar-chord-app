@@ -13,6 +13,16 @@ interface ArtistProfile {
 }
 
 const ARTIST_PROFILES: Record<string, ArtistProfile> = {
+  'sufle': {
+    typicalKeys: ['Bm', 'Em'],
+    verseProgression: ['Bm', 'D', 'G', 'Em', 'F#'],
+    chorusProgression: ['Bm', 'D', 'G', 'Em', 'F#'],
+    bridgeProgression: ['Em', 'F#', 'Bm', 'G'],
+    capo: 0,
+    tempo: 96,
+    difficulty: 'Orta',
+    suggestedPattern: 'Akustik Balad (D - D - D U D U)'
+  },
   'duman': {
     typicalKeys: ['Em', 'Am'],
     verseProgression: ['Em', 'G', 'D', 'Am'],

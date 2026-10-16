@@ -106,12 +106,14 @@ export function App() {
     setTimeout(() => setToastMessage(null), 4000);
   };
 
-  const handleSelectChord = (chord: string) => {
+  const handleSelectChord = (chord: string, silent = false) => {
     setActiveChord(chord);
     setPositionIdx(0);
-    const def = getOrGenerateChord(chord);
-    if (def.positions[0]) {
-      guitarAudio.strumChord(def.positions[0], 'down', 22);
+    if (!silent) {
+      const def = getOrGenerateChord(chord);
+      if (def.positions[0]) {
+        guitarAudio.strumChord(def.positions[0], 'down', 22);
+      }
     }
   };
 

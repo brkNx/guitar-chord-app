@@ -9,7 +9,7 @@ import { Play, Pause, ChevronUp, ChevronDown, RotateCcw, X, Radio, Video, Volume
 interface SongViewerProps {
   song: Song;
   activeChord: string;
-  onSelectChord: (chord: string) => void;
+  onSelectChord: (chord: string, silent?: boolean) => void;
   onOpenChordDetail?: (chord: string) => void;
   transposeOffset: number;
   onTransposeChange: (offset: number) => void;
@@ -44,6 +44,7 @@ export const SongViewer = ({
   const lineRefs = useRef<Record<number, HTMLDivElement | null>>({});
   const onSelectChordRef = useRef(onSelectChord);
   onSelectChordRef.current = onSelectChord;
+  const isYouTubeMasterClock = useRef(false);
 
   const isAutoScrolling = externalAutoScroll !== undefined ? externalAutoScroll : internalAutoScroll;
   const toggleAutoScroll = () => {
@@ -86,6 +87,7 @@ export const SongViewer = ({
   // Reset playhead when song changes
   useEffect(() => {
     setPlayheadIdx(0);
+    isYouTubeMasterClock.current = false;
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTop = 0;
     }
@@ -100,15 +102,8 @@ export const SongViewer = ({
 
     const currentEv = chordEvents[playheadIdx] || chordEvents[0];
     if (currentEv) {
-      onSelectChordRef.current(currentEv.chord);
-
-      // Play audio strum with guitar synth if sound enabled
-      if (soundEnabled) {
-        const def = getOrGenerateChord(currentEv.chord);
-        if (def?.positions?.[0]) {
-          guitarAudio.strumChord(def.positions[0], 'down', 22);
-        }
-      }
+      // Pass !soundEnabled as silent flag so audio only strums ONCE cleanly via handleSelectChord
+      onSelectChordRef.current(currentEv.chord, !soundEnabled);
 
       const lineEl = lineRefs.current[currentEv.lineIdx];
       if (lineEl && scrollContainerRef.current) {
@@ -122,7 +117,10 @@ export const SongViewer = ({
       }
     }
 
-    const bpm = song.tempo || 100;
+    // If YouTube is playing and delivering master clock progress, let YouTube drive playheadIdx
+    if (isYouTubeMasterClock.current) return;
+
+    const bpm = song.tempo || 96;
     // 2 beats per chord segment at 1x speed (scrollSpeed = 25)
     const stepMs = Math.max(
       480,
@@ -149,12 +147,18 @@ export const SongViewer = ({
 
           // State synchronization (1 = playing, 2 = paused, 0 = ended)
           if (typeof playerState === 'number') {
-            if (playerState === 1 && !isAutoScrolling) {
-              if (onToggleAutoScroll) onToggleAutoScroll();
-              else setInternalAutoScroll(true);
-            } else if ((playerState === 2 || playerState === 0) && isAutoScrolling) {
-              if (onToggleAutoScroll) onToggleAutoScroll();
-              else setInternalAutoScroll(false);
+            if (playerState === 1) {
+              isYouTubeMasterClock.current = true;
+              if (!isAutoScrolling) {
+                if (onToggleAutoScroll) onToggleAutoScroll();
+                else setInternalAutoScroll(true);
+              }
+            } else if (playerState === 2 || playerState === 0) {
+              isYouTubeMasterClock.current = false;
+              if (isAutoScrolling) {
+                if (onToggleAutoScroll) onToggleAutoScroll();
+                else setInternalAutoScroll(false);
+              }
             }
           }
 
@@ -343,7 +347,7 @@ export const SongViewer = ({
           <div className="w-full max-w-lg aspect-video rounded overflow-hidden border border-[#1e222d] bg-black">
             <iframe
               ref={iframeRef}
-              src={`https://www.youtube.com/embed/${song.youtubeId}?autoplay=1&enablejsapi=1`}
+              src={`https://www.youtube.com/embed/${song.youtubeId}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
               title={song.title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               referrerPolicy="strict-origin-when-cross-origin"
