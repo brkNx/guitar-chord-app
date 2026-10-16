@@ -214,12 +214,12 @@ export function GuitarModel({
         );
         turntableRef.current.rotation.z = THREE.MathUtils.damp(
           turntableRef.current.rotation.z,
-          -0.2,
+          -0.14,
           6,
           dt
         );
         if (!userInteracting) {
-          const targetY = Math.sin(state.clock.elapsedTime * 0.35) * 0.24 - 0.22;
+          const targetY = Math.sin(state.clock.elapsedTime * 0.25) * 0.14 - 0.08;
           turntableRef.current.rotation.y = THREE.MathUtils.damp(
             turntableRef.current.rotation.y,
             targetY,

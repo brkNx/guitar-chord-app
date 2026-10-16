@@ -74,6 +74,9 @@ export function App() {
   // Left column tab: 'theory' | 'setlist' | 'scales'
   const [leftTab, setLeftTab] = useState<'theory' | 'setlist' | 'scales'>('theory');
 
+  // Mobile studio view tab: 'stage' | 'lyrics' | 'theory'
+  const [mobileTab, setMobileTab] = useState<'stage' | 'lyrics' | 'theory'>('stage');
+
   // Search, custom & chord modals
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isCustomOpen, setIsCustomOpen] = useState(false);
@@ -227,20 +230,23 @@ export function App() {
   return (
     <div className="w-screen h-screen overflow-hidden bg-[#090a0f] text-slate-100 flex flex-col font-sans select-none studio-layout">
       {/* 1. 21st.dev / SOUNDSLICE 52px HARDWARE MASTER TRANSPORT BAR */}
-      <header className="h-[52px] bg-[#08090d]/85 backdrop-blur-xl px-4 flex items-center justify-between gap-2 z-40 select-none shrink-0 border-b border-white/[0.08]">
+      <header className="h-[52px] bg-[#08090d]/85 backdrop-blur-xl px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-2 z-40 select-none shrink-0 border-b border-white/[0.08]">
         {/* Left: Studio Branding & WebAudio Status */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-white/[0.03] border border-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b]" />
             <span className="font-mono text-xs font-bold tracking-tight text-white">
-              MOISES // SOUNDSLICE
+              MOISES
+            </span>
+            <span className="hidden sm:inline font-mono text-xs font-bold tracking-tight text-white/90">
+              // SOUNDSLICE
             </span>
             <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
               PRO
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full bg-white/[0.02] border border-white/[0.06]">
+          <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono text-slate-400 px-2 py-0.5 rounded-full bg-white/[0.02] border border-white/[0.06]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -250,11 +256,11 @@ export function App() {
         </div>
 
         {/* Center: Hardware Controls (Play, Metronome, Transpose, Capo, Tuning, Handedness) */}
-        <div className="flex items-center gap-2 font-mono text-xs">
+        <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-xs shrink-0">
           {/* Global Play / Autoscroll Button */}
           <button
             onClick={() => setIsAutoScrolling(!isAutoScrolling)}
-            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all cursor-pointer font-bold active:scale-95 shadow-sm ${
+            className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full transition-all cursor-pointer font-bold active:scale-95 shadow-sm ${
               isAutoScrolling
                 ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
                 : 'bg-white/[0.04] text-slate-200 hover:text-white border border-white/[0.08] hover:border-amber-500/40'
@@ -262,14 +268,14 @@ export function App() {
             title="Auto-scroll ve canlı ritim oynat"
           >
             {isAutoScrolling ? <Pause className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current ml-0.5" />}
-            <span>{isAutoScrolling ? 'PAUSE' : 'PLAY'}</span>
+            <span className="hidden xs:inline">{isAutoScrolling ? 'PAUSE' : 'PLAY'}</span>
           </button>
 
           {/* Soundslice Hardware Metronome Module */}
           <Metronome initialBpm={currentSong.tempo || 100} />
 
           {/* Transpose Steppers */}
-          <div className="hidden md:flex items-center bg-[#0e1017] border border-white/[0.08] rounded-full px-2 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="hidden sm:flex items-center bg-[#0e1017] border border-white/[0.08] rounded-full px-2 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-[10px] text-slate-500 mr-1">TRP:</span>
             <button
               onClick={() => setTransposeOffset(transposeOffset - 1)}
@@ -291,7 +297,7 @@ export function App() {
           </div>
 
           {/* Master Tuning Selector */}
-          <div className="hidden lg:flex items-center gap-1 bg-[#0e1017] border border-white/[0.08] px-2.5 py-1 rounded-full shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="hidden md:flex items-center gap-1 bg-[#0e1017] border border-white/[0.08] px-2.5 py-1 rounded-full shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <span className="text-[10px] text-slate-500">TUNING:</span>
             <select
               value={selectedTuningId}
@@ -322,7 +328,7 @@ export function App() {
           {/* Left-Handed Toggle */}
           <button
             onClick={() => setIsLeftHanded(!isLeftHanded)}
-            className={`px-2.5 py-1 rounded-full border text-[10px] font-mono transition-all active:scale-95 cursor-pointer ${
+            className={`hidden sm:block px-2.5 py-1 rounded-full border text-[10px] font-mono transition-all active:scale-95 cursor-pointer ${
               isLeftHanded
                 ? 'bg-amber-500/20 text-amber-400 border-amber-500/50'
                 : 'bg-[#0e1017] text-slate-400 border-white/[0.08] hover:text-white'
@@ -334,43 +340,43 @@ export function App() {
         </div>
 
         {/* Right: Cmd+K Quick Search, Chords Dictionary & Add Song */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <button
             onClick={() => setIsDictionaryOpen(true)}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 h-8 px-2 sm:px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
             title="Akor Kütüphanesi & Sözlük"
           >
             <BookOpen className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">AKORLAR</span>
+            <span className="hidden md:inline">AKORLAR</span>
           </button>
 
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 h-8 px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
+            className="flex items-center gap-1.5 h-8 px-2.5 sm:px-3 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] hover:border-amber-500/40 text-xs font-medium text-slate-200 transition-all cursor-pointer active:scale-95"
             title="Şarkı Ara (Cmd+K)"
           >
             <Search className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">ŞARKI ARA</span>
-            <kbd className="hidden sm:inline px-1.5 py-0.2 bg-black/40 border border-white/[0.08] rounded text-[9px] text-slate-400">
+            <kbd className="hidden lg:inline px-1.5 py-0.2 bg-black/40 border border-white/[0.08] rounded text-[9px] text-slate-400">
               ⌘K
             </kbd>
           </button>
 
           <button
             onClick={() => setIsCustomOpen(true)}
-            className="flex items-center gap-1 h-8 px-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
+            className="flex items-center justify-center w-8 h-8 sm:w-auto sm:px-3.5 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold transition-all cursor-pointer shadow-md shadow-amber-500/20 active:scale-95"
             title="Yeni Şarkı Ekle"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">EKLE</span>
+            <span className="hidden md:inline ml-1">EKLE</span>
           </button>
         </div>
       </header>
 
-      {/* 2. MOISES 3-COLUMN STUDIO GRID WORKSPACE */}
+      {/* 2. MOISES 3-COLUMN STUDIO GRID WORKSPACE (Desktop) / TABBED VIEW (Mobile) */}
       <div className="flex-1 studio-grid h-[calc(100vh-52px)] overflow-hidden">
         {/* SOL SÜTUN (260px): KÜTÜPHANE & TEORİ PANELİ */}
-        <aside className="w-full h-full flex flex-col bg-[#0b0d13] border-r border-white/[0.08] overflow-hidden select-none">
+        <aside className={`${mobileTab === 'theory' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#0b0d13] border-r border-white/[0.08] overflow-hidden select-none`}>
           {/* Navigation Tabs */}
           <div className="p-2 border-b border-white/[0.08] bg-[#08090d]">
             <div className="p-1 bg-[#10121a] border border-white/[0.06] rounded-xl grid grid-cols-3 gap-1 font-mono text-[10px]">
@@ -662,7 +668,7 @@ export function App() {
         </aside>
 
         {/* ORTA SÜTUN (1fr): 3D AKUSTİK GİTAR & KLAVYE STÜDYO SAHNESİ */}
-        <main className="h-full flex flex-col bg-[#090a0f] overflow-hidden min-w-0">
+        <main className={`${mobileTab === 'stage' ? 'flex' : 'hidden'} lg:flex h-full flex-col bg-[#090a0f] overflow-hidden min-w-0`}>
           <GuitarStage
             chordName={activeChord}
             position={currentPosition}
@@ -683,7 +689,7 @@ export function App() {
         </main>
 
         {/* SAĞ SÜTUN: MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
-        <aside className="w-full h-full flex flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0 p-2 gap-2">
+        <aside className={`${mobileTab === 'lyrics' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#11131a] border-l border-white/10 overflow-hidden min-w-0 p-2 gap-2`}>
           <SongViewer
             song={currentSong}
             activeChord={activeChord}
@@ -695,6 +701,45 @@ export function App() {
           />
         </aside>
       </div>
+
+      {/* 3. MOBILE STUDIO FLOATING DOCK (< 1024px) */}
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 h-[58px] z-40 bg-[#08090d]/95 backdrop-blur-2xl border-t border-white/[0.08] px-3 flex items-center justify-around gap-2 shadow-[0_-8px_32px_rgba(0,0,0,0.8)]">
+        <button
+          onClick={() => setMobileTab('stage')}
+          className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+            mobileTab === 'stage'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.04]'
+          }`}
+        >
+          <span className="text-sm">🎸</span>
+          <span className="truncate">3D / KLAVYE</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('lyrics')}
+          className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+            mobileTab === 'lyrics'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.04]'
+          }`}
+        >
+          <span className="text-sm">📝</span>
+          <span className="truncate">SÖZLER</span>
+        </button>
+
+        <button
+          onClick={() => setMobileTab('theory')}
+          className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
+            mobileTab === 'theory'
+              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
+              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.04]'
+          }`}
+        >
+          <span className="text-sm">📚</span>
+          <span className="truncate">TEORİ</span>
+        </button>
+      </nav>
 
       {/* QUICK SEARCH & CUSTOM SONG MODALS */}
       <SongSearchModal

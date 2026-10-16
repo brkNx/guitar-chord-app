@@ -323,6 +323,7 @@ export const CHORD_LIBRARY: Record<string, ChordDefinition> = {
     root: 'E',
     suffix: 'm7',
     positions: [
+      { frets: [0, 2, 2, 0, 3, 3], fingers: [0, 1, 2, 0, 3, 4], baseFret: 1 },
       { frets: [0, 2, 0, 0, 0, 0], fingers: [0, 1, 0, 0, 0, 0], baseFret: 1 },
       { frets: [0, 2, 2, 0, 3, 0], fingers: [0, 1, 2, 0, 3, 0], baseFret: 1 }
     ]

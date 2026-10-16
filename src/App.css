@@ -4,17 +4,19 @@
   grid-template-rows: 52px 1fr;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
-  background-color: #090a0f;
+  background-color: #08090d;
 }
 
 .studio-grid {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 390px;
   height: calc(100vh - 52px);
+  height: calc(100dvh - 52px);
   width: 100vw;
   overflow: hidden;
-  background-color: #090a0f;
+  background-color: #08090d;
 }
 
 @media (max-width: 1280px) {
@@ -23,16 +25,29 @@
   }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1023px) {
   .studio-grid {
-    grid-template-columns: 220px minmax(0, 1fr) 340px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 52px - 58px);
+    width: 100vw;
+    overflow: hidden;
   }
 }
 
-@media (max-width: 860px) {
-  .studio-grid {
-    grid-template-columns: 1fr;
-    overflow-y: auto;
-    height: auto;
-  }
+/* Custom Studio Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(245, 158, 11, 0.35);
+}
+

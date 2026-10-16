@@ -81,7 +81,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       </button>
 
       {/* 4 Precision LED Beat Indicators */}
-      <div className="flex items-center gap-1 px-1">
+      <div className="hidden sm:flex items-center gap-1 px-1">
         {[1, 2, 3, 4].map((b) => {
           const isActive = beat === b;
           return (
@@ -127,7 +127,7 @@ export const Metronome = ({ onBpmChange, initialBpm = 100 }: MetronomeProps) => 
       {/* Tap Tempo Button */}
       <button
         onClick={handleTapTempo}
-        className="px-2 py-0.5 bg-[#181c28] hover:bg-[#202536] border border-white/[0.08] hover:border-amber-500/40 rounded-full text-[10px] font-mono text-slate-300 hover:text-amber-400 transition-all cursor-pointer active:scale-95"
+        className="hidden sm:block px-2 py-0.5 bg-[#181c28] hover:bg-[#202536] border border-white/[0.08] hover:border-amber-500/40 rounded-full text-[10px] font-mono text-slate-300 hover:text-amber-400 transition-all cursor-pointer active:scale-95"
         title="Ritmik tıklayarak BPM yakala"
       >
         TAP

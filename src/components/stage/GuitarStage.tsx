@@ -32,14 +32,14 @@ interface GuitarStageProps {
 
 export type CamPreset = 'overview' | 'front' | 'pov' | 'neck';
 
-const OVERVIEW_CAM_POS = new THREE.Vector3(0.24, 0.04, 1.82);
-const OVERVIEW_TARGET = new THREE.Vector3(0, -0.02, 0);
+const OVERVIEW_CAM_POS = new THREE.Vector3(0.18, 0.05, 1.84);
+const OVERVIEW_TARGET = new THREE.Vector3(0, -0.01, 0);
 
-const FRONT_CAM_POS = new THREE.Vector3(0.02, 0.04, 1.72);
+const FRONT_CAM_POS = new THREE.Vector3(0.01, 0.03, 1.74);
 const FRONT_TARGET = new THREE.Vector3(0, 0, 0);
 
-const POV_CAM_POS = new THREE.Vector3(-0.48, 0.78, 1.05);
-const POV_TARGET = new THREE.Vector3(-0.15, -0.05, 0.05);
+const POV_CAM_POS = new THREE.Vector3(-0.46, 0.74, 1.08);
+const POV_TARGET = new THREE.Vector3(-0.14, -0.04, 0.06);
 
 const NECK_WORLD_Y = NECK_FOCUS_Y - MODEL_CENTER_Y;
 const NECK_CAM_POS = new THREE.Vector3(-NECK_WORLD_Y - 0.035, -0.09, 0.64);
@@ -217,7 +217,7 @@ export function GuitarStage({
         className="relative flex-1 min-h-0 w-full overflow-hidden"
         style={{
           background:
-            'radial-gradient(ellipse 70% 60% at 50% 50%, #161924 0%, #11131a 80%)',
+            'radial-gradient(ellipse 75% 70% at 50% 48%, #1c2234 0%, #10121a 55%, #07080c 100%)',
         }}
       >
         {/* TOP-LEFT HUD: ACTIVE CHORD TELEMETRY BADGE */}
@@ -314,59 +314,100 @@ export function GuitarStage({
             position: initialNeck
               ? [NECK_CAM_POS.x, NECK_CAM_POS.y, NECK_CAM_POS.z]
               : [OVERVIEW_CAM_POS.x, OVERVIEW_CAM_POS.y, OVERVIEW_CAM_POS.z],
-            fov: 34,
+            fov: 32,
             near: 0.04,
             far: 20,
           }}
           gl={{
             antialias: true,
             toneMapping: THREE.ACESFilmicToneMapping,
-            toneMappingExposure: 1.15,
+            toneMappingExposure: 1.0,
           }}
         >
           <Suspense fallback={null}>
-            {/* Studio Lighting & Reflections (Zero Network Dependencies) */}
-            <ambientLight intensity={0.45} />
+            {/* Studio 3-Point Master Lighting with Warm Key and Crisp Rim Kicker */}
+            <ambientLight intensity={0.25} color="#181c28" />
+
+            {/* Warm Key Studio Spotlight (front-right) */}
             <directionalLight
-              position={[1.8, 2.2, 2.4]}
-              intensity={2.4}
-              color="#fff6e5"
+              position={[2.4, 3.0, 2.8]}
+              intensity={1.6}
+              color="#fff8ed"
               castShadow
-              shadow-mapSize-width={1024}
-              shadow-mapSize-height={1024}
-            />
-            <directionalLight position={[-2.0, 1.0, 1.2]} intensity={1.1} color="#93c5fd" />
-            <spotLight
-              position={[0.2, 1.8, -1.6]}
-              intensity={1.8}
-              angle={0.6}
-              penumbra={0.8}
-              color="#fbbf24"
+              shadow-mapSize-width={2048}
+              shadow-mapSize-height={2048}
+              shadow-bias={-0.0001}
             />
 
+            {/* Cool Daylight Fill Light (left) */}
+            <directionalLight
+              position={[-2.8, 1.4, 2.0]}
+              intensity={0.7}
+              color="#a5c4e8"
+            />
+
+            {/* Golden Rim Spotlight (high-rear backlight creating acoustic silhouette) */}
+            <spotLight
+              position={[0.2, 3.8, -2.4]}
+              intensity={2.2}
+              angle={0.65}
+              penumbra={0.85}
+              color="#f59e0b"
+            />
+
+            {/* Warm Lower Bounce Light */}
+            <pointLight
+              position={[0, -2.2, 1.2]}
+              intensity={0.4}
+              color="#92400e"
+              distance={3.5}
+            />
+
+            {/* Backdrop Glow Point behind soundboard */}
+            <pointLight
+              position={[0, -0.05, -0.8]}
+              intensity={0.7}
+              color="#d97706"
+              distance={3.0}
+              decay={2}
+            />
+
+            {/* Studio Environment Reflections & Specular Highlights */}
             <Environment resolution={256} frames={1}>
+              {/* Overhead softbox light bank */}
               <Lightformer
                 form="rect"
-                intensity={2.8}
-                color="#fff3db"
-                position={[2.5, 1.5, 2]}
-                scale={[3, 6, 1]}
+                intensity={1.5}
+                color="#fffaf0"
+                position={[0, 5, 2]}
+                scale={[6, 10, 1]}
                 target={[0, 0, 0]}
               />
+              {/* Warm key strip light */}
               <Lightformer
                 form="rect"
                 intensity={1.6}
-                color="#cbd5e1"
-                position={[-3, 1, 1.5]}
-                scale={[2.5, 5, 1]}
+                color="#fed7aa"
+                position={[3.5, 2, 2.5]}
+                scale={[1.8, 9, 1]}
                 target={[0, 0, 0]}
               />
+              {/* Cool fill strip light */}
+              <Lightformer
+                form="rect"
+                intensity={0.9}
+                color="#bfdbfe"
+                position={[-4, 1.5, 2]}
+                scale={[1.8, 8, 1]}
+                target={[0, 0, 0]}
+              />
+              {/* Golden rim ring */}
               <Lightformer
                 form="ring"
-                intensity={1.2}
+                intensity={1.8}
                 color="#f59e0b"
-                position={[0, 3, -2]}
-                scale={3}
+                position={[0, 2.5, -3.2]}
+                scale={4.5}
                 target={[0, 0, 0]}
               />
             </Environment>
@@ -384,12 +425,18 @@ export function GuitarStage({
             />
 
             <ContactShadows
-              position={[0, -0.55, 0]}
-              opacity={0.65}
-              scale={1.5}
-              blur={2.4}
-              far={1.2}
+              position={[0, -0.54, 0]}
+              opacity={0.85}
+              scale={2.2}
+              blur={1.6}
+              far={1.4}
+              color="#04060a"
             />
+            {/* Subtle soft studio pedestal floor glow */}
+            <mesh position={[0, -0.542, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <circleGeometry args={[0.85, 32]} />
+              <meshBasicMaterial color="#0c0f18" transparent opacity={0.5} />
+            </mesh>
 
             <CameraRig
               stageMode={stageMode}
@@ -402,11 +449,11 @@ export function GuitarStage({
         {/* BOTTOM-CENTER INTERACTIVE HINT IN OVERVIEW MODE */}
         {stageMode === 'overview' && (
           <div className="
-            absolute bottom-3 left-1/2 -translate-x-1/2 z-10
+            absolute bottom-4 left-1/2 -translate-x-1/2 z-10
             max-w-[calc(100%-24px)] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full
-            bg-[#191c26]/90 border border-white/10 backdrop-blur-md
-            font-mono text-[10px] text-slate-300 shadow-xl pointer-events-none
-            whitespace-nowrap overflow-hidden
+            bg-[#0d1017]/90 border border-white/10 backdrop-blur-xl
+            font-mono text-[10px] text-slate-300 shadow-[0_8px_30px_rgba(0,0,0,0.6)] pointer-events-none
+            whitespace-nowrap overflow-hidden transition-all
           ">
             <span
               className={
