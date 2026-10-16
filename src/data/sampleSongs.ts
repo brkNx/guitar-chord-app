@@ -32,8 +32,8 @@ export const SAMPLE_SONGS: Song[] = [
       { time: 38.5, chord: 'G' },  // "Kalacak kalacak"
       { time: 43.5, chord: 'Em' }, // "kalacak yüzün"
       { time: 46.5, chord: 'F#' }, // "var mı"
-      { time: 51.5, chord: 'Bm' }, // "Şimdi gidersen"
-      { time: 56.8, chord: 'D' },  // "diye diye tıkandım"
+      { time: 51.5, chord: 'Bm' }, // "Ah bir bilsen"
+      { time: 56.8, chord: 'D' },  // "nasıl kapıldım"
       { time: 62.2, chord: 'G' },  // "Arkama baktım sevgilim"
       { time: 67.5, chord: 'Em' }, // "nerde kaldın"
       { time: 70.5, chord: 'F#' }, // "nerde kaldın (ara)"
@@ -66,7 +66,7 @@ export const SAMPLE_SONGS: Song[] = [
 {c: Nakarat}
 [Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
 [G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
-[Bm]Şimdi gidersen [D]diye diye tıkandım
+[Bm]Ah bir bilsen [D]nasıl kapıldım
 [G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
 [Bm]Sözlerine inanmıştım [D]başka gözlerde
 [G]Çok aramıştım [Em]seni [F#]

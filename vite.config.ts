@@ -687,7 +687,7 @@ async function resolveSongLyricsServer(
 {c: Nakarat}
 [Bm]Diyecek sözün var mı, [D]kapıda gözün var mı
 [G]Kalacak kalacak [Em]kalacak yüzün [F#]var mı
-[Bm]Şimdi gidersen [D]diye diye tıkandım
+[Bm]Ah bir bilsen [D]nasıl kapıldım
 [G]Arkama baktım sevgilim [Em]nerde kaldın [F#]
 [Bm]Sözlerine inanmıştım [D]başka gözlerde
 [G]Çok aramıştım [Em]seni [F#]
