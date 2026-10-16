@@ -44,9 +44,9 @@ export function autoCorrelate(
     return { freq: -1, clarity: 0, rms };
   }
 
-  // 2. Define search range for guitar frequencies: 60 Hz (Drop D / Low B) to 480 Hz (High E)
-  const minFreq = 60;
-  const maxFreq = 480;
+  // 2. Define search range for guitar frequencies: 50 Hz (Drop A / Drop C) to 700 Hz (High E / harmonics)
+  const minFreq = 50;
+  const maxFreq = 700;
   const minPeriod = Math.floor(sampleRate / maxFreq);
   const maxPeriod = Math.ceil(sampleRate / minFreq);
 
@@ -90,10 +90,11 @@ export function autoCorrelate(
   }
 
   // 4. McLeod Pitch Method (MPM) Peak Picking:
-  // Find local maxima and select the FIRST peak that reaches at least 85% of globalMax.
+  // Find local maxima and select the FIRST peak that reaches at least 90% of globalMax.
   // This fundamental peak picking rule reliably prevents octave halving (subharmonic lock)
-  // on strings with strong 2nd/3rd harmonics (such as D3, B3, E4).
-  const peakThreshold = Math.max(clarityThreshold * 0.85, globalMax * 0.85);
+  // on strings with strong 2nd/3rd harmonics (such as D3, B3, E4) while avoiding false
+  // 2nd-harmonic locks on low strings.
+  const peakThreshold = Math.max(clarityThreshold * 0.90, globalMax * 0.90);
   let chosenPeriod = -1;
 
   for (let period = minPeriod; period <= maxPeriod; period++) {

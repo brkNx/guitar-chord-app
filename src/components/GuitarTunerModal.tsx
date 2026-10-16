@@ -18,12 +18,14 @@ interface GuitarTunerModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialTuningId?: string;
+  onTuningChange?: (tuningId: string) => void;
 }
 
 export const GuitarTunerModal = ({
   isOpen,
   onClose,
-  initialTuningId = 'standard'
+  initialTuningId = 'standard',
+  onTuningChange
 }: GuitarTunerModalProps) => {
   const [selectedTuningId, setSelectedTuningId] = useState<string>(initialTuningId);
   const [mode, setMode] = useState<'auto' | 'manual'>('auto');
@@ -48,23 +50,36 @@ export const GuitarTunerModal = ({
     }));
   }, [activeTuning]);
 
+  // Persistent refs to eliminate tearing down mic stream on state changes
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+
+  const selectedStringIdxRef = useRef(selectedStringIdx);
+  selectedStringIdxRef.current = selectedStringIdx;
+
+  const stringTargetsRef = useRef(stringTargets);
+  stringTargetsRef.current = stringTargets;
+
+  const onTuningChangeRef = useRef(onTuningChange);
+  onTuningChangeRef.current = onTuningChange;
+
   const audioStreamRef = useRef<MediaStream | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number | null>(null);
   const inTuneTimerRef = useRef<number | null>(null);
+  const lastDetectTimeRef = useRef<number>(0);
 
-  // Sync with initialTuningId if opened
-  useEffect(() => {
-    if (isOpen) {
-      setSelectedTuningId(initialTuningId);
-    }
-  }, [isOpen, initialTuningId]);
+  // Handle tuning change from dropdown
+  const handleTuningSelect = (tuningId: string) => {
+    setSelectedTuningId(tuningId);
+    onTuningChangeRef.current?.(tuningId);
+  };
 
   // Play string Karplus-Strong sample when clicked or selected
   const handlePluckString = (stringIdx: number) => {
     setSelectedStringIdx(stringIdx);
-    const target = stringTargets[stringIdx];
+    const target = stringTargetsRef.current[stringIdx];
     if (target) {
       guitarAudio.pluckFrequency(target.frequency, 0.95);
     }
@@ -87,6 +102,9 @@ export const GuitarTunerModal = ({
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
       const ctx = new AudioContextClass();
+      if (ctx.state === 'suspended') {
+        await ctx.resume();
+      }
       audioContextRef.current = ctx;
 
       const source = ctx.createMediaStreamSource(stream);
@@ -102,30 +120,40 @@ export const GuitarTunerModal = ({
       const detectLoop = () => {
         if (!analyserRef.current || !audioContextRef.current) return;
 
-        analyserRef.current.getFloatTimeDomainData(buffer);
+        const now = performance.now();
+        // Throttle pitch detection to ~28-30 Hz (every 35ms) to prevent UI thread starvation alongside 3D Three.js
+        if (now - lastDetectTimeRef.current >= 35) {
+          lastDetectTimeRef.current = now;
 
-        const { freq, clarity, rms } = autoCorrelate(buffer, audioContextRef.current.sampleRate, 0.84);
-        setAudioLevel(Math.min(1, rms * 15));
+          analyserRef.current.getFloatTimeDomainData(buffer);
 
-        if (freq > 0 && clarity > 0.8) {
-          const result = matchTuningTarget(
-            freq,
-            stringTargets,
-            mode === 'manual' ? selectedStringIdx : undefined
-          );
+          const { freq, clarity, rms } = autoCorrelate(buffer, audioContextRef.current.sampleRate, 0.84);
+          setAudioLevel(Math.min(1, rms * 15));
 
-          if (result) {
-            setPitchData(result);
-            if (mode === 'auto') {
-              setSelectedStringIdx(result.stringIdx);
-            }
+          if (freq > 0 && clarity > 0.8) {
+            const currentTargets = stringTargetsRef.current;
+            const currentMode = modeRef.current;
+            const currentSelectedIdx = selectedStringIdxRef.current;
 
-            if (result.inTune) {
-              setInTuneHold(true);
-              if (inTuneTimerRef.current) window.clearTimeout(inTuneTimerRef.current);
-              inTuneTimerRef.current = window.setTimeout(() => {
-                setInTuneHold(false);
-              }, 1200);
+            const result = matchTuningTarget(
+              freq,
+              currentTargets,
+              currentMode === 'manual' ? currentSelectedIdx : undefined
+            );
+
+            if (result) {
+              setPitchData(result);
+              if (currentMode === 'auto') {
+                setSelectedStringIdx(result.stringIdx);
+              }
+
+              if (result.inTune) {
+                setInTuneHold(true);
+                if (inTuneTimerRef.current) window.clearTimeout(inTuneTimerRef.current);
+                inTuneTimerRef.current = window.setTimeout(() => {
+                  setInTuneHold(false);
+                }, 1200);
+              }
             }
           }
         }
@@ -164,7 +192,7 @@ export const GuitarTunerModal = ({
     setInTuneHold(false);
   };
 
-  // Automatically start listening when modal opens, stop on close
+  // Only start listening when modal is open; never tear down on tuning or string selection changes!
   useEffect(() => {
     if (isOpen) {
       startListening();
@@ -174,7 +202,20 @@ export const GuitarTunerModal = ({
     return () => {
       stopListening();
     };
-  }, [isOpen, selectedTuningId, mode, selectedStringIdx]);
+  }, [isOpen]);
+
+  // Keyboard shortcut: ESC to close
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -186,8 +227,14 @@ export const GuitarTunerModal = ({
   const needleAngle = Math.max(-45, Math.min(45, (deviation / 50) * 45));
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 select-none">
-      <div className="w-full max-w-3xl bg-[#0a0c12] border border-white/10 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col font-sans">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 select-none cursor-pointer"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-3xl bg-[#0a0c12] border border-white/10 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col font-sans cursor-default"
+      >
         {/* TOP COCKPIT HEADER */}
         <div className="px-4 sm:px-6 py-3.5 border-b border-white/[0.08] bg-[#07080d] flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -215,7 +262,7 @@ export const GuitarTunerModal = ({
               <Sliders className="w-3.5 h-3.5 text-amber-400" />
               <select
                 value={selectedTuningId}
-                onChange={(e) => setSelectedTuningId(e.target.value)}
+                onChange={(e) => handleTuningSelect(e.target.value)}
                 className="bg-transparent text-xs font-mono font-bold text-amber-400 focus:outline-none cursor-pointer"
               >
                 {GUITAR_TUNINGS.map((t) => (
@@ -437,16 +484,27 @@ export const GuitarTunerModal = ({
               </div>
             </div>
 
-            {/* Audio Signal Level Bar */}
+            {/* Audio Signal Level Bar & Mic Toggle */}
             <div className="w-full flex items-center gap-2 mt-3 font-mono text-[10px] text-slate-400">
-              <span className="shrink-0 flex items-center gap-1">
+              <button
+                onClick={() => {
+                  if (isListening) stopListening();
+                  else startListening();
+                }}
+                className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border transition-all cursor-pointer ${
+                  isListening
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25'
+                    : 'bg-white/5 border-white/10 text-slate-400 hover:text-white'
+                }`}
+                title={isListening ? 'Mikrofonu Durdur' : 'Mikrofonu Başlat'}
+              >
                 {isListening ? (
                   <Mic className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                 ) : (
                   <MicOff className="w-3.5 h-3.5 text-slate-500" />
                 )}
-                SİNYAL:
-              </span>
+                <span>{isListening ? 'DİNLİYOR' : 'DURAKLATILDI'}</span>
+              </button>
               <div className="flex-1 h-2 bg-[#08090e] rounded-full overflow-hidden border border-white/5 p-0.5">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-emerald-500 via-amber-500 to-rose-500 transition-all duration-75"
@@ -566,8 +624,14 @@ export const GuitarTunerModal = ({
 
             {/* Error Message if Mic not permitted */}
             {micError && (
-              <div className="mt-3 p-2 bg-rose-500/15 border border-rose-500/30 rounded-xl text-[10px] font-mono text-rose-300 text-center leading-snug">
-                {micError}
+              <div className="mt-3 p-2.5 bg-rose-500/15 border border-rose-500/30 rounded-xl text-[10px] font-mono text-rose-300 text-center leading-snug flex flex-col items-center gap-1.5">
+                <span>{micError}</span>
+                <button
+                  onClick={startListening}
+                  className="px-3 py-1 bg-rose-500/30 hover:bg-rose-500/40 text-white rounded-lg font-bold transition-all cursor-pointer"
+                >
+                  YENİDEN DENE
+                </button>
               </div>
             )}
 

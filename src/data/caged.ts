@@ -103,15 +103,11 @@ export function getCagedBoxFretRange(
 
   // Normalize into standard 0..14 guitar display range
   let minFret = baseFret;
-  if (minFret > 12) minFret -= 12;
+  if (minFret >= 12) minFret -= 12;
   if (minFret < 0) minFret += 12;
 
-  let maxFret = minFret + 3;
-  if (boxNumber === 1 || boxNumber === 3) {
-    maxFret = minFret + 3;
-  } else {
-    maxFret = minFret + 4;
-  }
+  let maxFret = minFret + (boxNumber === 1 || boxNumber === 3 ? 3 : 4);
+  if (maxFret > 14) maxFret = 14;
 
   return {
     minFret,

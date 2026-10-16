@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import type { ChordPosition, FretboardDisplayMode, FretboardViewMode } from '../types/guitar';
 import { getNoteAtFret } from '../data/chordLibrary';
-import { getChordTheoryDetails } from '../utils/chordTheory';
+import { getChordTheoryDetails, getOolimoStyle } from '../utils/chordTheory';
 import { GUITAR_SCALES, getScaleNoteInfo, extractRootNote } from '../data/scales';
 import { CAGED_BOXES, getCagedBoxFretRange, getFretShapesIntervalStyle } from '../data/caged';
 import { guitarAudio } from '../audio/guitarAudio';
@@ -26,20 +26,6 @@ interface FretboardProps {
   scaleRoot?: string;
   cagedBox?: number; // 0 = all, 1..5 = box 1..5
   onCagedBoxChange?: (box: number) => void;
-}
-
-// FretMap & Chorducate High-Contrast Color Coding for Chord Degrees
-export function getOolimoStyle(degree: string, isRoot: boolean): { fill: string; text: string; stroke: string } {
-  if (isRoot || degree === '1' || degree === 'R') {
-    // Root Note: High-Contrast Amber (#F59E0B)
-    return { fill: '#f59e0b', text: '#090a0f', stroke: '#fbbf24' };
-  }
-  if (degree === '3' || degree === 'b3' || degree === '2' || degree === '4' || degree === '5' || degree === 'b5' || degree === '#5') {
-    // Chord Tones (3rds & 5ths): High-Contrast Sky Blue (#38BDF8)
-    return { fill: '#38bdf8', text: '#090a0f', stroke: '#7dd3fc' };
-  }
-  // 7ths, Extensions & Scale Tones: Signal Emerald Green (#10B981)
-  return { fill: '#10b981', text: '#090a0f', stroke: '#34d399' };
 }
 
 export const Fretboard = ({
@@ -728,11 +714,13 @@ export const Fretboard = ({
                       if (scaleInfo.inScale) {
                         const style = getFretShapesIntervalStyle(scaleInfo.degreeName || '1');
                         const isPlucked = activeNote?.stringIdx === strIdx && activeNote?.fret === 0;
+                        const isInBox = cagedBox === 0 || boxRange.minFret === 0;
 
                         return (
                           <g
                             className="cursor-pointer"
                             onClick={() => handleStringClick(strIdx, 0)}
+                            opacity={isInBox ? 1 : 0.25}
                           >
                             <circle
                               cx="23"

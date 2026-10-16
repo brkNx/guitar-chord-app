@@ -414,14 +414,6 @@ export const SongViewer = ({
       }
     }
     onSelectChord(chord, isVirtualGuitarist);
-    const def = getOrGenerateChord(chord);
-    if (def.positions[0]) {
-      if (isVirtualGuitarist) {
-        guitarAudio.setVirtualGuitaristChord(def.positions[0]);
-      } else {
-        guitarAudio.strumChord(def.positions[0], 'down', 22);
-      }
-    }
     if (onOpenChordDetail) {
       onOpenChordDetail(chord);
     }

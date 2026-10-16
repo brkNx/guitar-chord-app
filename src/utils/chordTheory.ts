@@ -265,3 +265,17 @@ export function getChordTheoryDetails(
     stringsAnalysis
   };
 }
+
+// FretMap & Chorducate High-Contrast Color Coding for Chord Degrees
+export function getOolimoStyle(degree: string, isRoot: boolean): { fill: string; text: string; stroke: string } {
+  if (isRoot || degree === '1' || degree === 'R') {
+    // Root Note: High-Contrast Amber (#F59E0B)
+    return { fill: '#f59e0b', text: '#090a0f', stroke: '#fbbf24' };
+  }
+  if (degree === '3' || degree === 'b3' || degree === '2' || degree === '4' || degree === '5' || degree === 'b5' || degree === '#5') {
+    // Chord Tones (3rds & 5ths): High-Contrast Sky Blue (#38BDF8)
+    return { fill: '#38bdf8', text: '#090a0f', stroke: '#7dd3fc' };
+  }
+  // 7ths, Extensions & Scale Tones: Signal Emerald Green (#10B981)
+  return { fill: '#10b981', text: '#090a0f', stroke: '#34d399' };
+}

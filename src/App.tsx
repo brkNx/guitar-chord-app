@@ -136,7 +136,7 @@ export function App() {
         guitarAudio.setVirtualGuitaristChord(def.positions[0]);
       }
     }
-  }, [currentSong.id, currentSong.tempo]);
+  }, [currentSong.id, currentSong.tempo, isVirtualGuitarist, activeChord]);
 
   useEffect(() => {
     guitarAudio.setVirtualGuitaristPattern(selectedPatternId);
@@ -992,6 +992,7 @@ export function App() {
         isOpen={isTunerOpen}
         onClose={() => setIsTunerOpen(false)}
         initialTuningId={selectedTuningId}
+        onTuningChange={(tuningId) => setSelectedTuningId(tuningId)}
       />
 
       {/* TOAST NOTIFICATION */}

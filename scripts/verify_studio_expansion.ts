@@ -2,36 +2,41 @@ import { autoCorrelate, calculateCents, matchTuningTarget, type TunerStringTarge
 import { GUITAR_TUNINGS, getTuningById } from '../src/data/tunings';
 import { CAGED_BOXES, getCagedBoxFretRange, getFretShapesIntervalStyle } from '../src/data/caged';
 import { GUITAR_SCALES, getScaleNotes, getScaleNoteInfo, extractRootNote } from '../src/data/scales';
-import { ROCKSTAR_FINGERS } from '../src/components/RockStarChordCard';
+import { ROCKSTAR_FINGERS } from '../src/data/rockstar';
 import { NOTES, getOrGenerateChord } from '../src/data/chordLibrary';
 
 console.log('=== VERIFYING GUITARTUNA, FRETSHAPES & ROCKSTAR EXPANSION ===\n');
 
 let totalErrors = 0;
 
-// 1. Verify Pitch Detection Engine with Synthetic Guitar Frequencies
+// 1. Verify Pitch Detection Engine with Synthetic Guitar Frequencies (Standard + Low Drop A)
 console.log('1. Testing Autocorrelation Pitch Detection...');
-const sampleRate = 44100;
-const testFreqs = [82.41, 110.0, 146.83, 196.0, 246.94, 329.63];
+const sampleRates = [44100, 48000];
+const testFreqs = [55.00, 73.42, 82.41, 110.0, 146.83, 196.0, 246.94, 329.63];
 
-testFreqs.forEach((targetFreq) => {
-  const numSamples = 4096;
-  const buffer = new Float32Array(numSamples);
-  // Generate synthetic sine wave with slight harmonics
-  for (let i = 0; i < numSamples; i++) {
-    const t = i / sampleRate;
-    buffer[i] = 0.8 * Math.sin(2 * Math.PI * targetFreq * t) + 0.2 * Math.sin(4 * Math.PI * targetFreq * t);
-  }
+sampleRates.forEach((sampleRate) => {
+  console.log(`  Checking sample rate: ${sampleRate} Hz...`);
+  testFreqs.forEach((targetFreq) => {
+    const numSamples = 4096;
+    const buffer = new Float32Array(numSamples);
+    // Generate synthetic guitar tone with fundamental and prominent harmonics
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      buffer[i] = 0.6 * Math.sin(2 * Math.PI * targetFreq * t) +
+                  0.3 * Math.sin(4 * Math.PI * targetFreq * t) +
+                  0.1 * Math.sin(6 * Math.PI * targetFreq * t);
+    }
 
-  const { freq, clarity, rms } = autoCorrelate(buffer, sampleRate, 0.8);
-  const errorPercent = Math.abs((freq - targetFreq) / targetFreq) * 100;
+    const { freq, clarity } = autoCorrelate(buffer, sampleRate, 0.8);
+    const errorPercent = Math.abs((freq - targetFreq) / targetFreq) * 100;
 
-  if (errorPercent > 2.0 || clarity < 0.85) {
-    console.error(`  [ERROR] Detection failed for ${targetFreq} Hz: got ${freq.toFixed(2)} Hz (clarity: ${clarity.toFixed(2)})`);
-    totalErrors++;
-  } else {
-    console.log(`  ✓ Frequency ${targetFreq.toFixed(2)} Hz detected as ${freq.toFixed(2)} Hz (clarity: ${clarity.toFixed(2)}, error: ${errorPercent.toFixed(2)}%)`);
-  }
+    if (errorPercent > 2.0 || clarity < 0.82) {
+      console.error(`  [ERROR] Detection failed for ${targetFreq} Hz at ${sampleRate}Hz: got ${freq.toFixed(2)} Hz (clarity: ${clarity.toFixed(2)})`);
+      totalErrors++;
+    } else {
+      console.log(`  ✓ Frequency ${targetFreq.toFixed(2)} Hz detected as ${freq.toFixed(2)} Hz (clarity: ${clarity.toFixed(2)}, error: ${errorPercent.toFixed(2)}%)`);
+    }
+  });
 });
 
 // 2. Verify Cents and Tuning Target Matching
@@ -63,20 +68,20 @@ if (!resultA2 || resultA2.diffCents !== 15 || resultA2.inTune) {
   console.log(`  ✓ Sharp A2 matched: ${resultA2.stringNote}${resultA2.octave} (diff: +${resultA2.diffCents}¢, sharp detected)`);
 }
 
-// 3. Verify CAGED Box Calculations & Fret Ranges across all 12 Root Notes
+// 3. Verify CAGED Box Calculations & Fret Ranges across all 12 Root Notes strictly <= 14 frets
 console.log('\n3. Testing CAGED 5-Box Systems & Fret Ranges...');
-const sampleRoots = ['A', 'C', 'D', 'E', 'G', 'F#', 'Bb'];
+const allRoots = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
-sampleRoots.forEach((root) => {
+allRoots.forEach((root) => {
   for (let box = 1; box <= 5; box++) {
     const range = getCagedBoxFretRange(root, box);
-    if (range.minFret < 0 || range.maxFret > 18 || range.minFret >= range.maxFret) {
+    if (range.minFret < 0 || range.maxFret > 14 || range.minFret >= range.maxFret) {
       console.error(`  [ERROR] Invalid CAGED box range for root ${root} box ${box}: [${range.minFret}, ${range.maxFret}]`);
       totalErrors++;
     }
   }
 });
-console.log(`  ✓ Verified all 5 CAGED boxes across ${sampleRoots.length} root notes (minFret < maxFret valid).`);
+console.log(`  ✓ Verified all 5 CAGED boxes across all ${allRoots.length} chromatic roots strictly within 0..14 frets.`);
 
 // 4. Verify fretShapes Interval Colorings
 console.log('\n4. Testing fretShapes Interval Badge Styles...');

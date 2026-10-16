@@ -3,8 +3,7 @@ import * as THREE from 'three';
 import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import type { ChordPosition } from '../../types/guitar';
-import { getChordTheoryDetails } from '../../utils/chordTheory';
-import { getOolimoStyle } from '../Fretboard';
+import { getChordTheoryDetails, getOolimoStyle } from '../../utils/chordTheory';
 import {
   FRETBOARD_END_Y,
   FRETBOARD_Z,

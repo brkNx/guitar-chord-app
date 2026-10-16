@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ChordPosition } from '../types/guitar';
 import { getOrGenerateChord } from '../data/chordLibrary';
 import { guitarAudio } from '../audio/guitarAudio';
+import { ROCKSTAR_FINGERS } from '../data/rockstar';
 import { Volume2 } from 'lucide-react';
 
 interface RockStarChordCardProps {
@@ -12,15 +13,6 @@ interface RockStarChordCardProps {
   onSelectChord?: (chordName: string) => void;
   onPreviewSound?: () => void;
 }
-
-// RockStar Finger Color Coding Palette
-export const ROCKSTAR_FINGERS: Record<number, { bg: string; text: string; label: string; nameTr: string }> = {
-  1: { bg: '#0284c7', text: '#ffffff', label: '1', nameTr: 'İşaret' }, // Cyan / Sky Blue
-  2: { bg: '#059669', text: '#ffffff', label: '2', nameTr: 'Orta' },   // Emerald Green
-  3: { bg: '#d97706', text: '#ffffff', label: '3', nameTr: 'Yüzük' },  // Amber Orange
-  4: { bg: '#e11d48', text: '#ffffff', label: '4', nameTr: 'Serçe' },  // Rose Pink
-  5: { bg: '#475569', text: '#ffffff', label: 'T', nameTr: 'Başparmak' } // Slate
-};
 
 export const RockStarChordCard = ({
   chordName,
@@ -42,8 +34,9 @@ export const RockStarChordCard = ({
   const handleCardClick = () => {
     if (onSelectChord) {
       onSelectChord(chordName);
+    } else {
+      handlePlaySound();
     }
-    handlePlaySound();
   };
 
   const handlePlaySound = async (e?: React.MouseEvent) => {
