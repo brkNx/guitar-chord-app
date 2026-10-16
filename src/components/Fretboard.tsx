@@ -15,10 +15,12 @@ interface FretboardProps {
   totalPositions?: number;
   onPositionChange?: (idx: number) => void;
   onDisplayModeChange?: (mode: FretboardDisplayMode) => void;
+  onStringPluck?: (stringIdx: number, fret: number) => void;
+  onStrum?: (direction: 'down' | 'up') => void;
 }
 
 // Oolimo Color Coding for Chord Degrees
-function getOolimoStyle(degree: string, isRoot: boolean): { fill: string; text: string; stroke: string } {
+export function getOolimoStyle(degree: string, isRoot: boolean): { fill: string; text: string; stroke: string } {
   if (isRoot || degree === '1' || degree === 'R') {
     // Root: Deep Amber / Orange (#F59E0B)
     return { fill: '#f59e0b', text: '#090a0f', stroke: '#fbbf24' };
@@ -44,9 +46,12 @@ export const Fretboard = ({
   positionIdx = 0,
   totalPositions = 1,
   onPositionChange,
-  onDisplayModeChange
+  onDisplayModeChange,
+  onStringPluck,
+  onStrum
 }: FretboardProps) => {
   const [activeNote, setActiveNote] = useState<{ stringIdx: number; fret: number } | null>(null);
+  const [hoverCell, setHoverCell] = useState<{ stringIdx: number; fret: number } | null>(null);
   const [vibratingStrings, setVibratingStrings] = useState<Set<number>>(new Set());
   const [isStrumming, setIsStrumming] = useState(false);
 
@@ -86,12 +91,14 @@ export const Fretboard = ({
     setActiveNote({ stringIdx, fret });
     triggerStringVibration(stringIdx, 450);
     guitarAudio.pluckNote(stringIdx, fret, 0.9);
+    onStringPluck?.(stringIdx, fret);
     setTimeout(() => setActiveNote(null), 400);
   };
 
   const handleStrumClick = async () => {
     if (isStrumming) return;
     setIsStrumming(true);
+    onStrum?.('down');
     await guitarAudio.strumChord(position, 'down', 24, false, (strIdx: number) => {
       triggerStringVibration(strIdx, 450);
     });
@@ -293,23 +300,6 @@ export const Fretboard = ({
 
             return (
               <g key={`string-${strIdx}`}>
-                {/* Invisible wide pluck hit target */}
-                <line
-                  x1={30}
-                  y1={y}
-                  x2={30 + nutWidth + boardLen}
-                  y2={y}
-                  stroke="transparent"
-                  strokeWidth="16"
-                  className="cursor-pointer"
-                  onClick={() =>
-                    handleStringClick(
-                      strIdx,
-                      position.frets[strIdx] >= 0 ? position.frets[strIdx] : 0
-                    )
-                  }
-                />
-
                 {/* Visible Guitar String */}
                 <line
                   x1={28}
@@ -320,6 +310,59 @@ export const Fretboard = ({
                   strokeWidth={gauge}
                   opacity={isVibrating ? 1 : 0.8}
                 />
+
+                {/* Per-fret clickable hit cells (frets 1..numFrets) */}
+                {Array.from({ length: numFrets }).map((_, fIdx) => {
+                  const fNum = fIdx + 1;
+                  const cellX = 30 + nutWidth + fIdx * fretWidth;
+                  const cx = cellX + fretWidth / 2;
+                  const isHovered = hoverCell?.stringIdx === strIdx && hoverCell?.fret === fNum;
+                  const isPluckedCell = activeNote?.stringIdx === strIdx && activeNote?.fret === fNum;
+                  const isChordFret = position.frets[strIdx] === fNum;
+                  const cellNote = getNoteAtFret(strIdx, fNum);
+
+                  return (
+                    <g
+                      key={`cell-${strIdx}-${fNum}`}
+                      className="cursor-pointer"
+                      onMouseEnter={() => setHoverCell({ stringIdx: strIdx, fret: fNum })}
+                      onMouseLeave={() => setHoverCell(null)}
+                      onClick={() => handleStringClick(strIdx, fNum)}
+                    >
+                      <rect
+                        x={cellX}
+                        y={y - stringSpacing / 2}
+                        width={fretWidth}
+                        height={stringSpacing}
+                        fill="transparent"
+                      />
+                      {!isChordFret && (isHovered || isPluckedCell) && (
+                        <>
+                          <circle
+                            cx={cx}
+                            cy={y}
+                            r={isPluckedCell ? '11' : '8.5'}
+                            fill={isPluckedCell ? '#38bdf8' : '#181c26'}
+                            stroke="#38bdf8"
+                            strokeWidth={isPluckedCell ? '2.5' : '1.2'}
+                            opacity={isPluckedCell ? 0.95 : 0.75}
+                          />
+                          <text
+                            x={cx}
+                            y={y + 3}
+                            textAnchor="middle"
+                            fill={isPluckedCell ? '#090a0f' : '#e2e8f0'}
+                            fontSize="9"
+                            fontFamily="monospace"
+                            fontWeight="bold"
+                          >
+                            {cellNote}
+                          </text>
+                        </>
+                      )}
+                    </g>
+                  );
+                })}
 
                 {/* Open (O) / Mute (X) Indicator at Nut */}
                 {(() => {
@@ -334,8 +377,10 @@ export const Fretboard = ({
                         fontSize="12"
                         fontFamily="monospace"
                         fontWeight="bold"
+                        className="cursor-pointer"
+                        onClick={() => handleStringClick(strIdx, 0)}
                       >
-                        ✕
+                        X
                       </text>
                     );
                   }
@@ -378,6 +423,7 @@ export const Fretboard = ({
 
                     let label = `${finger > 0 ? finger : ''}`;
                     if (displayMode === 'notes') label = note;
+                    else if (displayMode === 'degrees') label = degree;
                     const isPlucked = activeNote?.stringIdx === strIdx && activeNote?.fret === fret;
 
                     return (

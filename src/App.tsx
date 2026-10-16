@@ -1,21 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import type { Song, FretboardDisplayMode } from './types/guitar';
 import { SAMPLE_SONGS } from './data/sampleSongs';
 import { getOrGenerateChord } from './data/chordLibrary';
 import { guitarAudio } from './audio/guitarAudio';
 import { getCapoRecommendation } from './utils/transpose';
+import { extractUniqueChords } from './utils/chordPro';
 import { GUITAR_TUNINGS, getTuningById } from './data/tunings';
 import { getChordTheoryDetails, type ChordTone } from './utils/chordTheory';
 import { GUITAR_SCALES, getScaleNotes, extractRootNote } from './data/scales';
 import { STRUM_PATTERNS } from './data/strumPatterns';
 import { generateSongWithAI } from './services/aiChordGenerator';
 
-import { Fretboard } from './components/Fretboard';
-import { Guitar3D } from './components/Guitar3D';
 import { SongViewer } from './components/SongViewer';
 import { SongSearchModal } from './components/SongSearchModal';
 import { CustomSongModal } from './components/CustomSongModal';
 import { Metronome } from './components/Metronome';
+
+const GuitarStage = lazy(() => import('./components/stage/GuitarStage'));
 
 import {
   Play,
@@ -24,8 +25,7 @@ import {
   ChevronUp,
   Search,
   Plus,
-  Video,
-  Music
+  Video
 } from 'lucide-react';
 
 const STORAGE_CUSTOM_SONGS = 'guitar_app_custom_songs';
@@ -79,8 +79,12 @@ export function App() {
   const activePattern = STRUM_PATTERNS.find((p) => p.id === selectedPatternId) || STRUM_PATTERNS[0];
   const [isPlayingStrumSeq, setIsPlayingStrumSeq] = useState(false);
 
-  // Capo recommendation
+  // Capo recommendation & unique chords in current song
   const capoAdvice = getCapoRecommendation(currentSong.key);
+  const songChords = useMemo(
+    () => extractUniqueChords(currentSong.content, transposeOffset, currentSong.key),
+    [currentSong.content, transposeOffset, currentSong.key]
+  );
 
   // Update Web Audio tuning
   useEffect(() => {
@@ -318,7 +322,7 @@ export function App() {
       </header>
 
       {/* 2. THREE-COLUMN FIXED STUDIO SPLIT PANE */}
-      <div className="flex-1 grid grid-cols-[300px_1fr_480px] h-[calc(100vh-48px)] overflow-hidden">
+      <div className="flex-1 grid grid-cols-[300px_1fr_430px] h-[calc(100vh-48px)] overflow-hidden">
         {/* SOL SÜTUN (300px): OOLIMO CHORD ANALYZER & THEORY PANEL */}
         <aside className="w-[300px] h-full flex flex-col bg-[#11141c] border-r border-[#1e222d] overflow-hidden select-none">
           {/* Header Tabs */}
@@ -590,8 +594,37 @@ export function App() {
           )}
         </aside>
 
-        {/* ORTA SÜTUN (1fr): CHORDIFY + ULTIMATE GUITAR PRO LIVE SONG SHEET */}
-        <main className="h-full flex flex-col bg-[#0b0d12] p-2 overflow-hidden min-w-0">
+        {/* ORTA SÜTUN (1fr): 3D AKUSTİK GİTAR SAHNESİ + SAP ZOOM & 2B AKOR KLAVYESİ + RİTİM DOCK */}
+        <main className="h-full flex flex-col bg-[#0b0d12] overflow-hidden min-w-0">
+          <Suspense
+            fallback={
+              <div className="flex-1 flex items-center justify-center font-mono text-xs text-slate-400">
+                3D STÜDYO SAHNESİ YÜKLENİYOR...
+              </div>
+            }
+          >
+            <GuitarStage
+              chordName={activeChord}
+              position={currentPosition}
+              positionIdx={positionIdx}
+              totalPositions={chordDef.positions.length}
+              displayMode={displayMode}
+              isLeftHanded={isLeftHanded}
+              songChords={songChords}
+              selectedPatternId={selectedPatternId}
+              isPlayingStrumSeq={isPlayingStrumSeq}
+              onSelectChord={handleSelectChord}
+              onPositionChange={setPositionIdx}
+              onDisplayModeChange={setDisplayMode}
+              onOpenChordDetail={() => setLeftTab('theory')}
+              onSelectPattern={setSelectedPatternId}
+              onPlayStrumSequence={handlePlayStrumSequence}
+            />
+          </Suspense>
+        </main>
+
+        {/* SAĞ SÜTUN (430px): CHORDIFY + ULTIMATE GUITAR PRO CANLI AKOR & SÖZ AKIŞI */}
+        <aside className="w-[430px] h-full flex flex-col bg-[#0b0d12] border-l border-[#1e222d] p-2 overflow-hidden min-w-0">
           <SongViewer
             song={currentSong}
             activeChord={activeChord}
@@ -601,100 +634,6 @@ export function App() {
             isAutoScrolling={isAutoScrolling}
             onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
           />
-        </main>
-
-        {/* SAĞ SÜTUN (480px): POLYGONIUM GUITAR 3D STUDIO + OOLIMO FRETBOARD + 16-STEP SEQUENCER */}
-        <aside className="w-[480px] h-full flex flex-col bg-[#11141c] border-l border-[#1e222d] overflow-y-auto p-2.5 gap-2.5 select-none scrollbar-thin">
-          {/* 1. POLYGONIUM GUITAR 3D STUDIO */}
-          <div className="shrink-0">
-            <Guitar3D
-              chordName={activeChord}
-              position={currentPosition}
-              isLeftHanded={isLeftHanded}
-              onOpenChordDetail={() => setLeftTab('theory')}
-            />
-          </div>
-
-          {/* 2. OOLIMO 2D FRETBOARD */}
-          <div className="shrink-0">
-            <Fretboard
-              chordName={activeChord}
-              position={currentPosition}
-              displayMode={displayMode}
-              isLeftHanded={isLeftHanded}
-              positionIdx={positionIdx}
-              totalPositions={chordDef.positions.length}
-              onPositionChange={setPositionIdx}
-              onDisplayModeChange={setDisplayMode}
-              onOpenChordDetail={() => setLeftTab('theory')}
-            />
-          </div>
-
-          {/* 3. 16-STEP STRUMMING SEQUENCER RACK */}
-          <div className="shrink-0 bg-[#11141c] border border-[#1e222d] rounded-lg p-2.5 text-xs font-mono space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-slate-300 flex items-center gap-1.5">
-                <Music className="w-3.5 h-3.5 text-amber-400" />
-                <span>16-ADIMLI RİTİM SEQUENCER</span>
-              </span>
-              <span className="text-[10px] text-amber-400 font-bold">
-                {activePattern.timeSignature}
-              </span>
-            </div>
-
-            {/* Pattern Selector */}
-            <select
-              value={selectedPatternId}
-              onChange={(e) => setSelectedPatternId(e.target.value)}
-              className="w-full bg-[#0b0d12] border border-[#1e222d] rounded px-2 py-1 text-xs text-slate-200 font-mono focus:outline-none"
-            >
-              {STRUM_PATTERNS.map((p) => (
-                <option key={p.id} value={p.id} className="bg-[#0b0d12]">
-                  {p.name}
-                </option>
-              ))}
-            </select>
-
-            {/* Visual Step Sequencer Grid */}
-            <div className="grid grid-cols-8 gap-1 pt-0.5">
-              {activePattern.strokes.map((stroke, idx) => (
-                <div
-                  key={idx}
-                  className={`py-1.5 px-0.5 rounded border text-center font-mono flex flex-col items-center justify-center gap-0.5 ${
-                    stroke.accent
-                      ? 'bg-amber-500/25 border-amber-500/50 text-amber-400 font-bold'
-                      : stroke.type === 'rest'
-                      ? 'bg-black/30 border-white/5 text-slate-600'
-                      : 'bg-[#181c26] border-[#1e222d] text-slate-300'
-                  }`}
-                >
-                  <span className="text-xs font-bold leading-none">{stroke.label}</span>
-                  <span className="text-[8px] text-slate-500 uppercase leading-none">
-                    {stroke.type === 'rest' ? 'ES' : stroke.accent ? 'ACC' : 'BEAT'}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* Play Rhythm Pattern Action */}
-            <button
-              onClick={handlePlayStrumSequence}
-              disabled={isPlayingStrumSeq}
-              className="w-full py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 disabled:opacity-50 text-slate-950 font-mono text-xs font-bold rounded flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shadow-amber-500/20"
-            >
-              {isPlayingStrumSeq ? (
-                <>
-                  <span className="animate-spin text-xs">◌</span>
-                  <span>RİTİM OYNATILIYOR...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-3 h-3 fill-current" />
-                  <span>RİTİMİ TEST ET</span>
-                </>
-              )}
-            </button>
-          </div>
         </aside>
       </div>
 
