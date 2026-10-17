@@ -14,7 +14,9 @@ async function testPlayback() {
     }
   });
 
-  await page.goto('http://127.0.0.1:5173');
+  const targetUrl = process.argv[2] || 'http://127.0.0.1:5173';
+  console.log(`Connecting to: ${targetUrl}`);
+  await page.goto(targetUrl);
   await page.waitForTimeout(2500);
 
   // Monitor DOM iframe mutations
