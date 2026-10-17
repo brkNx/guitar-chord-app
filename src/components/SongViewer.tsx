@@ -29,7 +29,7 @@ interface SongViewerProps {
   transposeOffset: number;
   onTransposeChange: (offset: number) => void;
   isAutoScrolling?: boolean;
-  onToggleAutoScroll?: () => void;
+  onToggleAutoScroll?: (forceState?: boolean) => void;
   isVirtualGuitarist?: boolean;
   virtualGuitaristMode?: VirtualGuitaristMode;
   onToggleVirtualGuitarist?: () => void;
@@ -112,16 +112,26 @@ export const SongViewer = ({
   const onSelectChordRef = useRef(onSelectChord);
   onSelectChordRef.current = onSelectChord;
 
+  const onToggleAutoScrollRef = useRef(onToggleAutoScroll);
+  onToggleAutoScrollRef.current = onToggleAutoScroll;
+
   const isAutoScrolling = externalAutoScroll !== undefined ? externalAutoScroll : internalAutoScroll;
   const isAutoScrollingRef = useRef(isAutoScrolling);
   isAutoScrollingRef.current = isAutoScrolling;
 
-  const toggleAutoScroll = () => {
-    if (onToggleAutoScroll) {
-      onToggleAutoScroll();
+  const hasStartedPlayingRef = useRef(false);
+  const isSeekingRef = useRef(false);
+
+  const setAutoScrollState = (active: boolean) => {
+    if (onToggleAutoScrollRef.current) {
+      onToggleAutoScrollRef.current(active);
     } else {
-      setInternalAutoScroll(!internalAutoScroll);
+      setInternalAutoScroll(active);
     }
+  };
+
+  const toggleAutoScroll = () => {
+    setAutoScrollState(!isAutoScrollingRef.current);
   };
 
   // Keep YouTube player visible if song has a youtubeId
@@ -190,8 +200,11 @@ export const SongViewer = ({
         ytPlayerRef.current = null;
       }
 
+      const container = ytContainerRef.current;
+      container.innerHTML = `<div id="yt-player-target-${song.id}" class="w-full h-full"></div>`;
+
       try {
-        ytPlayerRef.current = new (window as any).YT.Player(ytContainerRef.current, {
+        ytPlayerRef.current = new (window as any).YT.Player(`yt-player-target-${song.id}`, {
           width: '100%',
           height: '100%',
           videoId: song.youtubeId,
@@ -200,30 +213,47 @@ export const SongViewer = ({
             enablejsapi: 1,
             origin: window.location.origin,
             rel: 0,
-            modestbranding: 1
+            modestbranding: 1,
+            playsinline: 1
           },
           events: {
             onReady: (event: any) => {
               if (isCancelled) return;
               ytPlayerRef.current = event.target;
+              if (isAutoScrollingRef.current) {
+                try {
+                  event.target.playVideo();
+                } catch (err) {
+                  console.error('Failed to start playback on player ready:', err);
+                }
+              }
             },
             onStateChange: (event: any) => {
               if (isCancelled) return;
               // 1 = PLAYING
               if (event.data === 1) {
+                hasStartedPlayingRef.current = true;
                 if (!isAutoScrollingRef.current) {
-                  if (onToggleAutoScroll) onToggleAutoScroll();
-                  else setInternalAutoScroll(true);
+                  setAutoScrollState(true);
                 }
                 const cur = event.target.getCurrentTime();
                 if (typeof cur === 'number' && !isNaN(cur)) {
                   playbackStartTimeRef.current = performance.now() - cur * 1000;
                 }
-              } else if (event.data === 2 || event.data === 0) {
-                // 2 = PAUSED, 0 = ENDED
+              } else if (event.data === 0) {
+                // 0 = ENDED
+                hasStartedPlayingRef.current = false;
                 if (isAutoScrollingRef.current) {
-                  if (onToggleAutoScroll) onToggleAutoScroll();
-                  else setInternalAutoScroll(false);
+                  setAutoScrollState(false);
+                }
+              } else if (event.data === 2) {
+                // 2 = PAUSED
+                // Ignore transient pause during seek or before playback has ever started
+                if (isSeekingRef.current) return;
+                if (!hasStartedPlayingRef.current) return;
+
+                if (isAutoScrollingRef.current) {
+                  setAutoScrollState(false);
                 }
               }
             }
@@ -253,24 +283,49 @@ export const SongViewer = ({
         ytPlayerRef.current = null;
       }
     };
-  }, [showYouTube, song.id, song.youtubeId, onToggleAutoScroll]);
+  }, [showYouTube, song.id, song.youtubeId]);
 
+  const prevAutoScrollingRef = useRef(isAutoScrolling);
   // Control YouTube player and anchor master clock when auto-play toggles
   useEffect(() => {
-    if (isAutoScrolling) {
-      // Anchor master clock to current playhead position
-      const currentIdx = playheadIdxRef.current;
-      if (song.timings && song.timings[currentIdx]) {
-        playbackStartTimeRef.current =
-          performance.now() - song.timings[currentIdx].time * 1000;
+    const wasPlaying = prevAutoScrollingRef.current;
+    prevAutoScrollingRef.current = isAutoScrolling;
+
+    if (isAutoScrolling && !wasPlaying) {
+      // Anchor master clock to current playhead position or YouTube timestamp
+      if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === 'function') {
+        const ytCur = ytPlayerRef.current.getCurrentTime();
+        if (typeof ytCur === 'number' && !isNaN(ytCur) && ytCur > 0) {
+          playbackStartTimeRef.current = performance.now() - ytCur * 1000;
+        } else {
+          const currentIdx = playheadIdxRef.current;
+          if (song.timings && song.timings[currentIdx]) {
+            playbackStartTimeRef.current =
+              performance.now() - song.timings[currentIdx].time * 1000;
+          } else {
+            const bpm = song.tempo || 96;
+            const stepMs = Math.max(
+              480,
+              Math.round(((60000 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed))
+            );
+            playbackStartTimeRef.current =
+              performance.now() - currentIdx * stepMs;
+          }
+        }
       } else {
-        const bpm = song.tempo || 96;
-        const stepMs = Math.max(
-          480,
-          Math.round(((60000 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed))
-        );
-        playbackStartTimeRef.current =
-          performance.now() - currentIdx * stepMs;
+        const currentIdx = playheadIdxRef.current;
+        if (song.timings && song.timings[currentIdx]) {
+          playbackStartTimeRef.current =
+            performance.now() - song.timings[currentIdx].time * 1000;
+        } else {
+          const bpm = song.tempo || 96;
+          const stepMs = Math.max(
+            480,
+            Math.round(((60000 / bpm) * 2.2 * 25) / Math.max(10, scrollSpeed))
+          );
+          playbackStartTimeRef.current =
+            performance.now() - currentIdx * stepMs;
+        }
       }
 
       if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === 'function') {
@@ -279,7 +334,8 @@ export const SongViewer = ({
           ytPlayerRef.current.playVideo();
         }
       }
-    } else {
+    } else if (!isAutoScrolling && wasPlaying) {
+      hasStartedPlayingRef.current = false;
       if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === 'function') {
         const state = ytPlayerRef.current.getPlayerState?.();
         if (state === 1) {
@@ -395,7 +451,11 @@ export const SongViewer = ({
           const targetTime = song.timings[foundIdx].time;
           playbackStartTimeRef.current = performance.now() - targetTime * 1000;
           if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === 'function') {
+            isSeekingRef.current = true;
             ytPlayerRef.current.seekTo(targetTime, true);
+            setTimeout(() => {
+              isSeekingRef.current = false;
+            }, 600);
           }
         }
       }
@@ -621,7 +681,6 @@ export const SongViewer = ({
           <div className="w-full max-w-sm aspect-video max-h-40 rounded-2xl overflow-hidden border border-white/20 bg-black shadow-[0_8px_32px_rgba(0,0,0,0.85)] relative">
             <div
               ref={ytContainerRef}
-              id={`yt-player-${song.id}`}
               className="w-full h-full"
             />
           </div>

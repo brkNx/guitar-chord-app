@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Song, FretboardDisplayMode, FretboardViewMode } from './types/guitar';
 import { SAMPLE_SONGS } from './data/sampleSongs';
 import { getOrGenerateChord, NOTES, getNoteAtFret } from './data/chordLibrary';
@@ -181,7 +181,15 @@ export function App() {
     }
   };
 
-  const handleSelectChord = (chord: string, silent = false) => {
+  const handleToggleAutoScroll = useCallback((force?: boolean) => {
+    if (typeof force === 'boolean') {
+      setIsAutoScrolling(force);
+    } else {
+      setIsAutoScrolling((prev) => !prev);
+    }
+  }, []);
+
+  const handleSelectChord = useCallback((chord: string, silent = false) => {
     setActiveChord(chord);
     setPositionIdx(0);
     const r = extractRootNote(chord);
@@ -189,13 +197,13 @@ export function App() {
     const def = getOrGenerateChord(chord);
     const pos = def.positions[0];
     if (pos) {
-      if (isVirtualGuitarist) {
+      if (guitarAudio.isVirtualGuitaristActive()) {
         guitarAudio.setVirtualGuitaristChord(pos);
       } else if (!silent) {
         guitarAudio.strumChord(pos, 'down', 22);
       }
     }
-  };
+  }, []);
 
   const handleSelectSong = (song: Song) => {
     setSongs((prev) => {
@@ -331,7 +339,7 @@ export function App() {
         <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-xs shrink-0">
           {/* Global Play / Autoscroll Button */}
           <button
-            onClick={() => setIsAutoScrolling(!isAutoScrolling)}
+            onClick={() => handleToggleAutoScroll()}
             className={`flex items-center gap-1 sm:gap-1.5 px-3 sm:px-4 py-1.5 rounded-full transition-all cursor-pointer font-black text-xs active:scale-95 shadow-md ${
               isAutoScrolling
                 ? 'bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 text-slate-950 shadow-[0_0_22px_rgba(245,158,11,0.6)] border border-amber-200'
@@ -913,7 +921,7 @@ export function App() {
             transposeOffset={transposeOffset}
             onTransposeChange={setTransposeOffset}
             isAutoScrolling={isAutoScrolling}
-            onToggleAutoScroll={() => setIsAutoScrolling(!isAutoScrolling)}
+            onToggleAutoScroll={handleToggleAutoScroll}
             isVirtualGuitarist={isVirtualGuitarist}
             virtualGuitaristMode={virtualGuitaristMode}
             onToggleVirtualGuitarist={handleToggleVirtualGuitarist}
