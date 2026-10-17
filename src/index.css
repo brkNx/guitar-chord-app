@@ -2,16 +2,25 @@
 
 @layer base {
   :root {
-    --bg-void: #090a0f;
-    --bg-panel: #11131a;
-    --bg-card: #191c26;
-    --bg-card-hover: #222634;
-    --border-subtle: rgba(255, 255, 255, 0.07);
-    --border-hover: rgba(245, 158, 11, 0.35);
+    --bg-void: #06070c;
+    --bg-surface: #0a0d18;
+    --bg-panel: #0e1222;
+    --bg-card: #13172b;
+    --bg-card-hover: #1a203a;
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-hover: rgba(245, 158, 11, 0.45);
+    
+    /* 21st.dev Vibrant Studio Accents */
     --accent-amber: #f59e0b;
-    --accent-amber-glow: rgba(245, 158, 11, 0.4);
+    --accent-amber-glow: rgba(245, 158, 11, 0.5);
+    --accent-cyan: #06b6d4;
+    --accent-cyan-glow: rgba(6, 182, 212, 0.5);
+    --accent-violet: #8b5cf6;
+    --accent-violet-glow: rgba(139, 92, 246, 0.5);
     --accent-emerald: #10b981;
-    --accent-sky: #38bdf8;
+    --accent-emerald-glow: rgba(16, 185, 129, 0.5);
+    --accent-rose: #f43f5e;
+    
     --text-primary: #f8fafc;
     --text-muted: #94a3b8;
     --text-dim: #64748b;
@@ -36,52 +45,127 @@
   }
 }
 
-/* Soundslice & Moises Ultra-Sleek Scrollbars */
+/* 21st.dev Ultra-Sleek Scrollbars */
 ::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #090a0f;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #191c26;
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #f59e0b;
+  background: rgba(245, 158, 11, 0.5);
 }
 
-/* Glass Frosting Utility */
+/* Ambient Background Lightings & Studio Atmosphere */
+.bg-studio-ambient {
+  background-color: #06070c;
+  background-image:
+    radial-gradient(ellipse 60% 40% at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 45% 35% at 90% 85%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 10% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 60%);
+}
+
+.bg-stage-ambient {
+  background-color: #07080f;
+  background-image:
+    radial-gradient(circle 500px at 50% 35%, rgba(139, 92, 246, 0.14) 0%, transparent 70%),
+    radial-gradient(circle 400px at 50% 70%, rgba(245, 158, 11, 0.08) 0%, transparent 60%);
+}
+
+/* Glass Frosting Utilities */
 .glass-panel {
-  background: rgba(17, 19, 26, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(14, 18, 34, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 .glass-transport {
-  background: rgba(14, 16, 23, 0.9);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(10, 13, 25, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 4px 24px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
-/* Moises Chord Box Glow */
+/* 21st.dev Dynamic Gradient Card & Border Wrappers */
+.gradient-border-card {
+  position: relative;
+  background: rgba(14, 18, 32, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.gradient-border-glow {
+  position: relative;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.2), rgba(245, 158, 11, 0.25));
+  padding: 1px;
+}
+
+.gradient-border-inner {
+  border-radius: calc(1rem - 1px);
+  background: rgba(11, 14, 26, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+/* Glow Utilities */
+.glow-amber-sm {
+  box-shadow: 0 0 14px -2px rgba(245, 158, 11, 0.45);
+}
+
+.glow-amber-md {
+  box-shadow: 0 0 24px -2px rgba(245, 158, 11, 0.6);
+}
+
+.glow-cyan-sm {
+  box-shadow: 0 0 14px -2px rgba(6, 182, 212, 0.45);
+}
+
+.glow-cyan-md {
+  box-shadow: 0 0 24px -2px rgba(6, 182, 212, 0.6);
+}
+
+.glow-emerald-sm {
+  box-shadow: 0 0 14px -2px rgba(16, 185, 129, 0.45);
+}
+
+.glow-violet-sm {
+  box-shadow: 0 0 14px -2px rgba(139, 92, 246, 0.45);
+}
+
+/* Chord Badges & Teleprompter Glow */
 .moises-chord-badge {
   font-family: "JetBrains Mono", monospace;
   background: rgba(245, 158, 11, 0.12);
   border: 1px solid rgba(245, 158, 11, 0.35);
-  border-radius: 6px;
-  color: #f59e0b;
+  border-radius: 8px;
+  color: #fbbf24;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.moises-chord-badge:hover {
+  background: rgba(245, 158, 11, 0.24);
+  border-color: rgba(245, 158, 11, 0.6);
+  transform: translateY(-1px);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
 .moises-chord-active {
-  background: #f59e0b !important;
-  color: #090a0f !important;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24) !important;
+  color: #06070c !important;
+  font-weight: 900 !important;
   border-color: #ffffff !important;
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.85), inset 0 0 4px rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.85), inset 0 0 4px rgba(255, 255, 255, 0.7) !important;
   transform: scale(1.08);
 }
 
@@ -98,7 +182,7 @@
 
 @keyframes pulseGlow {
   0%, 100% { opacity: 0.8; }
-  50% { opacity: 1; filter: drop-shadow(0 0 8px #f59e0b); }
+  50% { opacity: 1; filter: drop-shadow(0 0 10px #f59e0b); }
 }
 
 .active-beat-indicator {
@@ -108,21 +192,21 @@
 /* 21st.dev Design System Tokens & Surface Highlights */
 @layer utilities {
   .surface-card {
-    background-color: #0e1017;
+    background-color: rgba(14, 18, 32, 0.75);
     border: 1px solid rgba(255, 255, 255, 0.08);
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.07), 0 4px 20px rgba(0, 0, 0, 0.4);
   }
   .surface-elevated {
-    background-color: #141722;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    background-color: rgba(20, 25, 45, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
   }
   .pill-interactive {
     border-radius: 9999px;
     transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
   }
   .pill-interactive:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
   }
 }
 
@@ -133,27 +217,27 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  background-color: #08090d;
+  background-color: #06070c;
 }
 
 .studio-grid {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr) 390px;
+  grid-template-columns: 270px minmax(0, 1fr) 410px;
   height: calc(100vh - 52px);
   width: 100vw;
   overflow: hidden;
-  background-color: #08090d;
+  background-color: #06070c;
 }
 
 @media (max-width: 1280px) {
   .studio-grid {
-    grid-template-columns: 240px minmax(0, 1fr) 360px;
+    grid-template-columns: 250px minmax(0, 1fr) 375px;
   }
 }
 
 @media (max-width: 1080px) {
   .studio-grid {
-    grid-template-columns: 220px minmax(0, 1fr) 340px;
+    grid-template-columns: 230px minmax(0, 1fr) 350px;
   }
 }
 
@@ -164,4 +248,3 @@
     height: auto;
   }
 }
-

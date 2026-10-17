@@ -427,14 +427,14 @@ export const SongViewer = ({
   const activeLineObj = activeEvent ? parsedLines[activeEvent.lineIdx] : null;
 
   return (
-    <div className="flex flex-col h-full bg-[#0c0e14] border border-white/[0.08] rounded-2xl shadow-[0_10px_35px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] overflow-hidden text-slate-200 select-none">
+    <div className="flex flex-col h-full bg-[#070914]/90 backdrop-blur-2xl border border-white/[0.08] rounded-3xl shadow-[0_16px_40px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.08)] overflow-hidden text-slate-200 select-none">
       {/* Song Header & Controls Bar */}
-      <div className="p-3.5 border-b border-white/[0.08] bg-[#090b10] flex flex-wrap items-center justify-between gap-2.5">
+      <div className="p-3.5 border-b border-white/[0.08] bg-[#090d1c]/90 flex flex-wrap items-center justify-between gap-2.5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold text-white tracking-tight">{song.title}</h2>
+            <h2 className="text-base font-black bg-gradient-to-r from-white via-slate-100 to-slate-300 bg-clip-text text-transparent tracking-tight">{song.title}</h2>
             {song.isAiGenerated && (
-              <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 shrink-0">
+              <span className="font-mono text-[9px] px-2 py-0.2 rounded-full bg-violet-500/25 text-violet-300 border border-violet-500/40 shrink-0 font-bold shadow-[0_0_10px_rgba(139,92,246,0.3)]">
                 AI RIG
               </span>
             )}
@@ -449,8 +449,8 @@ export const SongViewer = ({
         {/* Toolbar: Transpose + Auto-Play/Scroll + YouTube */}
         <div className="flex flex-wrap items-center gap-1.5 font-mono text-xs">
           {/* Transpose Controls */}
-          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full px-2 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
-            <span className="text-slate-500 mr-1 text-[10px]">TRP:</span>
+          <div className="flex items-center bg-[#0d1020]/90 border border-white/[0.08] rounded-full px-2.5 py-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <span className="text-slate-400 mr-1 text-[10px] font-bold">TRP:</span>
             <button
               onClick={() => onTransposeChange(transposeOffset - 1)}
               className="p-0.5 hover:text-white text-slate-400 transition-colors cursor-pointer"
@@ -458,7 +458,7 @@ export const SongViewer = ({
             >
               <ChevronDown className="w-3 h-3" />
             </button>
-            <span className={`px-1 font-bold ${transposeOffset !== 0 ? 'text-amber-400' : 'text-slate-300'}`}>
+            <span className={`px-1.5 font-bold ${transposeOffset !== 0 ? 'text-amber-400' : 'text-slate-300'}`}>
               {transposeOffset > 0 ? `+${transposeOffset}` : transposeOffset}
             </span>
             <button
@@ -480,13 +480,13 @@ export const SongViewer = ({
           </div>
 
           {/* Auto-Play & Chord Animation Toggle */}
-          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="flex items-center bg-[#0d1020]/90 border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <button
               onClick={toggleAutoScroll}
-              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full transition-all cursor-pointer font-bold active:scale-95 ${
+              className={`flex items-center gap-1.5 px-3.5 py-1 rounded-full transition-all cursor-pointer font-black text-xs active:scale-95 ${
                 isAutoScrolling
-                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_18px_rgba(245,158,11,0.55)] border border-amber-200'
+                  : 'text-slate-200 hover:text-white'
               }`}
               title="Şarkıyı başlat ve akorları otomatik bas"
             >
@@ -510,27 +510,27 @@ export const SongViewer = ({
           </div>
 
           {/* Virtual Guitarist Live Accompaniment Toggle */}
-          <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+          <div className="flex items-center bg-[#0d1020]/90 border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
             <button
               onClick={toggleVirtualGuitarist}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all cursor-pointer font-bold active:scale-95 ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all cursor-pointer font-black text-xs active:scale-95 ${
                 isVirtualGuitarist
-                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/30'
-                  : 'text-slate-300 hover:text-white'
+                  ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-slate-950 shadow-[0_0_20px_rgba(20,184,166,0.6)] border border-teal-200'
+                  : 'text-emerald-300 hover:text-white'
               }`}
               title="YouTube şarkısının canlı akustik ritim/arpejini sanal gitaristle çal"
             >
-              <Sparkles className="w-3 h-3 fill-current" />
+              <Sparkles className="w-3 h-3 fill-current text-amber-300" />
               <span>{isVirtualGuitarist ? 'SANAL GİTARİST' : 'SANAL GİTARİST'}</span>
             </button>
 
             {/* Mode Pills: Arpej vs Ritim */}
-            <div className="flex items-center bg-black/40 rounded-full p-0.5 ml-1">
+            <div className="flex items-center bg-black/50 rounded-full p-0.5 ml-1">
               <button
                 onClick={() => handleVirtualModeChange('arpeggio')}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer ${
                   virtualMode === 'arpeggio'
-                    ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                    ? 'bg-emerald-400 text-slate-950 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
                 title="Akustik parmak stili arpej (Sufle - Pus tarzı)"
@@ -539,9 +539,9 @@ export const SongViewer = ({
               </button>
               <button
                 onClick={() => handleVirtualModeChange('strum')}
-                className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer ${
                   virtualMode === 'strum'
-                    ? 'bg-emerald-400 text-slate-950 shadow-sm'
+                    ? 'bg-emerald-400 text-slate-950 shadow-[0_0_8px_rgba(52,211,153,0.6)]'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
                 title="Akor ritim vuruşları (Strumming)"
@@ -554,10 +554,10 @@ export const SongViewer = ({
           {/* Sound Toggle (Gitar Sesi) */}
           <button
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 font-bold ${
               soundEnabled
-                ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
-                : 'bg-[#131620] text-slate-500 border-white/[0.08] hover:text-slate-300'
+                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                : 'bg-[#0d1020]/90 text-slate-500 border-white/[0.08] hover:text-slate-300'
             }`}
             title={soundEnabled ? 'Gitar Akor Sesi: Açık' : 'Gitar Akor Sesi: Sessiz'}
           >
@@ -572,10 +572,10 @@ export const SongViewer = ({
           {/* RockStar Karaoke Stage View Toggle */}
           <button
             onClick={() => setShowKaraokeStage(!showKaraokeStage)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 font-bold ${
               showKaraokeStage
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm'
-                : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
+                ? 'bg-amber-500/20 text-amber-300 border-amber-400/50 shadow-[0_0_12px_rgba(245,158,11,0.3)]'
+                : 'bg-[#0d1020]/90 text-slate-400 border-white/[0.08] hover:text-white'
             }`}
             title="RockStar Sahne & Canlı Şarkı Sözü Karaoke Modu"
           >
@@ -587,14 +587,14 @@ export const SongViewer = ({
           {/* RockStar Chord Cards Toggle */}
           <button
             onClick={() => setShowRockStarCards(!showRockStarCards)}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 font-bold ${
               showRockStarCards
-                ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sm'
-                : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
+                ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+                : 'bg-[#0d1020]/90 text-slate-400 border-white/[0.08] hover:text-white'
             }`}
             title="RockStar Renkli Parmak Şemalı Akor Kartları"
           >
-            <Layers className="w-3 h-3 text-sky-400" />
+            <Layers className="w-3 h-3 text-cyan-400" />
             <span className="hidden sm:inline">{showRockStarCards ? 'KARTLAR: AÇIK' : 'KARTLAR'}</span>
             <span className="sm:hidden">KARTLAR</span>
           </button>
@@ -603,13 +603,13 @@ export const SongViewer = ({
           {song.youtubeId && (
             <button
               onClick={() => setShowYouTube(!showYouTube)}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 ${
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full border transition-all cursor-pointer active:scale-95 font-bold ${
                 showYouTube
-                  ? 'bg-red-500/20 text-red-300 border-red-500/40 shadow-sm'
-                  : 'bg-[#131620] text-slate-400 border-white/[0.08] hover:text-white'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                  : 'bg-[#0d1020]/90 text-slate-400 border-white/[0.08] hover:text-white'
               }`}
             >
-              <Video className="w-3 h-3" />
+              <Video className="w-3 h-3 text-rose-400" />
               <span>{showYouTube ? 'VİDEO AÇIK' : 'YOUTUBE'}</span>
             </button>
           )}
@@ -618,23 +618,23 @@ export const SongViewer = ({
 
       {/* Embedded YouTube Play-Along Player */}
       {showYouTube && song.youtubeId && (
-        <div className="bg-[#090a0f] border-b border-white/10 p-3 flex flex-col items-center justify-center relative">
+        <div className="bg-[#070a16] border-b border-white/[0.08] p-3 flex flex-col items-center justify-center relative shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
           <button
             onClick={() => setShowYouTube(false)}
-            className="absolute top-2 right-2 p-1 text-slate-500 hover:text-white cursor-pointer z-10"
+            className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.1] text-slate-400 hover:text-white cursor-pointer z-10 transition-colors"
             title="Kapat"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
-          <div className="w-full max-w-lg aspect-video rounded-lg overflow-hidden border border-white/10 bg-black shadow-xl relative">
+          <div className="w-full max-w-lg aspect-video rounded-2xl overflow-hidden border border-white/15 bg-black shadow-[0_8px_32px_rgba(0,0,0,0.8)] relative">
             <div
               ref={ytContainerRef}
               id={`yt-player-${song.id}`}
               className="w-full h-full"
             />
           </div>
-          <p className="text-[10px] text-slate-400 mt-2 font-mono flex items-center gap-1.5">
-            <Radio className="w-2.5 h-2.5 text-red-400 animate-pulse" />
+          <p className="text-[10px] text-cyan-300/90 mt-2 font-mono flex items-center gap-1.5">
+            <Radio className="w-2.5 h-2.5 text-rose-400 animate-pulse" />
             <span>YOUTUBE CANLI SENKRON // Şarkıyı dinlerken sözler ve akorlar milisaniyelik akar.</span>
           </p>
         </div>
@@ -642,9 +642,9 @@ export const SongViewer = ({
 
       {/* RockStar High-Craft Chord Cards Shelf (or fallback pills) */}
       {showRockStarCards ? (
-        <div className="px-3.5 py-2.5 bg-[#0a0c12] border-b border-white/[0.08] flex items-center gap-2 overflow-x-auto scrollbar-thin">
-          <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-1">
-            <Layers className="w-3.5 h-3.5 text-sky-400" />
+        <div className="px-3.5 py-2.5 bg-[#090c1a] border-b border-white/[0.08] flex items-center gap-2 overflow-x-auto scrollbar-thin">
+          <span className="text-[10px] font-mono font-black text-cyan-300 uppercase tracking-wider shrink-0 flex items-center gap-1.5 mr-1">
+            <Layers className="w-3.5 h-3.5 text-cyan-400" />
             <span className="hidden sm:inline">ROCKSTAR KARTLARI:</span>
             <span className="sm:hidden">AKORLAR:</span>
           </span>
@@ -665,8 +665,8 @@ export const SongViewer = ({
         </div>
       ) : (
         /* Minimal Pills Mode */
-        <div className="px-3.5 py-2 bg-[#0e1017] border-b border-white/10 flex items-center gap-2 overflow-x-auto scrollbar-none font-mono text-xs">
-          <span className="text-[10px] text-slate-500 uppercase tracking-wider shrink-0">
+        <div className="px-3.5 py-2 bg-[#090c1a] border-b border-white/[0.08] flex items-center gap-2 overflow-x-auto scrollbar-none font-mono text-xs">
+          <span className="text-[10px] text-slate-400 uppercase tracking-wider shrink-0 font-bold">
             AKORLAR:
           </span>
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -676,10 +676,10 @@ export const SongViewer = ({
                 <button
                   key={chord}
                   onClick={() => handleChordClick(chord)}
-                  className={`px-3 py-1 rounded-md text-xs font-bold font-mono transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-xl text-xs font-black font-mono transition-all cursor-pointer ${
                     isActive
-                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/35 scale-105'
-                      : 'bg-[#191c26] text-amber-400 border border-white/10 hover:border-amber-500/50 hover:bg-[#222634]'
+                      ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.6)] scale-105 border border-amber-200'
+                      : 'bg-[#12162a] text-amber-300 border border-white/10 hover:border-amber-400/50 hover:bg-[#1a203a]'
                   }`}
                 >
                   {chord}
@@ -692,24 +692,24 @@ export const SongViewer = ({
 
       {/* RockStar Sing-Along Live Stage & Karaoke Cockpit */}
       {showKaraokeStage && (
-        <div className="px-4 py-3 bg-gradient-to-r from-[#111420] via-[#0d1017] to-[#121422] border-b border-white/[0.08] shadow-inner flex flex-col gap-2">
+        <div className="px-4 py-3 bg-gradient-to-r from-[#111738]/95 via-[#0d1124]/95 to-[#161230]/95 border-b border-white/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_8px_30px_rgba(0,0,0,0.4)] flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 font-mono text-[10px] font-bold text-amber-400 uppercase shadow-sm">
+              <span className="flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-gradient-to-r from-amber-500/20 to-amber-600/20 border border-amber-400/40 font-mono text-[10px] font-black text-amber-300 uppercase shadow-[0_0_12px_rgba(245,158,11,0.25)]">
                 <Mic className="w-3 h-3 text-amber-400 animate-pulse" />
                 <span>ROCKSTAR CANLI SAHNE // KARAOKE</span>
               </span>
-              <span className="font-mono text-[10px] text-slate-400 hidden xs:inline">
+              <span className="font-mono text-[10px] text-cyan-300/80 hidden xs:inline font-semibold">
                 {isAutoScrolling ? 'ŞARKI AKIYOR' : 'PLAY İLE CANLI AKIŞI BAŞLATIN'}
               </span>
             </div>
 
             {/* Upcoming Next Chord Preview */}
             {upcomingEvent && upcomingEvent.chord !== activeChord && (
-              <div className="flex items-center gap-1.5 font-mono text-[11px] bg-white/[0.04] border border-white/10 px-2.5 py-0.5 rounded-full">
-                <span className="text-slate-400">SIRADAKİ:</span>
+              <div className="flex items-center gap-1.5 font-mono text-[11px] bg-[#121836] border border-cyan-400/40 px-3 py-0.5 rounded-full shadow-[0_0_12px_rgba(6,182,212,0.25)]">
+                <span className="text-slate-400 font-bold">SIRADAKİ:</span>
                 <span className="font-black text-amber-400">{upcomingEvent.chord}</span>
-                <ArrowRight className="w-3 h-3 text-slate-500" />
+                <ArrowRight className="w-3 h-3 text-cyan-400" />
               </div>
             )}
           </div>
@@ -725,12 +725,12 @@ export const SongViewer = ({
                       key={sIdx}
                       className={`transition-all duration-150 ${
                         isSegmentActive
-                          ? 'text-amber-300 font-black scale-105 filter drop-shadow-[0_0_12px_rgba(245,158,11,0.85)]'
+                          ? 'text-amber-300 font-black scale-105 filter drop-shadow-[0_0_16px_rgba(245,158,11,0.95)]'
                           : 'text-slate-200'
                       }`}
                     >
                       {seg.chord && (
-                        <span className="text-xs font-mono font-bold text-amber-400/90 mr-1 block sm:inline">
+                        <span className="text-xs font-mono font-black text-amber-400 mr-1.5 px-1.5 py-0.2 rounded-md bg-amber-500/20 border border-amber-400/40 shadow-sm inline-block">
                           [{seg.chord}]
                         </span>
                       )}
@@ -749,9 +749,9 @@ export const SongViewer = ({
       )}
 
       {/* 16-Step Strumming & Fingerpicking Visualizer Strip */}
-      <div className="px-3.5 py-1.5 bg-[#090a0f] border-b border-white/10 flex items-center justify-between text-[10px] font-mono text-slate-400">
+      <div className="px-3.5 py-1.5 bg-[#070914] border-b border-white/[0.08] flex items-center justify-between text-[10px] font-mono text-slate-400">
         <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
-          <span className="text-slate-500 uppercase shrink-0">
+          <span className="text-slate-400 uppercase shrink-0 font-bold">
             {isVirtualGuitarist
               ? virtualMode === 'arpeggio'
                 ? 'ARPEJ:'
@@ -765,11 +765,11 @@ export const SongViewer = ({
                   return (
                     <span
                       key={i}
-                      className={`px-1.5 py-0.2 rounded border transition-all ${
+                      className={`px-2 py-0.5 rounded-lg border transition-all ${
                         isCurrent
-                          ? 'bg-emerald-400 text-slate-950 border-emerald-300 font-extrabold shadow-[0_0_12px_rgba(52,211,153,0.85)] scale-110'
+                          ? 'bg-gradient-to-r from-emerald-400 to-teal-400 text-slate-950 border-emerald-200 font-black shadow-[0_0_14px_rgba(52,211,153,0.9)] scale-110'
                           : i === 0
-                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300 font-bold'
+                          ? 'bg-emerald-500/20 border-emerald-500/45 text-emerald-300 font-bold'
                           : 'bg-white/5 border-white/10 text-slate-300'
                       }`}
                     >
@@ -782,13 +782,13 @@ export const SongViewer = ({
                   return (
                     <span
                       key={i}
-                      className={`px-1.5 py-0.2 rounded border transition-all ${
+                      className={`px-2 py-0.5 rounded-lg border transition-all ${
                         isCurrent
-                          ? 'bg-amber-400 text-slate-950 border-amber-300 font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.85)] scale-110'
+                          ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-200 font-black shadow-[0_0_14px_rgba(245,158,11,0.9)] scale-110'
                           : stroke.accent
-                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold'
+                          ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold'
                           : stroke.type === 'rest'
-                          ? 'bg-black/40 border-white/5 text-slate-600'
+                          ? 'bg-black/50 border-white/5 text-slate-600'
                           : 'bg-white/5 border-white/10 text-slate-300'
                       }`}
                     >
@@ -802,10 +802,10 @@ export const SongViewer = ({
           {isVirtualGuitarist && (
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_6px_#10b981]"></span>
             </span>
           )}
-          <span className={`font-bold ${isVirtualGuitarist ? 'text-emerald-400' : 'text-slate-400'}`}>
+          <span className={`font-bold ${isVirtualGuitarist ? 'text-emerald-300' : 'text-slate-400'}`}>
             {isVirtualGuitarist
               ? `CANLI EŞLİK: ${song.tempo || 96} BPM // ${virtualMode === 'arpeggio' ? 'PARMAK ARPEJ' : 'RİTİM'}`
               : isAutoScrolling
@@ -818,7 +818,7 @@ export const SongViewer = ({
       {/* Scrollable Song Lyrics & Moises ChordPro Content */}
       <div
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-5 font-mono text-sm leading-relaxed space-y-4 relative bg-[#090a0f]"
+        className="flex-1 overflow-y-auto p-5 font-mono text-sm leading-relaxed space-y-4 relative bg-[#060812]"
       >
         {parsedLines.map((line, lineIdx) => {
           if (line.type === 'empty') {
@@ -829,9 +829,9 @@ export const SongViewer = ({
             return (
               <div
                 key={lineIdx}
-                className="pt-4 pb-1.5 border-b border-white/10 text-amber-400/95 font-bold text-xs uppercase tracking-wider flex items-center gap-2"
+                className="pt-4 pb-1.5 border-b border-white/[0.08] text-amber-300 font-black text-xs uppercase tracking-wider flex items-center gap-2"
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
                 <span>{line.sectionName}</span>
               </div>
             );
@@ -845,10 +845,10 @@ export const SongViewer = ({
                 ref={(el) => {
                   lineRefs.current[lineIdx] = el;
                 }}
-                className={`flex flex-wrap items-end py-2 px-3 rounded-lg transition-all group border-l-2 ${
+                className={`flex flex-wrap items-end py-2.5 px-3.5 rounded-2xl transition-all group border-l-4 ${
                   isLinePlaying
-                    ? 'bg-amber-500/10 border-amber-400 shadow-[inset_0_0_24px_rgba(245,158,11,0.08)]'
-                    : 'border-transparent hover:bg-white/[0.02]'
+                    ? 'bg-gradient-to-r from-amber-500/20 via-violet-500/12 to-transparent border-amber-400 shadow-[inset_0_0_32px_rgba(245,158,11,0.12),0_4px_20px_rgba(0,0,0,0.3)] my-1'
+                    : 'border-transparent hover:bg-white/[0.03]'
                 }`}
               >
                 {line.segments.map((seg, segIdx) => {
@@ -864,16 +864,16 @@ export const SongViewer = ({
                         (seg.chord && activeChord === seg.chord)));
 
                   return (
-                    <div key={segIdx} className="flex flex-col items-start mr-2.5">
+                    <div key={segIdx} className="flex flex-col items-start mr-3">
                       {seg.chord ? (
                         <button
                           onClick={() => handleChordClick(seg.chord, lineIdx, segIdx)}
-                          className={`font-mono text-xs font-bold px-2 py-0.5 rounded-md transition-all cursor-pointer select-none leading-tight mb-1 border ${
+                          className={`font-mono text-xs font-black px-2.5 py-0.5 rounded-lg transition-all cursor-pointer select-none leading-tight mb-1 border ${
                             isExactStepPlaying
-                              ? 'bg-amber-400 text-slate-950 border-white ring-2 ring-amber-400/60 shadow-[0_0_16px_rgba(245,158,11,0.85)] scale-110'
+                              ? 'bg-gradient-to-r from-amber-400 to-amber-300 text-slate-950 border-white ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.95)] scale-110'
                               : isChordActive
-                              ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.5)] scale-105'
-                              : 'bg-[rgba(245,158,11,0.12)] border-[rgba(245,158,11,0.35)] text-amber-400 hover:bg-amber-500/25'
+                              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.6)] scale-105'
+                              : 'bg-amber-500/15 border-amber-500/35 text-amber-300 hover:bg-amber-500/25 hover:border-amber-400/60 hover:scale-105'
                           }`}
                           title={`Akoru çal: ${seg.chord}`}
                         >
@@ -886,9 +886,9 @@ export const SongViewer = ({
                       <span
                         className={`text-sm whitespace-pre font-sans transition-colors ${
                           isExactStepPlaying
-                            ? 'text-amber-300 font-semibold'
+                            ? 'text-amber-200 font-bold drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]'
                             : isLinePlaying
-                            ? 'text-white'
+                            ? 'text-white font-semibold'
                             : 'text-slate-200'
                         }`}
                       >

@@ -68,11 +68,11 @@ export const RockStarChordCard = ({
     <div
       onClick={handleCardClick}
       className={`relative group rounded-2xl border transition-all select-none cursor-pointer flex flex-col items-center ${
-        compact ? 'p-2 min-w-[110px]' : 'p-3.5 min-w-[155px]'
+        compact ? 'p-2.5 min-w-[115px]' : 'p-3.5 min-w-[155px]'
       } ${
         isActive
-          ? 'bg-gradient-to-b from-[#181d2c] to-[#0f121c] border-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.35)] scale-105 z-10'
-          : 'bg-[#10131b] hover:bg-[#161a26] border-white/[0.08] hover:border-amber-500/40 shadow-md'
+          ? 'bg-gradient-to-b from-[#181f3c] via-[#12162a] to-[#0d1020] border-amber-400 shadow-[0_0_24px_rgba(245,158,11,0.45)] scale-105 z-10'
+          : 'bg-[#0e1224]/80 hover:bg-[#141932] border-white/[0.08] hover:border-amber-400/40 shadow-lg'
       }`}
     >
       {/* CARD HEADER */}
@@ -81,12 +81,12 @@ export const RockStarChordCard = ({
           <span
             className={`font-mono font-black tracking-tight ${
               compact ? 'text-sm' : 'text-base'
-            } ${isActive ? 'text-amber-400' : 'text-white group-hover:text-amber-300'}`}
+            } ${isActive ? 'text-amber-300 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'text-white group-hover:text-amber-300'}`}
           >
             {chordName}
           </span>
           {isActive && (
-            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#f59e0b]" />
+            <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_#f59e0b] animate-pulse" />
           )}
         </div>
 

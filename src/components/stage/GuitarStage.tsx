@@ -252,37 +252,37 @@ export function GuitarStage({
   }, []);
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#11131a] overflow-hidden select-none">
+    <div className="relative w-full h-full flex flex-col bg-[#07080f] overflow-hidden select-none">
       {/* 3D HERO VIEWPORT WITH SEAMLESS STUDIO BACKDROP */}
       <div
         className="relative flex-1 min-h-0 w-full overflow-hidden"
         style={{
           background:
-            'radial-gradient(ellipse 75% 70% at 50% 48%, #1c2234 0%, #10121a 55%, #07080c 100%)',
+            'radial-gradient(ellipse 80% 75% at 50% 42%, rgba(99, 102, 241, 0.18) 0%, rgba(14, 18, 36, 0.95) 55%, #06070c 100%)',
         }}
       >
         {/* TOP HUD: ZERO-COLLISION RESPONSIVE DUAL-WING BAR */}
         <div className="absolute top-2.5 sm:top-3.5 inset-x-2.5 sm:inset-x-3.5 z-10 flex items-center justify-between gap-1.5 sm:gap-2.5 pointer-events-none">
           {/* Left Wing: Active Chord Telemetry Badge */}
-          <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 bg-[#0e1017]/90 border border-white/[0.08] rounded-xl sm:rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-xl shadow-[0_10px_30px_-5px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] shrink-0">
+          <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 bg-[#0a0d1c]/90 border border-white/[0.1] rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.1)] shrink-0">
             <button
               onClick={onOpenChordDetail}
-              className="px-2 sm:px-2.5 py-0.5 bg-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-extrabold rounded-lg cursor-pointer hover:bg-amber-400 active:scale-95 transition-all shadow-[0_0_15px_rgba(245,158,11,0.25)]"
+              className="px-2.5 sm:px-3 py-0.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-black rounded-xl cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_16px_rgba(245,158,11,0.5)] border border-amber-200"
               title="Akor teorisini incele"
             >
               {chordName}
             </button>
             <div className="flex flex-col font-mono">
-              <span className="text-[10px] sm:text-[11px] font-bold text-slate-200 leading-tight">
+              <span className="text-[10px] sm:text-[11px] font-black text-white leading-tight">
                 {theory.typeCategory}
               </span>
-              <span className="text-[9px] sm:text-[10px] text-slate-400 leading-tight">
+              <span className="text-[9px] sm:text-[10px] text-cyan-300 leading-tight font-semibold">
                 {position.baseFret > 1 ? `${position.baseFret}. Prd` : 'Açık'} • #{positionIdx + 1}/{totalPositions}
               </span>
             </div>
             <button
               onClick={() => triggerStrum('down')}
-              className="ml-0.5 sm:ml-1 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 bg-white/[0.04] hover:bg-white/[0.08] border border-amber-500/30 text-amber-400 font-mono text-[11px] sm:text-xs font-bold rounded-lg transition-all cursor-pointer active:scale-95"
+              className="ml-0.5 sm:ml-1 flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-400/50 text-amber-300 font-mono text-[11px] sm:text-xs font-black rounded-xl transition-all cursor-pointer active:scale-95 shadow-[0_0_12px_rgba(245,158,11,0.25)]"
               title="Akoru Tınlat"
             >
               <Volume2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
@@ -291,15 +291,15 @@ export function GuitarStage({
           </div>
 
           {/* Right Wing: Polygonium 3D Camera Floating Pills */}
-          <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1 bg-[#0e1017]/90 border border-white/[0.08] rounded-full p-1 backdrop-blur-xl shadow-2xl font-mono text-[9px] sm:text-[10px] shrink-0">
+          <div className="pointer-events-auto flex items-center gap-0.5 sm:gap-1 bg-[#0a0d1c]/90 border border-white/[0.1] rounded-full p-1 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.1)] font-mono text-[9px] sm:text-[10px] shrink-0">
             <button
               onClick={() => {
                 setStageMode('overview');
                 setCamPreset('pov');
               }}
-              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full font-black transition-all cursor-pointer active:scale-95 ${
                 stageMode === 'overview' && camPreset === 'pov'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-amber-200'
                   : 'text-slate-300 hover:text-white'
               }`}
               title="Oyuncu Bakış Açısı (POV)"
@@ -311,9 +311,9 @@ export function GuitarStage({
                 setStageMode('overview');
                 setCamPreset('front');
               }}
-              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full font-black transition-all cursor-pointer active:scale-95 ${
                 stageMode === 'overview' && camPreset === 'front'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-amber-200'
                   : 'text-slate-300 hover:text-white'
               }`}
               title="Önden Bakış Açısı"
@@ -326,9 +326,9 @@ export function GuitarStage({
                 setStageMode('overview');
                 setCamPreset('overview');
               }}
-              className={`px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+              className={`px-2.5 sm:px-3.5 py-1 rounded-full font-black transition-all cursor-pointer active:scale-95 ${
                 stageMode === 'overview' && camPreset === 'overview'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-amber-200'
                   : 'text-slate-300 hover:text-white'
               }`}
               title="Tam Gitar Görünümü"
@@ -340,14 +340,14 @@ export function GuitarStage({
               onClick={() => {
                 enterNeckMode();
               }}
-              className={`flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full font-bold transition-all cursor-pointer active:scale-95 ${
+              className={`flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1 rounded-full font-black transition-all cursor-pointer active:scale-95 ${
                 stageMode === 'neck'
-                  ? 'bg-amber-500 text-slate-950 shadow-sm'
+                  ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_14px_rgba(245,158,11,0.5)] border border-amber-200'
                   : 'text-slate-300 hover:text-white'
               }`}
               title="Sap ve 2D Akor Klavyesi"
             >
-              <Layers className="w-3 h-3" />
+              <Layers className="w-3 h-3 text-cyan-400" />
               <span>KLAVYE</span>
             </button>
           </div>
@@ -497,9 +497,9 @@ export function GuitarStage({
         {stageMode === 'overview' && (
           <div className="
             absolute bottom-4 left-1/2 -translate-x-1/2 z-10
-            max-w-[calc(100%-24px)] flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-full
-            bg-[#0d1017]/90 border border-white/10 backdrop-blur-xl
-            font-mono text-[10px] text-slate-300 shadow-[0_8px_30px_rgba(0,0,0,0.6)] pointer-events-none
+            max-w-[calc(100%-24px)] flex items-center justify-center gap-2 px-4 py-1.5 rounded-full
+            bg-[#0a0d1c]/90 border border-white/10 backdrop-blur-2xl
+            font-mono text-[10px] text-slate-200 shadow-[0_8px_32px_rgba(0,0,0,0.7)] pointer-events-none
             whitespace-nowrap overflow-hidden transition-all
           ">
             <span
@@ -553,19 +553,19 @@ export function GuitarStage({
       </div>
 
       {/* BOTTOM DOCK: COMPACT 16-STEP STRUMMING SEQUENCER */}
-      <div className="shrink-0 bg-[#090b10] border-t border-white/[0.08] px-4 py-2 font-mono text-xs flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
+      <div className="shrink-0 bg-[#070914] border-t border-white/[0.08] px-4 py-2 font-mono text-xs flex items-center justify-between gap-2 overflow-x-auto scrollbar-none shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         <div className="flex items-center gap-2 shrink-0">
-          <span className="font-bold text-slate-300 flex items-center gap-1.5 text-[11px] shrink-0">
+          <span className="font-black text-amber-300 flex items-center gap-1.5 text-[11px] shrink-0">
             <Music className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">RİTİM DOCK</span>
           </span>
           <select
             value={selectedPatternId}
             onChange={(e) => onSelectPattern(e.target.value)}
-            className="bg-[#131620] border border-white/[0.08] rounded-full px-2.5 py-1 text-[11px] text-slate-200 font-mono focus:outline-none max-w-[160px] sm:max-w-[210px] truncate shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]"
+            className="bg-[#0e1224] border border-white/[0.08] rounded-full px-3 py-1 text-[11px] text-slate-200 font-mono focus:outline-none max-w-[160px] sm:max-w-[210px] truncate shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] cursor-pointer"
           >
             {STRUM_PATTERNS.map((p) => (
-              <option key={p.id} value={p.id} className="bg-[#11131a]">
+              <option key={p.id} value={p.id} className="bg-[#0e1224]">
                 {p.name} ({p.timeSignature})
               </option>
             ))}
@@ -579,17 +579,17 @@ export function GuitarStage({
             return (
               <div
                 key={idx}
-                className={`w-7 py-1 px-0.5 rounded-md border text-center font-mono flex flex-col items-center justify-center shrink-0 transition-all ${
+                className={`w-7 py-1 px-0.5 rounded-xl border text-center font-mono flex flex-col items-center justify-center shrink-0 transition-all ${
                   isPulse
-                    ? 'bg-amber-400 text-slate-950 border-amber-300 font-extrabold shadow-[0_0_12px_rgba(245,158,11,0.85)] scale-110'
+                    ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 border-amber-200 font-black shadow-[0_0_14px_rgba(245,158,11,0.9)] scale-110'
                     : stroke.accent
-                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-400 font-bold shadow-sm'
+                    ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold shadow-sm'
                     : stroke.type === 'rest'
-                    ? 'bg-black/40 border-white/5 text-slate-600'
-                    : 'bg-[#181c26] border-white/10 text-slate-300'
+                    ? 'bg-black/50 border-white/5 text-slate-600'
+                    : 'bg-[#12162a] border-white/10 text-slate-300'
                 }`}
               >
-                <span className="text-[11px] font-bold leading-none">{stroke.label}</span>
+                <span className="text-[11px] font-black leading-none">{stroke.label}</span>
                 <span className="text-[8px] uppercase leading-none mt-0.5 opacity-80">
                   {stroke.type === 'rest' ? 'ES' : stroke.accent ? 'ACC' : 'BEAT'}
                 </span>
@@ -600,13 +600,13 @@ export function GuitarStage({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {onToggleVirtualGuitarist && (
-            <div className="flex items-center bg-[#131620] border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+            <div className="flex items-center bg-[#0d1020]/90 border border-white/[0.08] rounded-full p-0.5 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]">
               <button
                 onClick={onToggleVirtualGuitarist}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-bold transition-all cursor-pointer active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-mono text-[11px] font-black transition-all cursor-pointer active:scale-95 ${
                   isVirtualGuitarist
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md shadow-emerald-500/25'
-                    : 'text-slate-300 hover:text-white'
+                    ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(20,184,166,0.6)] border border-teal-200'
+                    : 'text-emerald-300 hover:text-white'
                 }`}
                 title="Sanal gitarist eşliğini aç/kapat"
               >
@@ -616,10 +616,10 @@ export function GuitarStage({
               </button>
 
               {onVirtualGuitaristModeChange && (
-                <div className="flex items-center bg-black/40 rounded-full p-0.5 ml-1">
+                <div className="flex items-center bg-black/50 rounded-full p-0.5 ml-1">
                   <button
                     onClick={() => onVirtualGuitaristModeChange('arpeggio')}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer ${
                       virtualGuitaristMode === 'arpeggio'
                         ? 'bg-emerald-400 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
@@ -630,7 +630,7 @@ export function GuitarStage({
                   </button>
                   <button
                     onClick={() => onVirtualGuitaristModeChange('strum')}
-                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-black transition-all cursor-pointer ${
                       virtualGuitaristMode === 'strum'
                         ? 'bg-emerald-400 text-slate-950 shadow-sm'
                         : 'text-slate-400 hover:text-slate-200'
@@ -650,7 +650,7 @@ export function GuitarStage({
               onPlayStrumSequence();
             }}
             disabled={isPlayingStrumSeq}
-            className="px-3.5 py-1.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-bold rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-amber-500/25 shrink-0 whitespace-nowrap active:scale-95"
+            className="px-3.5 py-1.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:brightness-110 disabled:opacity-50 text-slate-950 font-mono text-[11px] font-black rounded-full flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_16px_rgba(245,158,11,0.4)] border border-amber-200 shrink-0 whitespace-nowrap active:scale-95"
           >
             <Play className="w-3 h-3 fill-current" />
             <span>{isPlayingStrumSeq ? 'ÇALINIYOR...' : 'TEK TUR TEST'}</span>

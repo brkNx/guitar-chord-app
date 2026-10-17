@@ -229,24 +229,24 @@ export const GuitarTunerModal = ({
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md animate-in fade-in duration-200 select-none cursor-pointer"
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-2xl animate-in fade-in duration-200 select-none cursor-pointer"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-3xl bg-[#0a0c12] border border-white/10 rounded-2xl sm:rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.85)] overflow-hidden flex flex-col font-sans cursor-default"
+        className="w-full max-w-3xl bg-[#080b18]/95 border border-white/[0.12] rounded-3xl shadow-[0_25px_80px_rgba(0,0,0,0.9),inset_0_1px_0_rgba(255,255,255,0.12)] overflow-hidden flex flex-col font-sans cursor-default"
       >
         {/* TOP COCKPIT HEADER */}
-        <div className="px-4 sm:px-6 py-3.5 border-b border-white/[0.08] bg-[#07080d] flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 to-amber-300 flex items-center justify-center text-slate-950 font-bold shadow-md shadow-amber-500/20">
+        <div className="px-5 sm:px-6 py-4 border-b border-white/[0.08] bg-[#090d1f]/90 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-amber-400 via-emerald-400 to-cyan-400 flex items-center justify-center text-slate-950 font-black shadow-[0_0_18px_rgba(16,185,129,0.4)]">
               <Sparkles className="w-4 h-4 fill-current" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="text-sm font-extrabold tracking-tight text-white font-mono uppercase">
+                <h3 className="text-sm font-black tracking-tight text-white font-mono uppercase bg-gradient-to-r from-amber-300 via-emerald-200 to-cyan-300 bg-clip-text text-transparent">
                   GUITARTUNA // PRO AKORT CİHAZI
                 </h3>
-                <span className="font-mono text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-bold">
+                <span className="font-mono text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/50 font-bold shadow-[0_0_10px_rgba(16,185,129,0.3)]">
                   YIN DSP
                 </span>
               </div>
