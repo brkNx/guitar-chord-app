@@ -81,7 +81,13 @@ export function App() {
   const [leftTab, setLeftTab] = useState<'theory' | 'setlist' | 'scales'>('theory');
 
   // Mobile studio view tab: 'stage' | 'lyrics' | 'theory'
-  const [mobileTab, setMobileTab] = useState<'stage' | 'lyrics' | 'theory'>('stage');
+  const [mobileTab, setMobileTab] = useState<'stage' | 'lyrics' | 'theory'>(() => {
+    if (typeof window !== 'undefined') {
+      const t = new URLSearchParams(window.location.search).get('tab');
+      if (t === 'lyrics' || t === 'theory') return t;
+    }
+    return 'stage';
+  });
 
   // Search, custom & chord modals
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -292,32 +298,32 @@ export function App() {
   return (
     <div className="w-screen h-screen overflow-hidden bg-studio-ambient text-slate-100 flex flex-col font-sans select-none studio-layout">
       {/* 1. 21st.dev / SOUNDSLICE 52px HARDWARE MASTER TRANSPORT BAR */}
-      <header className="h-[52px] bg-[#070913]/90 backdrop-blur-2xl px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-2 z-40 select-none shrink-0 border-b border-white/[0.08] shadow-[0_4px_30px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.08)]">
+      <header className="h-[52px] bg-[#0a0e26]/90 backdrop-blur-2xl px-2 sm:px-4 flex items-center justify-between gap-1.5 sm:gap-2 z-40 select-none shrink-0 border-b border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.12)]">
         {/* Left: Studio Branding & WebAudio Status */}
         <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500/15 via-fuchsia-500/10 to-amber-500/15 border border-violet-500/35 shadow-[0_0_16px_rgba(139,92,246,0.2)]">
+          <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-1 rounded-full bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-amber-500/20 border border-violet-500/40 shadow-[0_0_20px_rgba(139,92,246,0.3)]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_8px_#f59e0b]"></span>
             </span>
-            <span className="font-mono text-xs font-black tracking-tight bg-gradient-to-r from-amber-300 via-violet-200 to-cyan-300 bg-clip-text text-transparent">
+            <span className="font-mono text-xs font-black tracking-tight bg-gradient-to-r from-amber-300 via-fuchsia-200 to-cyan-300 bg-clip-text text-transparent">
               MOISES
             </span>
-            <span className="hidden sm:inline font-mono text-xs font-bold tracking-tight text-slate-300">
+            <span className="hidden sm:inline font-mono text-xs font-bold tracking-tight text-slate-200">
               // SOUNDSLICE
             </span>
-            <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-gradient-to-r from-violet-500/25 to-fuchsia-500/25 text-violet-300 border border-violet-500/40 font-bold">
+            <span className="font-mono text-[9px] px-1.5 py-0.2 rounded-full bg-gradient-to-r from-violet-500/30 to-fuchsia-500/30 text-violet-200 border border-violet-400/50 font-bold shadow-sm">
               PRO
             </span>
           </div>
 
-          <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono text-slate-300 px-2.5 py-0.5 rounded-full bg-white/[0.03] border border-white/[0.08] shadow-sm">
+          <div className="hidden lg:flex items-center gap-1.5 text-[10px] font-mono text-slate-200 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400 shadow-[0_0_6px_#10b981]"></span>
             </span>
             <span className="text-emerald-400 font-bold">48kHz</span>
-            <span className="text-slate-400">DSP</span>
+            <span className="text-emerald-300/80">DSP</span>
           </div>
         </div>
 
@@ -472,19 +478,19 @@ export function App() {
 
       {/* 2. MOISES 3-COLUMN STUDIO GRID WORKSPACE (Desktop) / TABBED VIEW (Mobile) */}
       <div className="flex-1 studio-grid h-[calc(100vh-52px)] overflow-hidden">
-        {/* SOL SÜTUN (270px): KÜTÜPHANE & TEORİ PANELİ */}
-        <aside className={`${mobileTab === 'theory' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#070913]/95 backdrop-blur-xl border-r border-white/[0.08] overflow-hidden select-none`}>
+        {/* SOL SÜTUN (275px): KÜTÜPHANE & TEORİ PANELİ */}
+        <aside className={`${mobileTab === 'theory' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#0a0e26]/95 backdrop-blur-2xl border-r border-white/[0.12] overflow-hidden select-none`}>
           {/* Navigation Tabs */}
-          <div className="p-2.5 border-b border-white/[0.08] bg-[#090c18]/80">
-            <div className="p-1 bg-[#0d1020] border border-white/[0.08] rounded-2xl grid grid-cols-3 gap-1 font-mono text-[10px]">
+          <div className="p-2.5 border-b border-white/[0.1] bg-[#0c112e]/90 shadow-sm">
+            <div className="p-1 bg-[#10163a] border border-white/[0.1] rounded-2xl grid grid-cols-3 gap-1 font-mono text-[10px]">
               {(['theory', 'setlist', 'scales'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setLeftTab(tab)}
                   className={`py-1.5 rounded-xl border text-center transition-all uppercase cursor-pointer font-bold ${
                     leftTab === tab
-                      ? 'bg-gradient-to-r from-violet-600/35 via-cyan-600/30 to-violet-600/35 border-cyan-400/60 text-cyan-200 shadow-[0_0_16px_rgba(6,182,212,0.35)] font-black'
-                      : 'bg-transparent border-transparent text-slate-400 hover:text-white hover:bg-white/[0.05]'
+                      ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-cyan-600 border-cyan-400/60 text-white shadow-[0_0_18px_rgba(139,92,246,0.45)] font-black'
+                      : 'bg-transparent border-transparent text-slate-400 hover:text-white hover:bg-white/[0.06]'
                   }`}
                 >
                   {tab === 'theory' ? 'TEORİ' : tab === 'setlist' ? 'LİSTE' : 'GAMLAR'}
@@ -499,24 +505,24 @@ export function App() {
               {/* Active Chord Summary Card */}
               <div
                 onClick={() => handleOpenChordDetail(activeChord)}
-                className="p-3.5 rounded-2xl bg-gradient-to-b from-[#14182c] to-[#0c0f1e] border border-white/[0.12] hover:border-amber-400/60 space-y-1.5 transition-all cursor-pointer group shadow-[0_4px_20px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] hover:shadow-[0_0_24px_rgba(245,158,11,0.25)]"
+                className="p-3.5 rounded-2xl bg-gradient-to-b from-[#182046] via-[#121838] to-[#0e122a] border border-violet-500/30 hover:border-amber-400/70 space-y-1.5 transition-all cursor-pointer group shadow-[0_8px_30px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.15)] hover:shadow-[0_0_28px_rgba(245,158,11,0.35)]"
                 title="Detaylı akor analizini aç"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className="text-3xl font-black bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-100 bg-clip-text text-transparent group-hover:scale-105 transition-transform drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+                    <span className="text-3xl font-black bg-gradient-to-r from-amber-300 via-amber-200 to-yellow-100 bg-clip-text text-transparent group-hover:scale-105 transition-transform drop-shadow-[0_0_14px_rgba(245,158,11,0.6)]">
                       {activeChord}
                     </span>
-                    <span className="text-[9px] text-amber-400/80 font-mono px-1.5 py-0.2 rounded-full bg-amber-500/15 border border-amber-500/30">
+                    <span className="text-[9px] text-amber-300 font-mono px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 font-bold shadow-sm">
                       [DETAY ↗]
                     </span>
                   </div>
-                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-violet-500/20 border border-violet-500/40 text-violet-300 font-bold">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-violet-500/25 border border-violet-400/50 text-violet-200 font-bold shadow-sm">
                     {theory.typeCategory}
                   </span>
                 </div>
-                <p className="text-[11px] text-slate-300 font-sans leading-relaxed">
-                  {theory.fullName} • <span className="text-cyan-300">{theory.mood}</span>
+                <p className="text-[11px] text-slate-200 font-sans leading-relaxed">
+                  {theory.fullName} • <span className="text-cyan-300 font-medium">{theory.mood}</span>
                 </p>
               </div>
 
@@ -899,7 +905,7 @@ export function App() {
         </main>
 
         {/* SAĞ SÜTUN: MOISES CHORD SHEET & LYRICS PLAY-ALONG */}
-        <aside className={`${mobileTab === 'lyrics' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#070913]/95 backdrop-blur-xl border-l border-white/[0.08] overflow-hidden min-w-0 p-2 gap-2`}>
+        <aside className={`${mobileTab === 'lyrics' ? 'flex' : 'hidden'} lg:flex w-full h-full flex-col bg-[#0a0e26]/95 backdrop-blur-2xl border-l border-white/[0.12] overflow-hidden min-w-0 p-2 gap-2`}>
           <SongViewer
             song={currentSong}
             activeChord={activeChord}
@@ -917,13 +923,13 @@ export function App() {
       </div>
 
       {/* 3. MOBILE STUDIO FLOATING DOCK (< 1024px) */}
-      <nav className="lg:hidden fixed bottom-0 inset-x-0 h-[58px] z-40 bg-[#070913]/90 backdrop-blur-2xl border-t border-white/[0.08] px-3 flex items-center justify-around gap-2 shadow-[0_-8px_32px_rgba(0,0,0,0.8)]">
+      <nav className="lg:hidden fixed bottom-0 inset-x-0 h-[58px] z-40 bg-[#0a0e26]/90 backdrop-blur-2xl border-t border-white/[0.12] px-3 flex items-center justify-around gap-2 shadow-[0_-8px_32px_rgba(0,0,0,0.85)]">
         <button
           onClick={() => setMobileTab('stage')}
           className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
             mobileTab === 'stage'
-              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
-              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.06]'
+              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.5)] font-black border border-amber-200'
+              : 'text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08]'
           }`}
         >
           <span className="text-sm">🎸</span>
@@ -934,8 +940,8 @@ export function App() {
           onClick={() => setMobileTab('lyrics')}
           className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
             mobileTab === 'lyrics'
-              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
-              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.06]'
+              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.5)] font-black border border-amber-200'
+              : 'text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08]'
           }`}
         >
           <span className="text-sm">📝</span>
@@ -946,8 +952,8 @@ export function App() {
           onClick={() => setMobileTab('theory')}
           className={`flex-1 py-1.5 px-2 rounded-xl flex items-center justify-center gap-1.5 font-mono text-xs font-bold transition-all cursor-pointer active:scale-95 ${
             mobileTab === 'theory'
-              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-md shadow-amber-500/30 font-black'
-              : 'text-slate-400 hover:text-white bg-white/[0.03] border border-white/[0.06]'
+              ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 shadow-[0_0_16px_rgba(245,158,11,0.5)] font-black border border-amber-200'
+              : 'text-slate-400 hover:text-white bg-white/[0.04] border border-white/[0.08]'
           }`}
         >
           <span className="text-sm">📚</span>

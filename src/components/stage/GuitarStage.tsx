@@ -252,22 +252,22 @@ export function GuitarStage({
   }, []);
 
   return (
-    <div className="relative w-full h-full flex flex-col bg-[#07080f] overflow-hidden select-none">
+    <div className="relative w-full h-full flex flex-col bg-[#070916] overflow-hidden select-none">
       {/* 3D HERO VIEWPORT WITH SEAMLESS STUDIO BACKDROP */}
       <div
         className="relative flex-1 min-h-0 w-full overflow-hidden"
         style={{
           background:
-            'radial-gradient(ellipse 80% 75% at 50% 42%, rgba(99, 102, 241, 0.18) 0%, rgba(14, 18, 36, 0.95) 55%, #06070c 100%)',
+            'radial-gradient(ellipse 85% 75% at 50% 35%, rgba(139, 92, 246, 0.3) 0%, rgba(20, 26, 60, 0.92) 55%, #070916 100%)',
         }}
       >
         {/* TOP HUD: ZERO-COLLISION RESPONSIVE DUAL-WING BAR */}
         <div className="absolute top-2.5 sm:top-3.5 inset-x-2.5 sm:inset-x-3.5 z-10 flex items-center justify-between gap-1.5 sm:gap-2.5 pointer-events-none">
           {/* Left Wing: Active Chord Telemetry Badge */}
-          <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 bg-[#0a0d1c]/90 border border-white/[0.1] rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.1)] shrink-0">
+          <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-2.5 bg-[#0c112d]/90 border border-white/[0.14] rounded-2xl px-2.5 sm:px-3.5 py-1.5 sm:py-2 backdrop-blur-2xl shadow-[0_16px_40px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.15)] shrink-0">
             <button
               onClick={onOpenChordDetail}
-              className="px-2.5 sm:px-3 py-0.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-black rounded-xl cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_16px_rgba(245,158,11,0.5)] border border-amber-200"
+              className="px-2.5 sm:px-3 py-0.5 bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950 font-mono text-xs sm:text-sm font-black rounded-xl cursor-pointer hover:brightness-110 active:scale-95 transition-all shadow-[0_0_18px_rgba(245,158,11,0.6)] border border-amber-200"
               title="Akor teorisini incele"
             >
               {chordName}
@@ -553,19 +553,19 @@ export function GuitarStage({
       </div>
 
       {/* BOTTOM DOCK: COMPACT 16-STEP STRUMMING SEQUENCER */}
-      <div className="shrink-0 bg-[#070914] border-t border-white/[0.08] px-4 py-2 font-mono text-xs flex items-center justify-between gap-2 overflow-x-auto scrollbar-none shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+      <div className="shrink-0 bg-[#090d24]/95 border-t border-white/[0.12] px-4 py-2.5 font-mono text-xs flex items-center justify-between gap-2 overflow-x-auto scrollbar-none shadow-[0_-8px_32px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.12)]">
         <div className="flex items-center gap-2 shrink-0">
-          <span className="font-black text-amber-300 flex items-center gap-1.5 text-[11px] shrink-0">
+          <span className="font-black text-amber-300 flex items-center gap-1.5 text-[11px] shrink-0 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]">
             <Music className="w-3.5 h-3.5 text-amber-400" />
             <span className="hidden sm:inline">RİTİM DOCK</span>
           </span>
           <select
             value={selectedPatternId}
             onChange={(e) => onSelectPattern(e.target.value)}
-            className="bg-[#0e1224] border border-white/[0.08] rounded-full px-3 py-1 text-[11px] text-slate-200 font-mono focus:outline-none max-w-[160px] sm:max-w-[210px] truncate shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] cursor-pointer"
+            className="bg-[#12183c] border border-white/[0.1] rounded-full px-3 py-1 text-[11px] text-slate-200 font-mono focus:outline-none max-w-[160px] sm:max-w-[210px] truncate shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] cursor-pointer"
           >
             {STRUM_PATTERNS.map((p) => (
-              <option key={p.id} value={p.id} className="bg-[#0e1224]">
+              <option key={p.id} value={p.id} className="bg-[#0e1430]">
                 {p.name} ({p.timeSignature})
               </option>
             ))}
