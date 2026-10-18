@@ -9,6 +9,7 @@ Herhangi bir şarkının akorlarını canlı bir **3D gitar ve fretboard** üzer
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Built in 4 Hours](https://img.shields.io/badge/⏱️_BUILT_IN-4_HOURS-FF6B35?style=for-the-badge)](#-4-saat-challenge)
 
 🔗 **Live:** https://guitar-chord-app-three.vercel.app
 
@@ -21,6 +22,24 @@ Herhangi bir şarkının akorlarını canlı bir **3D gitar ve fretboard** üzer
 <p align="center">
   <img src="docs/screenshots/mobile.png" alt="Mobil görünüm" width="300">
 </p>
+
+---
+
+## ⚡ 4 Saat Challenge
+
+> **Bu proje tek bir 4 saatlik challenge sprint'inde, sıfırdan inşa edildi.** Şablon yok, hazır boilerplate yok, kopyala-yapıştır proje iskeleti yok — sadece ham kod, müzik teorisi ve fizik modellemesi.
+
+Tek oturumda çıkanlar:
+
+- ✅ **Sıfırdan 3D gitar sahnesi** — Three.js / React Three Fiber ile prosedürel akustik gitar modeli
+- ✅ **Karplus-Strong akustik tel sentezi** — tek satır ses dosyası olmadan, saf Web Audio fiziksel modelleme
+- ✅ **Fretboard motoru** — 6 tel × 14 perde, parmak/bare/derece matrisi, solak mod, çoklu pozisyon
+- ✅ **ChordPro oynatıcı** — transpoze, kapo, otomatik kaydırma, akor rozetleri
+- ✅ **AI armoni analizi** — bilinmeyen şarkılar için akor üretimi + iki satırlı tab parser
+- ✅ **YouTube 0ms drift canlı senkron** — milisaniyelik karaoke hizalaması
+- ✅ **Metronom + Ritim Dock + mobil UI** — 220 BPM'e kadar, tamamen responsive
+
+**Süre: 4 saat. Kod: production. Bahane: yok.** 🎸
 
 ---
 
