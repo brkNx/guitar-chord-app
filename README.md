@@ -1,14 +1,32 @@
-# 🎸 Gitar Akor Pro (Guitar Chord & Fretboard Visualizer)
+# 🎸 Gitar Akor Pro — Guitar Chord & Fretboard Studio
 
-Modern, interaktif ve yapay zeka destekli gitar akor & şarkı çalma asistanı. 
+**Modern, interaktif ve AI destekli gitar akor & şarkı çalma asistanı.**
 
-Herhangi bir şarkının sözleri üzerindeki akorları canlı bir **gitar sapı (fretboard)** üzerinde parmak pozisyonları, bare basışları ve gerçek akustik ses tınısı ile senkronize olarak gösterir. Şarkı internette veya hiçbir yerde olmasa bile, yapay zeka armoni analiz motoru şarkının akorlarını anında üretir.
+Herhangi bir şarkının akorlarını canlı bir **3D gitar ve fretboard** üzerinde; parmak pozisyonları, bare basışları ve gerçek akustik tel tınısıyla senkronize gösterir. Şarkı internette olmasa bile yapay zeka armoni analizi ile akorları anında üretir.
+
+[![Canlı Demo](https://img.shields.io/badge/🚀%20CANLI%20DEMO-Vercel-000000?style=for-the-badge&logo=vercel)](https://guitar-chord-app-three.vercel.app)
+[![React 19](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vite.dev)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+
+🔗 **Live:** https://guitar-chord-app-three.vercel.app
+
+---
+
+## 📸 Ekran Görüntüleri
+
+<img src="docs/screenshots/hero-desktop.png" alt="Gitar Akor Pro — Stüdyo görünümü" width="100%">
+
+<p align="center">
+  <img src="docs/screenshots/mobile.png" alt="Mobil görünüm" width="300">
+</p>
 
 ---
 
 ## ✨ Özellikler
 
-### 1. 🎸 İnteraktif SVG Gitar Sapı (Fretboard)
+### 1. 🎸 İnteraktif 3D Gitar & Fretboard
 - **6 Tel & 14 Perde**: Standart E-A-D-G-B-e akort, sedef perde işaretleri (3, 5, 7, 9, 12 çift nokta).
 - **Parmak & Bare Gösterimi**: Hangi parmağın hangi tele basacağını gösteren numaralar (1-4) ve bare akor şeritleri.
 - **Boş & Kapalı Teller**: Boş tınlayacak teller (`O`) ve çalınmayacak teller (`✕`).
@@ -28,6 +46,7 @@ Herhangi bir şarkının sözleri üzerindeki akorları canlı bir **gitar sapı
 - **Transpoze Motoru**: Tek tıkla şarkıyı `+1` / `-1` yarım ses yukarı/aşağı taşıma.
 - **Otomatik Kaydırma (Auto-Scroll)**: Ayarlanabilir hız ile şarkı çalarken sayfanın eller serbest aşağı kayması.
 - **Kapo (Capo) Desteği**: Kapo perde tavsiyesi ve ton eşlemesi.
+- **YouTube Canlı Senkron**: 0ms drift master clock ile video çalarken sözler ve akorlar milisaniyelik senkron akar.
 
 ### 4. 🧠 Yapay Zeka (AI) Akor Çıkarıcı & Akıllı Arama
 - **Yeni / Bilinmeyen Şarkılar**: Şarkı internette hiç bulunmasa bile yapay zeka müzik teorisi ve armoni analiziyle tonu, kıta ve nakarat akor döngüsünü otomatik üretir.
@@ -43,6 +62,7 @@ Herhangi bir şarkının sözleri üzerindeki akorları canlı bir **gitar sapı
 ## 🛠️ Teknoloji Yığını
 - **Frontend**: React 19, TypeScript, Vite
 - **Stil**: Tailwind CSS v4, Lucide React Icons
+- **3D**: Three.js / React Three Fiber gitar sahnesi
 - **Ses Motoru**: Web Audio API (Native Karplus-Strong physical modeling)
 - **Doğrulama**: Iris Visual Testing
 
@@ -74,3 +94,18 @@ Tarayıcınızda `http://localhost:5173` adresine gidin.
 npm run build
 npm run preview
 ```
+
+---
+
+## 🌐 Deployment
+
+Vercel üzerinde otomatik deploy:
+
+- **Production**: https://guitar-chord-app-three.vercel.app
+- **Branch Preview**: commit push edildiğinde otomatik preview URL üretilir.
+
+---
+
+<p align="center">
+  <b>🎸 Build. Strum. Repeat.</b>
+</p>
