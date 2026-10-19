@@ -15,16 +15,6 @@ Herhangi bir şarkının akorlarını canlı bir **3D gitar ve fretboard** üzer
 
 ---
 
-## 📸 Ekran Görüntüleri
-
-<img src="docs/screenshots/hero-desktop.png" alt="Gitar Akor Pro — Stüdyo görünümü" width="100%">
-
-<p align="center">
-  <img src="docs/screenshots/mobile.png" alt="Mobil görünüm" width="300">
-</p>
-
----
-
 ## ⚡ 4 Saat Challenge
 
 > **Bu proje tek bir 4 saatlik challenge sprint'inde, sıfırdan inşa edildi.** Şablon yok, hazır boilerplate yok, kopyala-yapıştır proje iskeleti yok — sadece ham kod, müzik teorisi ve fizik modellemesi.
